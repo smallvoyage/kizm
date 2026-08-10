@@ -1,6 +1,6 @@
 # Fitness Analytics
 
-A personal fitness analytics dashboard for visualizing body composition, nutrition, activity, and workout progress from Notion data.
+A personal fitness analytics dashboard for visualizing body composition, nutrition, activity, and workout progress from Notion data!
 
 Notionをデータ入力・保存先として使い、日々のフィットネスデータを見やすく可視化する個人用Webアプリです。現在のMVPはBody Composition（体重・体脂肪率・筋肉量）に対応しています。
 
