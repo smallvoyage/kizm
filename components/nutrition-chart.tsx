@@ -104,8 +104,8 @@ export function NutritionChart({
   )
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-2 px-2 sm:px-0">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           期間
         </p>
@@ -118,9 +118,15 @@ export function NutritionChart({
           }}
           variant="outline"
           spacing={0}
+          className="grid w-full grid-cols-4 sm:w-fit"
         >
           {periodOptions.map((option) => (
-            <ToggleGroupItem key={option} value={option}>
+            <ToggleGroupItem
+              key={option}
+              value={option}
+              aria-label={periodLabels[option]}
+              className="h-11 min-w-0 px-2 sm:h-8"
+            >
               {periodLabels[option]}
             </ToggleGroupItem>
           ))}
@@ -168,7 +174,11 @@ export function NutritionChart({
               unit=" kcal"
             />
             <ChartTooltip content={<NutritionTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend
+              content={
+                <ChartLegendContent className="gap-2 text-[10px] sm:gap-4 sm:text-xs" />
+              }
+            />
             <Bar
               yAxisId="grams"
               dataKey="protein"

@@ -133,11 +133,11 @@ export default async function Home() {
                 log={getLatestNutritionLog(logs)}
                 goals={NUTRITION_GOALS}
               />
-              <Card className="gap-6 shadow-sm">
-                <CardHeader>
+              <Card className="gap-4 shadow-sm sm:gap-6">
+                <CardHeader className="px-4 sm:px-(--card-spacing)">
                   <CardTitle className="text-lg">栄養バランスの推移</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-2 sm:px-(--card-spacing)">
                   <NutritionChart logs={logs} referenceDate={today()} />
                 </CardContent>
               </Card>

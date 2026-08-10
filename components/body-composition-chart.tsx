@@ -108,7 +108,7 @@ export function BodyCompositionChart({
                 key={option}
                 value={option}
                 aria-label={periodLabels[option]}
-                className="min-w-0 px-2"
+                className="h-11 min-w-0 px-2 sm:h-8"
               >
                 {periodLabels[option]}
               </ToggleGroupItem>
@@ -138,7 +138,7 @@ export function BodyCompositionChart({
                   visibleMetrics.length === 1 &&
                   visibleMetrics.includes(option.value)
                 }
-                className="min-w-0 px-2"
+                className="h-11 min-w-0 px-2 sm:h-8"
               >
                 <span
                   className="size-2 rounded-full"
