@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Fitness Analytics",
-  description: "A personal fitness analytics dashboard powered by Notion.",
+  title: "フィットネス分析",
+  description: "Notionと連携した個人用フィットネス分析ダッシュボードです。",
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>{children}</body>
     </html>
   )

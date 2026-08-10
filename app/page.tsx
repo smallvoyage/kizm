@@ -42,10 +42,10 @@ export default async function Home() {
           </div>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Fitness Analytics
+              フィットネス分析
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Body composition at a glance
+              身体組成の変化をひと目で確認
             </p>
           </div>
         </header>
@@ -53,16 +53,15 @@ export default async function Home() {
         {errorMessage ? (
           <Alert variant="destructive" className="bg-background p-4">
             <TriangleAlert aria-hidden="true" />
-            <AlertTitle>Data could not be loaded</AlertTitle>
+            <AlertTitle>データを読み込めませんでした</AlertTitle>
             <AlertDescription>{errorMessage}</AlertDescription>
           </Alert>
         ) : logs.length === 0 ? (
           <Alert className="bg-background p-4">
             <Database aria-hidden="true" />
-            <AlertTitle>No fitness logs yet</AlertTitle>
+            <AlertTitle>フィットネス記録がまだありません</AlertTitle>
             <AlertDescription>
-              NotionのDays Data Sourceにレコードを追加すると、ここにBody
-              Compositionが表示されます。
+              NotionのDaysデータソースに記録を追加すると、ここに身体組成が表示されます。
             </AlertDescription>
           </Alert>
         ) : (
@@ -73,27 +72,27 @@ export default async function Home() {
                   id="current-metrics-heading"
                   className="text-lg font-semibold tracking-tight"
                 >
-                  Current Metrics
+                  現在の測定値
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Latest valid value and change from the previous valid record
+                  最新の有効値と、その直前の有効な記録からの変化
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <MetricCard
-                  title="Weight"
+                  title="体重"
                   summary={getMetricSummary(logs, "weight")}
                   unit="kg"
                   differenceUnit="kg"
                 />
                 <MetricCard
-                  title="Body Fat"
+                  title="体脂肪率"
                   summary={getMetricSummary(logs, "bodyFat")}
                   unit="%"
                   differenceUnit="pt"
                 />
                 <MetricCard
-                  title="Muscle Mass"
+                  title="筋肉量"
                   summary={getMetricSummary(logs, "muscleMass")}
                   unit="kg"
                   differenceUnit="kg"
@@ -105,11 +104,10 @@ export default async function Home() {
               <Card className="gap-6 shadow-sm">
                 <CardHeader>
                   <CardTitle id="body-composition-heading" className="text-lg">
-                    Body Composition
+                    身体組成
                   </CardTitle>
                   <CardDescription>
-                    Weight and muscle mass use the left axis; body fat uses the
-                    right axis.
+                    体重と筋肉量は左軸、体脂肪率は右軸で表示します。
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

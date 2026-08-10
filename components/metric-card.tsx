@@ -49,7 +49,7 @@ export function MetricCard({
       <CardHeader>
         <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
         <CardDescription className="sr-only">
-          Latest recorded {title.toLowerCase()}
+          最新の{title}の記録
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -73,7 +73,7 @@ export function MetricCard({
           >
             <DifferenceIcon className="size-3.5" aria-hidden="true" />
             {summary.difference === null
-              ? "No previous record"
+              ? "比較できる記録なし"
               : `${formatDifference(summary.difference)} ${differenceUnit}`}
           </span>
           {summary.date && (
