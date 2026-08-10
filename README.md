@@ -25,6 +25,7 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 - 欠損値、空データ、対象期間の空データ、設定不備、Notion APIエラーの表示
 - PC・スマートフォンに対応したレスポンシブUI
 - 最新の摂取カロリー・たんぱく質・脂質・炭水化物
+- 1日の目標に対するカロリー・三大栄養素の残量と達成状況
 - 摂取カロリーと三大栄養素の7日・30日・90日・全期間チャート
 
 ## アーキテクチャ
@@ -38,6 +39,7 @@ components/nutrition-chart.tsx        栄養バランスの期間別チャート
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
+lib/nutrition-goals.ts                1日の栄養目標のサーバー側設定
 ```
 
 `NOTION_TOKEN` とNotion SDKは `lib/notion.ts` のサーバー側に閉じています。UIにはNotionのレスポンスを直接渡さず、次のドメインモデルに変換します。
@@ -130,11 +132,15 @@ NOTION_TOKEN=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 NOTION_DAYS_DATA_SOURCE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 NOTION_MEALS_DATA_SOURCE_ID=
 NOTION_WORKOUTS_DATA_SOURCE_ID=
+NUTRITION_GOAL_CALORIES=2000
+NUTRITION_GOAL_PROTEIN_G=150
+NUTRITION_GOAL_FAT_G=60
+NUTRITION_GOAL_CARBS_G=250
 ```
 
 `.env.local` は `.gitignore` 対象です。クライアントに公開される `NEXT_PUBLIC_` 接頭辞は使用しません。
 
-MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。
+MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。`NUTRITION_GOAL_*` は1日の摂取目標で、省略した場合は上記の値を使用します。自身の目標に合わせて変更してください。
 
 ## ローカル開発
 

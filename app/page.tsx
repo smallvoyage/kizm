@@ -13,6 +13,7 @@ import {
   getMetricSummary,
 } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
+import { getNutritionGoals } from "@/lib/nutrition-goals"
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -107,7 +108,10 @@ export default async function Home() {
               >
                 食事状況
               </h2>
-              <NutritionSummary log={getLatestNutritionLog(logs)} />
+              <NutritionSummary
+                log={getLatestNutritionLog(logs)}
+                goals={getNutritionGoals()}
+              />
               <Card className="gap-6 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg">栄養バランスの推移</CardTitle>
