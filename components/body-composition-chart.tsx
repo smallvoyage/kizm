@@ -250,15 +250,21 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 dataKey={selectedMetric}
                 name={selectedOption.label}
                 type="monotone"
-                stroke={`var(--color-${selectedMetric})`}
-                strokeWidth={3}
+                stroke="var(--muted-foreground)"
+                strokeWidth={2}
+                strokeOpacity={0.45}
                 dot={{
-                  r: 3.5,
+                  r: 4,
                   fill: `var(--color-${selectedMetric})`,
                   stroke: "var(--background)",
                   strokeWidth: 2,
                 }}
-                activeDot={{ r: 6, strokeWidth: 3 }}
+                activeDot={{
+                  r: 6,
+                  fill: `var(--color-${selectedMetric})`,
+                  stroke: "var(--background)",
+                  strokeWidth: 3,
+                }}
                 connectNulls={false}
               />
             </LineChart>
