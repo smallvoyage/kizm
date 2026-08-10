@@ -29,12 +29,12 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-muted/30">
-      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <header className="mb-8 flex items-center gap-3 sm:mb-10">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-foreground text-background shadow-sm">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-12 lg:px-8">
+        <header className="mb-6 flex items-center gap-3 sm:mb-10">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground text-background shadow-sm sm:size-10">
             <Activity className="size-5" aria-hidden="true" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-3xl">
             フィットネス分析
           </h1>
         </header>
@@ -51,11 +51,11 @@ export default async function Home() {
             <AlertTitle>フィットネス記録がまだありません</AlertTitle>
           </Alert>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <section aria-labelledby="current-metrics-heading">
               <h2
                 id="current-metrics-heading"
-                className="mb-4 text-lg font-semibold tracking-tight"
+                className="mb-3 text-base font-semibold tracking-tight sm:mb-4 sm:text-lg"
               >
                 現在の測定値
               </h2>
@@ -82,13 +82,13 @@ export default async function Home() {
             </section>
 
             <section aria-labelledby="body-composition-heading">
-              <Card className="gap-6 shadow-sm">
-                <CardHeader>
+              <Card className="gap-4 shadow-sm sm:gap-6">
+                <CardHeader className="px-4 sm:px-(--card-spacing)">
                   <CardTitle id="body-composition-heading" className="text-lg">
                     身体組成
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-2 sm:px-(--card-spacing)">
                   <BodyCompositionChart logs={logs} referenceDate={today()} />
                 </CardContent>
               </Card>
