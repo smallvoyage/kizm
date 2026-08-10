@@ -12,6 +12,7 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 - shadcn/ui / shadcn/ui Charts
 - Recharts
 - Notion JavaScript SDK / Data Source Query API（Notion API `2026-03-11`）
+- Biome
 - pnpm
 - Vercel
 
@@ -143,6 +144,7 @@ pnpm dev
 
 ```bash
 pnpm lint
+pnpm format:check
 pnpm typecheck
 pnpm build
 ```

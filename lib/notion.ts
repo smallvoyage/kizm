@@ -32,7 +32,10 @@ const REQUIRED_PROPERTY_TYPES = {
 type PageProperty = PageObjectResponse["properties"][string]
 
 export class FitnessDataError extends Error {
-  constructor(public readonly userMessage: string, options?: ErrorOptions) {
+  constructor(
+    public readonly userMessage: string,
+    options?: ErrorOptions
+  ) {
     super(userMessage, options)
     this.name = "FitnessDataError"
   }

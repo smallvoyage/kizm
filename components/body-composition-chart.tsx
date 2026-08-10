@@ -1,22 +1,22 @@
 "use client"
 
-import { useMemo, useState, type ReactNode } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import {
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from "@/components/ui/chart"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
-  filterLogsByPeriod,
   type BodyCompositionMetric,
   type ChartPeriod,
   type FitnessLog,
+  filterLogsByPeriod,
 } from "@/lib/fitness"
 
 const chartConfig = {
@@ -62,9 +62,9 @@ export function BodyCompositionChart({
   referenceDate,
 }: BodyCompositionChartProps) {
   const [period, setPeriod] = useState<ChartPeriod>("30D")
-  const [visibleMetrics, setVisibleMetrics] = useState<
-    BodyCompositionMetric[]
-  >(["weight", "bodyFat", "muscleMass"])
+  const [visibleMetrics, setVisibleMetrics] = useState<BodyCompositionMetric[]>(
+    ["weight", "bodyFat", "muscleMass"]
+  )
 
   const filteredLogs = useMemo(
     () => filterLogsByPeriod(logs, period, referenceDate),

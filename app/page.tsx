@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { getMetricSummary, type FitnessLog } from "@/lib/fitness"
+import { type FitnessLog, getMetricSummary } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 
 function today(): string {
@@ -113,10 +113,7 @@ export default async function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <BodyCompositionChart
-                    logs={logs}
-                    referenceDate={today()}
-                  />
+                  <BodyCompositionChart logs={logs} referenceDate={today()} />
                 </CardContent>
               </Card>
             </section>
