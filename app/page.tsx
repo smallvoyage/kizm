@@ -61,7 +61,7 @@ export default async function Home() {
             <Database aria-hidden="true" />
             <AlertTitle>No fitness logs yet</AlertTitle>
             <AlertDescription>
-              NotionのData Sourceにレコードを追加すると、ここにBody
+              NotionのDays Data Sourceにレコードを追加すると、ここにBody
               Compositionが表示されます。
             </AlertDescription>
           </Alert>

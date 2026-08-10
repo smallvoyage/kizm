@@ -51,7 +51,7 @@ type FitnessLog = {
 }
 ```
 
-Data Source Queryは100件ずつ全ページを取得し、Log Date昇順へ並べ替えます。値が未入力のnumberプロパティは `null` として扱い、Log Dateが未入力の行はチャート対象外にします。
+MVPではDays Data Sourceのみを使用します。Data Source Queryは100件ずつ全ページを取得し、Log Date昇順へ並べ替えます。値が未入力のnumberプロパティは `null` として扱い、Log Dateが未入力の行はチャート対象外にします。MealsとWorkoutsのIDは将来機能用で、現時点ではAPI queryを行いません。
 
 ## セットアップ
 
@@ -74,7 +74,15 @@ pnpm install
 
 ### 3. Notion Data Sourceを準備する
 
-1日1レコードで、以下の名前と型を完全一致で作成してください。
+このプロジェクトでは次の3つのData Sourceを想定しています。
+
+| Data Source | 環境変数 | 用途 |
+| --- | --- | --- |
+| Days | `NOTION_DAYS_DATA_SOURCE_ID` | Body Compositionと将来のActivity |
+| Meals | `NOTION_MEALS_DATA_SOURCE_ID` | 将来のNutrition Analytics |
+| Workouts | `NOTION_WORKOUTS_DATA_SOURCE_ID` | 将来のWorkout Analytics |
+
+今回のMVPで必要なのはDaysのみです。Daysには1日1レコードで、以下の名前と型を完全一致で作成してください。
 
 | プロパティ | 型 |
 | --- | --- |
@@ -98,9 +106,9 @@ NotionのData Sourceには通常Titleプロパティも存在しますが、こ�
 
 接続されていないDatabaseをAPIからqueryすると取得できません。
 
-### 5. NOTION_DATA_SOURCE_IDを確認する
+### 5. Data Source IDを確認する
 
-Database設定の `Manage data sources` を開き、対象Data Sourceの `•••` メニューから `Copy data source ID` を選びます。Database URL内のDatabase IDとは別のIDなので注意してください。
+各Database設定の `Manage data sources` を開き、対象Data Sourceの `•••` メニューから `Copy data source ID` を選びます。Database URL内のDatabase IDとは別のIDなので注意してください。MVPではDaysのIDを `NOTION_DAYS_DATA_SOURCE_ID` に設定します。
 
 代替手段として、Database IDを使ってRetrieve a database APIを呼び、レスポンスの `data_sources` 配列にある対象Data Sourceの `id` を確認できます。
 
@@ -114,10 +122,14 @@ cp .env.example .env.local
 
 ```dotenv
 NOTION_TOKEN=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-NOTION_DATA_SOURCE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+NOTION_DAYS_DATA_SOURCE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+NOTION_MEALS_DATA_SOURCE_ID=
+NOTION_WORKOUTS_DATA_SOURCE_ID=
 ```
 
 `.env.local` は `.gitignore` 対象です。クライアントに公開される `NEXT_PUBLIC_` 接頭辞は使用しません。
+
+MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。
 
 ## ローカル開発
 
@@ -141,11 +153,13 @@ pnpm build
 2. Framework PresetがNext.js、Install Commandが `pnpm install` であることを確認します。
 3. Project SettingsのEnvironment Variablesに次を登録します。
    - `NOTION_TOKEN`
-   - `NOTION_DATA_SOURCE_ID`
+   - `NOTION_DAYS_DATA_SOURCE_ID`
+   - `NOTION_MEALS_DATA_SOURCE_ID`（将来のNutrition Analytics用・MVPでは任意）
+   - `NOTION_WORKOUTS_DATA_SOURCE_ID`（将来のWorkout Analytics用・MVPでは任意）
 4. Productionへデプロイします。Preview環境でも実データを確認する場合は、同じ環境変数をPreviewにも設定します。
 
 Notion Integrationが対象Databaseへ接続されていれば、Vercelから追加のDBやバックエンドサービスなしで読み取れます。
 
 ## 今後の拡張
 
-Nutrition・Activityは既存の `FitnessLog` と `lib/notion.ts` の正規化結果を再利用し、専用の集計関数とClient Chart Componentを追加できます。Workoutは種目・セット単位の別Data Sourceを想定し、`FitnessLog` に無理に混在させず、`WorkoutLog` など独立したドメインモデルと取得関数を追加する方針です。Server Componentだけが各Data Sourceを取得し、Client Componentには正規化済みデータだけを渡します。
+ActivityはDaysの `FitnessLog` と `lib/notion.ts` の正規化結果を再利用できます。NutritionはMealsから `MealLog`、WorkoutはWorkoutsから種目・セット単位の `WorkoutLog` へ正規化し、それぞれ独立した取得関数と集計・Chart Componentを追加する方針です。Server Componentだけが各Data Sourceを取得し、Client Componentには正規化済みデータだけを渡します。

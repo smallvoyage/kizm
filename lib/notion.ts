@@ -102,12 +102,14 @@ function toFitnessLog(page: PageObjectResponse): FitnessLog | null {
 
 export async function getFitnessLogs(): Promise<FitnessLog[]> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
-  const dataSourceId = getRequiredEnvironmentVariable("NOTION_DATA_SOURCE_ID")
+  const daysDataSourceId = getRequiredEnvironmentVariable(
+    "NOTION_DAYS_DATA_SOURCE_ID"
+  )
   const notion = new Client({ auth: token, notionVersion: "2026-03-11" })
 
   try {
     const dataSource = await notion.dataSources.retrieve({
-      data_source_id: dataSourceId,
+      data_source_id: daysDataSourceId,
     })
     validateProperties(dataSource.properties)
 
@@ -116,7 +118,7 @@ export async function getFitnessLogs(): Promise<FitnessLog[]> {
 
     do {
       const response = await notion.dataSources.query({
-        data_source_id: dataSourceId,
+        data_source_id: daysDataSourceId,
         page_size: 100,
         start_cursor: startCursor,
       })
@@ -144,7 +146,7 @@ export async function getFitnessLogs(): Promise<FitnessLog[]> {
     }
 
     throw new FitnessDataError(
-      "Notionからデータを取得できませんでした。Integrationの接続、Data Source ID、トークンを確認してください。",
+      "NotionのDaysからデータを取得できませんでした。Integrationの接続、Days Data Source ID、トークンを確認してください。",
       { cause: error }
     )
   }
