@@ -57,7 +57,7 @@ export default async function Home() {
                 id="current-metrics-heading"
                 className="mb-3 text-base font-semibold tracking-tight sm:mb-4 sm:text-lg"
               >
-                今日の測定値
+                最新の測定値
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                 <MetricCard
