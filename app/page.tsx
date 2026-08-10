@@ -3,7 +3,6 @@ import { connection } from "next/server"
 
 import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { MetricCard } from "@/components/metric-card"
-import { NutritionChart } from "@/components/nutrition-chart"
 import { NutritionSummary } from "@/components/nutrition-summary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -133,14 +132,6 @@ export default async function Home() {
                 log={getLatestNutritionLog(logs)}
                 goals={NUTRITION_GOALS}
               />
-              <Card className="gap-4 shadow-sm sm:gap-6">
-                <CardHeader className="px-4 sm:px-(--card-spacing)">
-                  <CardTitle className="text-lg">栄養バランスの推移</CardTitle>
-                </CardHeader>
-                <CardContent className="px-2 sm:px-(--card-spacing)">
-                  <NutritionChart logs={logs} referenceDate={today()} />
-                </CardContent>
-              </Card>
             </section>
           </div>
         )}

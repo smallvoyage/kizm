@@ -26,7 +26,6 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 - PC・スマートフォンに対応したレスポンシブUI
 - 最新の摂取カロリー・たんぱく質・脂質・炭水化物
 - 1日の目標に対するカロリー・三大栄養素の残量と達成状況
-- 摂取カロリーと三大栄養素の7日・30日・90日・全期間チャート
 
 ## アーキテクチャ
 
@@ -35,7 +34,6 @@ app/page.tsx                         Server Component / データ取得とペー
 components/body-composition-chart.tsx Client Component / フィルターとチャート操作
 components/metric-card.tsx           Current Metricsの表示
 components/nutrition-summary.tsx      最新の食事状況
-components/nutrition-chart.tsx        栄養バランスの期間別チャート
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
