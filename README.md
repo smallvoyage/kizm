@@ -2,7 +2,7 @@
 
 A personal fitness analytics dashboard for visualizing body composition, nutrition, activity, and workout progress from Notion data.
 
-Notionをデータ入力・保存先として使い、日々のフィットネスデータを見やすく可視化する個人用Webアプリです。現在のMVPはBody Composition（体重・体脂肪率・筋肉量）に対応しています。
+Notionをデータ入力・保存先として使い、日々のフィットネスデータを見やすく可視化する個人用Webアプリです。身体組成（体重・体脂肪率・筋肉量）と食事状況（カロリー・三大栄養素）に対応しています。
 
 ## 技術構成
 
@@ -24,6 +24,8 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 - 7日・30日・90日・全期間のフィルター（初期値は30日）
 - 欠損値、空データ、対象期間の空データ、設定不備、Notion APIエラーの表示
 - PC・スマートフォンに対応したレスポンシブUI
+- 最新の摂取カロリー・たんぱく質・脂質・炭水化物
+- 1日の目標に対するカロリー・三大栄養素の残量と達成状況
 
 ## アーキテクチャ
 
@@ -31,9 +33,11 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 app/page.tsx                         Server Component / データ取得とページ構成
 components/body-composition-chart.tsx Client Component / フィルターとチャート操作
 components/metric-card.tsx           Current Metricsの表示
+components/nutrition-summary.tsx      最新の食事状況
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
+lib/nutrition-goals.ts                1日の栄養目標のサーバー側設定
 ```
 
 `NOTION_TOKEN` とNotion SDKは `lib/notion.ts` のサーバー側に閉じています。UIにはNotionのレスポンスを直接渡さず、次のドメインモデルに変換します。
@@ -97,7 +101,7 @@ pnpm install
 | Body Fat % | Number |
 | Muscle Mass kg | Number |
 
-NotionのData Sourceには通常Titleプロパティも存在しますが、このアプリでは参照しません。MVPの必須プロパティは `Log Date`、`Weight kg`、`Body Fat %`、`Muscle Mass kg` です。Stepsと栄養集計は未作成・未入力でも `null` として扱い、今回の画面には表示しません。栄養集計はMealsとのRelationを使った数値Rollupとして読み取れます。
+NotionのData Sourceには通常Titleプロパティも存在しますが、このアプリでは参照しません。アプリの動作に必須のプロパティは `Log Date`、`Weight kg`、`Body Fat %`、`Muscle Mass kg` です。Stepsは未作成・未入力でも `null` として扱い、現在の画面には表示しません。食事状況のサマリとチャートを利用するには、`Total Calories`、`Total Protein g`、`Total Fat g`、`Total Carbs g` の4つも作成してください。これらの栄養集計はMealsとのRelationを使った数値Rollupとして読み取り、未作成・未入力の場合は食事状況にデータが表示されません。
 
 ### 4. Integrationを接続する
 
@@ -130,7 +134,7 @@ NOTION_WORKOUTS_DATA_SOURCE_ID=
 
 `.env.local` は `.gitignore` 対象です。クライアントに公開される `NEXT_PUBLIC_` 接頭辞は使用しません。
 
-MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。
+MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。1日の摂取目標は `lib/nutrition-goals.ts` で設定します。
 
 ## ローカル開発
 

@@ -11,6 +11,7 @@ export type FitnessLog = {
 }
 
 export type BodyCompositionMetric = "weight" | "bodyFat" | "muscleMass"
+export type NutritionMetric = "calories" | "protein" | "fat" | "carbs"
 export type ChartPeriod = "7D" | "30D" | "90D" | "ALL"
 
 export type MetricSummary = {
@@ -67,6 +68,16 @@ export function getBodyCompositionSummary(
       })
     ) as Record<BodyCompositionMetric, MetricSummary>,
   }
+}
+
+export function getLatestNutritionLog(logs: FitnessLog[]): FitnessLog | null {
+  return (
+    logs.findLast((log) =>
+      (["calories", "protein", "fat", "carbs"] as const).some(
+        (metric) => log[metric] !== null
+      )
+    ) ?? null
+  )
 }
 
 export function filterLogsByPeriod(
