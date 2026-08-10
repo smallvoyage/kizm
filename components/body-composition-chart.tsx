@@ -20,21 +20,27 @@ import {
 } from "@/lib/fitness"
 
 const chartConfig = {
-  weight: { label: "Weight", color: "var(--chart-1)" },
-  bodyFat: { label: "Body Fat", color: "var(--chart-2)" },
-  muscleMass: { label: "Muscle Mass", color: "var(--chart-3)" },
+  weight: { label: "体重", color: "var(--chart-1)" },
+  bodyFat: { label: "体脂肪率", color: "var(--chart-2)" },
+  muscleMass: { label: "筋肉量", color: "var(--chart-3)" },
 } satisfies ChartConfig
 
 const metricOptions: Array<{
   value: BodyCompositionMetric
   label: string
 }> = [
-  { value: "weight", label: "Weight" },
-  { value: "bodyFat", label: "Body Fat" },
-  { value: "muscleMass", label: "Muscle Mass" },
+  { value: "weight", label: "体重" },
+  { value: "bodyFat", label: "体脂肪率" },
+  { value: "muscleMass", label: "筋肉量" },
 ]
 
 const periodOptions: ChartPeriod[] = ["7D", "30D", "90D", "ALL"]
+const periodLabels: Record<ChartPeriod, string> = {
+  "7D": "7日",
+  "30D": "30日",
+  "90D": "90日",
+  ALL: "全期間",
+}
 
 function formatAxisDate(date: string) {
   const [, month, day] = date.split("-")
@@ -87,18 +93,22 @@ export function BodyCompositionChart({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Period
+            期間
           </p>
           <ToggleGroup
-            aria-label="Chart period"
+            aria-label="グラフの表示期間"
             value={[period]}
             onValueChange={handlePeriodChange}
             variant="outline"
             spacing={0}
           >
             {periodOptions.map((option) => (
-              <ToggleGroupItem key={option} value={option} aria-label={option}>
-                {option}
+              <ToggleGroupItem
+                key={option}
+                value={option}
+                aria-label={periodLabels[option]}
+              >
+                {periodLabels[option]}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -106,10 +116,10 @@ export function BodyCompositionChart({
 
         <div className="space-y-2">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Metrics
+            指標
           </p>
           <ToggleGroup
-            aria-label="Visible metrics"
+            aria-label="表示する指標"
             value={visibleMetrics}
             onValueChange={handleMetricsChange}
             variant="outline"
@@ -121,7 +131,7 @@ export function BodyCompositionChart({
               <ToggleGroupItem
                 key={option.value}
                 value={option.value}
-                aria-label={`Toggle ${option.label}`}
+                aria-label={`${option.label}の表示を切り替え`}
                 disabled={
                   visibleMetrics.length === 1 &&
                   visibleMetrics.includes(option.value)
@@ -136,20 +146,12 @@ export function BodyCompositionChart({
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <p className="text-xs text-muted-foreground">
-            At least one metric remains visible.
-          </p>
         </div>
       </div>
 
       {filteredLogs.length === 0 ? (
         <div className="flex min-h-80 items-center justify-center rounded-lg border border-dashed bg-muted/20 px-6 text-center">
-          <div>
-            <p className="font-medium">No data in this period</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Select a longer period to view earlier records.
-            </p>
-          </div>
+          <p className="font-medium">この期間のデータはありません</p>
         </div>
       ) : (
         <ChartContainer

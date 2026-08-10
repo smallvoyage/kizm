@@ -1,12 +1,6 @@
 import { CalendarDays, Minus, TrendingDown, TrendingUp } from "lucide-react"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { MetricSummary } from "@/lib/fitness"
 import { cn } from "@/lib/utils"
 
@@ -48,9 +42,6 @@ export function MetricCard({
     <Card className="gap-5 shadow-sm">
       <CardHeader>
         <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
-        <CardDescription className="sr-only">
-          Latest recorded {title.toLowerCase()}
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-baseline gap-2">
@@ -73,7 +64,7 @@ export function MetricCard({
           >
             <DifferenceIcon className="size-3.5" aria-hidden="true" />
             {summary.difference === null
-              ? "No previous record"
+              ? "比較できる記録なし"
               : `${formatDifference(summary.difference)} ${differenceUnit}`}
           </span>
           {summary.date && (

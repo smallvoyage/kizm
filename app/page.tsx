@@ -4,13 +4,7 @@ import { connection } from "next/server"
 import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { MetricCard } from "@/components/metric-card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type FitnessLog, getMetricSummary } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 
@@ -40,60 +34,46 @@ export default async function Home() {
           <div className="flex size-10 items-center justify-center rounded-xl bg-foreground text-background shadow-sm">
             <Activity className="size-5" aria-hidden="true" />
           </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Fitness Analytics
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Body composition at a glance
-            </p>
-          </div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            フィットネス分析
+          </h1>
         </header>
 
         {errorMessage ? (
           <Alert variant="destructive" className="bg-background p-4">
             <TriangleAlert aria-hidden="true" />
-            <AlertTitle>Data could not be loaded</AlertTitle>
+            <AlertTitle>データを読み込めませんでした</AlertTitle>
             <AlertDescription>{errorMessage}</AlertDescription>
           </Alert>
         ) : logs.length === 0 ? (
           <Alert className="bg-background p-4">
             <Database aria-hidden="true" />
-            <AlertTitle>No fitness logs yet</AlertTitle>
-            <AlertDescription>
-              NotionのDays Data Sourceにレコードを追加すると、ここにBody
-              Compositionが表示されます。
-            </AlertDescription>
+            <AlertTitle>フィットネス記録がまだありません</AlertTitle>
           </Alert>
         ) : (
           <div className="space-y-8">
             <section aria-labelledby="current-metrics-heading">
-              <div className="mb-4">
-                <h2
-                  id="current-metrics-heading"
-                  className="text-lg font-semibold tracking-tight"
-                >
-                  Current Metrics
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Latest valid value and change from the previous valid record
-                </p>
-              </div>
+              <h2
+                id="current-metrics-heading"
+                className="mb-4 text-lg font-semibold tracking-tight"
+              >
+                現在の測定値
+              </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <MetricCard
-                  title="Weight"
+                  title="体重"
                   summary={getMetricSummary(logs, "weight")}
                   unit="kg"
                   differenceUnit="kg"
                 />
                 <MetricCard
-                  title="Body Fat"
+                  title="体脂肪率"
                   summary={getMetricSummary(logs, "bodyFat")}
                   unit="%"
                   differenceUnit="pt"
                 />
                 <MetricCard
-                  title="Muscle Mass"
+                  title="筋肉量"
                   summary={getMetricSummary(logs, "muscleMass")}
                   unit="kg"
                   differenceUnit="kg"
@@ -105,12 +85,8 @@ export default async function Home() {
               <Card className="gap-6 shadow-sm">
                 <CardHeader>
                   <CardTitle id="body-composition-heading" className="text-lg">
-                    Body Composition
+                    身体組成
                   </CardTitle>
-                  <CardDescription>
-                    Weight and muscle mass use the left axis; body fat uses the
-                    right axis.
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <BodyCompositionChart logs={logs} referenceDate={today()} />
