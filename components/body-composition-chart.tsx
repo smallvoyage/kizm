@@ -8,15 +8,8 @@ import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import {
-  type BodyCompositionMetric,
-  type ChartPeriod,
-  type FitnessLog,
-  filterLogsByPeriod,
-} from "@/lib/fitness"
+import type { BodyCompositionMetric, FitnessLog } from "@/lib/fitness"
 import { cn } from "@/lib/utils"
 
 const chartConfig = {
@@ -46,14 +39,6 @@ const metricOptions: Array<{
   },
 ]
 
-const periodOptions: ChartPeriod[] = ["7D", "30D", "90D", "ALL"]
-const periodLabels: Record<ChartPeriod, string> = {
-  "7D": "7日",
-  "30D": "30日",
-  "90D": "90日",
-  ALL: "全期間",
-}
-
 function formatAxisDate(date: string) {
   const [, month, day] = date.split("-")
   return `${Number(month)}/${Number(day)}`
@@ -81,30 +66,19 @@ function latestBodyCompositionLog(logs: FitnessLog[]) {
 
 type BodyCompositionChartProps = {
   logs: FitnessLog[]
-  referenceDate: string
 }
 
-export function BodyCompositionChart({
-  logs,
-  referenceDate,
-}: BodyCompositionChartProps) {
+export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
   const initialLog = latestBodyCompositionLog(logs)
-  const [period, setPeriod] = useState<ChartPeriod>("30D")
   const [selectedMetric, setSelectedMetric] =
     useState<BodyCompositionMetric>("weight")
   const [selectedDate, setSelectedDate] = useState<string | null>(
     initialLog?.date ?? null
   )
 
-  const filteredLogs = useMemo(
-    () => filterLogsByPeriod(logs, period, referenceDate),
-    [logs, period, referenceDate]
-  )
   const latestAxisDate = useMemo(
-    () =>
-      filteredLogs.findLast((log) => log[selectedMetric] !== null)?.date ??
-      null,
-    [filteredLogs, selectedMetric]
+    () => logs.findLast((log) => log[selectedMetric] !== null)?.date ?? null,
+    [logs, selectedMetric]
   )
   const selectedLog =
     logs.find((log) => log.date === selectedDate) ?? initialLog ?? null
@@ -137,18 +111,6 @@ export function BodyCompositionChart({
     BodyCompositionMetric,
     { value: number | null; difference: number | null }
   >
-
-  const handlePeriodChange = (values: string[]) => {
-    const nextPeriod = values.at(-1) as ChartPeriod | undefined
-    if (!nextPeriod) return
-
-    setPeriod(nextPeriod)
-    const nextLogs = filterLogsByPeriod(logs, nextPeriod, referenceDate)
-    const nextSelectedLog =
-      nextLogs.findLast((log) => log[selectedMetric] !== null) ??
-      latestBodyCompositionLog(nextLogs)
-    setSelectedDate(nextSelectedLog?.date ?? null)
-  }
 
   const selectedValue = summaries[selectedMetric].value
 
@@ -242,9 +204,9 @@ export function BodyCompositionChart({
           )}
         </div>
 
-        {filteredLogs.length === 0 ? (
+        {latestAxisDate === null ? (
           <div className="flex min-h-64 items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 text-center sm:min-h-80">
-            <p className="font-medium">この期間のデータはありません</p>
+            <p className="font-medium">この指標のデータはありません</p>
           </div>
         ) : (
           <ChartContainer
@@ -253,7 +215,7 @@ export function BodyCompositionChart({
           >
             <LineChart
               accessibilityLayer
-              data={filteredLogs}
+              data={logs}
               margin={{ top: 16, right: 12, bottom: 8, left: 4 }}
               onClick={({ activeLabel }) => {
                 if (typeof activeLabel === "string") {
@@ -281,21 +243,8 @@ export function BodyCompositionChart({
               />
               <ChartTooltip
                 trigger="click"
-                cursor={{ strokeDasharray: "3 3" }}
-                content={
-                  <ChartTooltipContent
-                    hideIndicator
-                    labelFormatter={(label) =>
-                      typeof label === "string" ? formatDate(label) : label
-                    }
-                    formatter={(value) => (
-                      <span className="font-mono font-medium tabular-nums text-foreground">
-                        {typeof value === "number" ? value.toFixed(1) : value}{" "}
-                        {selectedOption.unit}
-                      </span>
-                    )}
-                  />
-                }
+                cursor={false}
+                content={() => null}
               />
               <Line
                 dataKey={selectedMetric}
@@ -315,31 +264,6 @@ export function BodyCompositionChart({
             </LineChart>
           </ChartContainer>
         )}
-
-        <div className="space-y-2 px-2 sm:px-0">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            表示期間
-          </p>
-          <ToggleGroup
-            aria-label="グラフの表示期間"
-            value={[period]}
-            onValueChange={handlePeriodChange}
-            variant="outline"
-            spacing={0}
-            className="grid w-full grid-cols-4 sm:w-fit"
-          >
-            {periodOptions.map((option) => (
-              <ToggleGroupItem
-                key={option}
-                value={option}
-                aria-label={periodLabels[option]}
-                className="h-11 min-w-0 px-2 sm:h-9 sm:min-w-20"
-              >
-                {periodLabels[option]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
       </div>
     </div>
   )

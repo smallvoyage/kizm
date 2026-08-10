@@ -9,10 +9,6 @@ import { type FitnessLog, getLatestNutritionLog } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
 export default async function Home() {
   await connection()
 
@@ -64,7 +60,7 @@ export default async function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-2 sm:px-(--card-spacing)">
-                  <BodyCompositionChart logs={logs} referenceDate={today()} />
+                  <BodyCompositionChart logs={logs} />
                 </CardContent>
               </Card>
             </section>
