@@ -132,15 +132,11 @@ NOTION_TOKEN=secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 NOTION_DAYS_DATA_SOURCE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 NOTION_MEALS_DATA_SOURCE_ID=
 NOTION_WORKOUTS_DATA_SOURCE_ID=
-NUTRITION_GOAL_CALORIES=2000
-NUTRITION_GOAL_PROTEIN_G=150
-NUTRITION_GOAL_FAT_G=60
-NUTRITION_GOAL_CARBS_G=250
 ```
 
 `.env.local` は `.gitignore` 対象です。クライアントに公開される `NEXT_PUBLIC_` 接頭辞は使用しません。
 
-MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。`NUTRITION_GOAL_*` は1日の摂取目標で、省略した場合は上記の値を使用します。自身の目標に合わせて変更してください。
+MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。1日の摂取目標は `lib/nutrition-goals.ts` で設定します。
 
 ## ローカル開発
 
