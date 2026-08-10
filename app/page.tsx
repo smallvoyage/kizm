@@ -1,15 +1,24 @@
-import { Activity, Database, TriangleAlert } from "lucide-react"
+import { Activity, CalendarDays, Database, TriangleAlert } from "lucide-react"
 import { connection } from "next/server"
 
 import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { MetricCard } from "@/components/metric-card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { type FitnessLog, getMetricSummary } from "@/lib/fitness"
+import { type FitnessLog, getBodyCompositionSummary } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+function formatDate(date: string): string {
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`))
 }
 
 export default async function Home() {
@@ -26,6 +35,8 @@ export default async function Home() {
         ? error.userMessage
         : "フィットネスデータを読み込めませんでした。"
   }
+
+  const bodyComposition = getBodyCompositionSummary(logs)
 
   return (
     <main className="min-h-screen bg-muted/30">
@@ -53,28 +64,38 @@ export default async function Home() {
         ) : (
           <div className="space-y-6 sm:space-y-8">
             <section aria-labelledby="current-metrics-heading">
-              <h2
-                id="current-metrics-heading"
-                className="mb-3 text-base font-semibold tracking-tight sm:mb-4 sm:text-lg"
-              >
-                現在の測定値
-              </h2>
+              <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
+                <h2
+                  id="current-metrics-heading"
+                  className="text-base font-semibold tracking-tight sm:text-lg"
+                >
+                  現在の測定値
+                </h2>
+                {bodyComposition.date && (
+                  <p className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
+                    <CalendarDays className="size-3.5" aria-hidden="true" />
+                    <time dateTime={bodyComposition.date}>
+                      {formatDate(bodyComposition.date)}
+                    </time>
+                  </p>
+                )}
+              </div>
               <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <MetricCard
                   title="体重"
-                  summary={getMetricSummary(logs, "weight")}
+                  summary={bodyComposition.metrics.weight}
                   unit="kg"
                   differenceUnit="kg"
                 />
                 <MetricCard
                   title="体脂肪率"
-                  summary={getMetricSummary(logs, "bodyFat")}
+                  summary={bodyComposition.metrics.bodyFat}
                   unit="%"
                   differenceUnit="pt"
                 />
                 <MetricCard
                   title="筋肉量"
-                  summary={getMetricSummary(logs, "muscleMass")}
+                  summary={bodyComposition.metrics.muscleMass}
                   unit="kg"
                   differenceUnit="kg"
                 />

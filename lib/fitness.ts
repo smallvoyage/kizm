@@ -16,7 +16,11 @@ export type ChartPeriod = "7D" | "30D" | "90D" | "ALL"
 export type MetricSummary = {
   value: number | null
   difference: number | null
+}
+
+export type BodyCompositionSummary = {
   date: string | null
+  metrics: Record<BodyCompositionMetric, MetricSummary>
 }
 
 const PERIOD_DAYS: Record<Exclude<ChartPeriod, "ALL">, number> = {
@@ -33,25 +37,35 @@ function toUtcDay(date: string): number | null {
   return Date.UTC(Number(year), Number(month) - 1, Number(day))
 }
 
-export function getMetricSummary(
-  logs: FitnessLog[],
-  metric: BodyCompositionMetric
-): MetricSummary {
-  const validLogs = logs.filter((log) => log[metric] !== null)
-  const latest = validLogs.at(-1)
-  const previous = validLogs.at(-2)
-
-  if (!latest || latest[metric] === null) {
-    return { value: null, difference: null, date: null }
-  }
+export function getBodyCompositionSummary(
+  logs: FitnessLog[]
+): BodyCompositionSummary {
+  const metrics: BodyCompositionMetric[] = ["weight", "bodyFat", "muscleMass"]
+  const bodyCompositionLogs = logs.filter((log) =>
+    metrics.some((metric) => log[metric] !== null)
+  )
+  const latest = bodyCompositionLogs.at(-1)
+  const previous = bodyCompositionLogs.at(-2)
 
   return {
-    value: latest[metric],
-    difference:
-      previous && previous[metric] !== null
-        ? latest[metric] - previous[metric]
-        : null,
-    date: latest.date,
+    date: latest?.date ?? null,
+    metrics: Object.fromEntries(
+      metrics.map((metric) => {
+        const value = latest?.[metric] ?? null
+        const previousValue = previous?.[metric] ?? null
+
+        return [
+          metric,
+          {
+            value,
+            difference:
+              value !== null && previousValue !== null
+                ? value - previousValue
+                : null,
+          },
+        ]
+      })
+    ) as Record<BodyCompositionMetric, MetricSummary>,
   }
 }
 
