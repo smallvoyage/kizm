@@ -89,8 +89,8 @@ export function BodyCompositionChart({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4 px-2 sm:px-0 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             期間
@@ -101,12 +101,14 @@ export function BodyCompositionChart({
             onValueChange={handlePeriodChange}
             variant="outline"
             spacing={0}
+            className="grid w-full grid-cols-4 sm:w-fit"
           >
             {periodOptions.map((option) => (
               <ToggleGroupItem
                 key={option}
                 value={option}
                 aria-label={periodLabels[option]}
+                className="min-w-0 px-2"
               >
                 {periodLabels[option]}
               </ToggleGroupItem>
@@ -125,7 +127,7 @@ export function BodyCompositionChart({
             variant="outline"
             spacing={0}
             multiple
-            className="max-w-full overflow-x-auto"
+            className="grid w-full grid-cols-3 sm:w-fit"
           >
             {metricOptions.map((option) => (
               <ToggleGroupItem
@@ -136,6 +138,7 @@ export function BodyCompositionChart({
                   visibleMetrics.length === 1 &&
                   visibleMetrics.includes(option.value)
                 }
+                className="min-w-0 px-2"
               >
                 <span
                   className="size-2 rounded-full"
@@ -150,18 +153,18 @@ export function BodyCompositionChart({
       </div>
 
       {filteredLogs.length === 0 ? (
-        <div className="flex min-h-80 items-center justify-center rounded-lg border border-dashed bg-muted/20 px-6 text-center">
+        <div className="flex min-h-64 items-center justify-center rounded-lg border border-dashed bg-muted/20 px-6 text-center sm:min-h-80">
           <p className="font-medium">この期間のデータはありません</p>
         </div>
       ) : (
         <ChartContainer
           config={chartConfig}
-          className="h-[360px] w-full sm:h-[440px]"
+          className="h-[300px] w-full sm:h-[440px]"
         >
           <LineChart
             accessibilityLayer
             data={filteredLogs}
-            margin={{ top: 8, right: 4, bottom: 8, left: 4 }}
+            margin={{ top: 8, right: 0, bottom: 8, left: 0 }}
           >
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
