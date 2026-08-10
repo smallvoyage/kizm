@@ -39,11 +39,11 @@ export function MetricCard({
         : TrendingDown
 
   return (
-    <Card className="gap-5 shadow-sm">
+    <Card className="gap-3 shadow-sm sm:gap-5">
       <CardHeader>
         <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 sm:space-y-3">
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
             {summary.value === null ? "—" : summary.value.toFixed(1)}
@@ -55,7 +55,7 @@ export function MetricCard({
           )}
         </div>
 
-        <div className="flex min-h-5 items-center justify-between gap-3 text-xs text-muted-foreground">
+        <div className="flex min-h-5 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span
             className={cn(
               "inline-flex items-center gap-1 font-medium tabular-nums",
