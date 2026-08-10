@@ -132,6 +132,11 @@ export function NutritionChart({
               unit=" kcal"
             />
             <ChartTooltip
+              itemSorter={(item) =>
+                ["calories", "protein", "fat", "carbs"].indexOf(
+                  String(item.dataKey)
+                )
+              }
               content={
                 <ChartTooltipContent
                   labelFormatter={formatTooltipDate}
