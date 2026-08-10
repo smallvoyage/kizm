@@ -13,7 +13,8 @@ const PROPERTY_NAMES = {
   date: "Log Date",
   steps: "Steps",
   calories: "Total Calories",
-  protein: "Total Protein",
+  protein: "Total Protein g",
+  legacyProtein: "Total Protein",
   fat: "Total Fat g",
   carbs: "Total Carbs g",
   weight: "Weight kg",
@@ -21,13 +22,8 @@ const PROPERTY_NAMES = {
   muscleMass: "Muscle Mass kg",
 } as const
 
-const EXPECTED_PROPERTY_TYPES = {
+const REQUIRED_PROPERTY_TYPES = {
   [PROPERTY_NAMES.date]: "date",
-  [PROPERTY_NAMES.steps]: "number",
-  [PROPERTY_NAMES.calories]: "number",
-  [PROPERTY_NAMES.protein]: "number",
-  [PROPERTY_NAMES.fat]: "number",
-  [PROPERTY_NAMES.carbs]: "number",
   [PROPERTY_NAMES.weight]: "number",
   [PROPERTY_NAMES.bodyFat]: "number",
   [PROPERTY_NAMES.muscleMass]: "number",
@@ -52,9 +48,23 @@ function getRequiredEnvironmentVariable(name: string): string {
   return value
 }
 
-function getNumber(properties: PageObjectResponse["properties"], name: string) {
-  const property: PageProperty | undefined = properties[name]
-  return property?.type === "number" ? property.number : null
+function getNumber(
+  properties: PageObjectResponse["properties"],
+  ...names: string[]
+) {
+  for (const name of names) {
+    const property: PageProperty | undefined = properties[name]
+
+    if (property?.type === "number") {
+      return property.number
+    }
+
+    if (property?.type === "rollup" && property.rollup.type === "number") {
+      return property.rollup.number
+    }
+  }
+
+  return null
 }
 
 function getDate(properties: PageObjectResponse["properties"], name: string) {
@@ -63,7 +73,7 @@ function getDate(properties: PageObjectResponse["properties"], name: string) {
 }
 
 function validateProperties(properties: Record<string, { type: string }>) {
-  const missing = Object.keys(EXPECTED_PROPERTY_TYPES).filter(
+  const missing = Object.keys(REQUIRED_PROPERTY_TYPES).filter(
     (name) => !(name in properties)
   )
   if (missing.length > 0) {
@@ -72,7 +82,7 @@ function validateProperties(properties: Record<string, { type: string }>) {
     )
   }
 
-  const invalid = Object.entries(EXPECTED_PROPERTY_TYPES)
+  const invalid = Object.entries(REQUIRED_PROPERTY_TYPES)
     .filter(([name, expectedType]) => properties[name]?.type !== expectedType)
     .map(([name, expectedType]) => `${name} (${expectedType})`)
   if (invalid.length > 0) {
@@ -91,7 +101,11 @@ function toFitnessLog(page: PageObjectResponse): FitnessLog | null {
     date,
     steps: getNumber(properties, PROPERTY_NAMES.steps),
     calories: getNumber(properties, PROPERTY_NAMES.calories),
-    protein: getNumber(properties, PROPERTY_NAMES.protein),
+    protein: getNumber(
+      properties,
+      PROPERTY_NAMES.protein,
+      PROPERTY_NAMES.legacyProtein
+    ),
     fat: getNumber(properties, PROPERTY_NAMES.fat),
     carbs: getNumber(properties, PROPERTY_NAMES.carbs),
     weight: getNumber(properties, PROPERTY_NAMES.weight),

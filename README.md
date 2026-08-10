@@ -88,15 +88,15 @@ pnpm install
 | --- | --- |
 | Log Date | Date |
 | Steps | Number |
-| Total Calories | Number |
-| Total Protein | Number |
-| Total Fat g | Number |
-| Total Carbs g | Number |
+| Total Calories | Rollup（Number） |
+| Total Protein g | Rollup（Number） |
+| Total Fat g | Rollup（Number） |
+| Total Carbs g | Rollup（Number） |
 | Weight kg | Number |
 | Body Fat % | Number |
 | Muscle Mass kg | Number |
 
-NotionのData Sourceには通常Titleプロパティも存在しますが、このアプリでは参照しません。Body Composition以外のNumberプロパティは将来の拡張用で、今回の画面には表示されません。
+NotionのData Sourceには通常Titleプロパティも存在しますが、このアプリでは参照しません。MVPの必須プロパティは `Log Date`、`Weight kg`、`Body Fat %`、`Muscle Mass kg` です。Stepsと栄養集計は未作成・未入力でも `null` として扱い、今回の画面には表示しません。栄養集計はMealsとのRelationを使った数値Rollupとして読み取れます。
 
 ### 4. Integrationを接続する
 
