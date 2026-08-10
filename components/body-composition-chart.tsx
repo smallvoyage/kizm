@@ -100,6 +100,12 @@ export function BodyCompositionChart({
     () => filterLogsByPeriod(logs, period, referenceDate),
     [logs, period, referenceDate]
   )
+  const latestAxisDate = useMemo(
+    () =>
+      filteredLogs.findLast((log) => log[selectedMetric] !== null)?.date ??
+      null,
+    [filteredLogs, selectedMetric]
+  )
   const selectedLog =
     logs.find((log) => log.date === selectedDate) ?? initialLog ?? null
   const selectedOption =
@@ -261,7 +267,8 @@ export function BodyCompositionChart({
                 axisLine={false}
                 tickLine={false}
                 tickMargin={12}
-                minTickGap={28}
+                ticks={latestAxisDate ? [latestAxisDate] : []}
+                interval={0}
                 tickFormatter={formatAxisDate}
               />
               <YAxis
