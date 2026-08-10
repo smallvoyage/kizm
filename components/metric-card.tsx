@@ -25,6 +25,14 @@ function formatDate(date: string): string {
   }).format(new Date(`${date}T00:00:00Z`))
 }
 
+function formatCompactDate(date: string): string {
+  return new Intl.DateTimeFormat("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`))
+}
+
 export function MetricCard({
   title,
   summary,
@@ -57,7 +65,7 @@ export function MetricCard({
           )}
         </div>
 
-        <div className="flex min-h-5 items-center justify-between gap-1 text-[10px] text-muted-foreground sm:gap-3 sm:text-xs">
+        <div className="flex min-h-5 flex-col items-start gap-1 text-[10px] text-muted-foreground sm:text-xs lg:flex-row lg:items-center lg:justify-between lg:gap-3">
           <span
             className={cn(
               "inline-flex min-w-0 items-center gap-0.5 font-medium tabular-nums sm:gap-1",
@@ -73,9 +81,17 @@ export function MetricCard({
               : `${formatDifference(summary.difference)} ${differenceUnit}`}
           </span>
           {summary.date && (
-            <span className="hidden items-center gap-1 whitespace-nowrap lg:inline-flex">
-              <CalendarDays className="size-3.5" aria-hidden="true" />
-              {formatDate(summary.date)}
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap sm:gap-1">
+              <CalendarDays
+                className="size-3 shrink-0 sm:size-3.5"
+                aria-hidden="true"
+              />
+              <span className="sm:hidden">
+                {formatCompactDate(summary.date)}
+              </span>
+              <span className="hidden sm:inline">
+                {formatDate(summary.date)}
+              </span>
             </span>
           )}
         </div>
