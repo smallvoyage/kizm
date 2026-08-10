@@ -69,7 +69,7 @@ export default async function Home() {
                   id="current-metrics-heading"
                   className="text-base font-semibold tracking-tight sm:text-lg"
                 >
-                  現在の測定値
+                  最新の測定値
                 </h2>
                 {bodyComposition.date && (
                   <p className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
