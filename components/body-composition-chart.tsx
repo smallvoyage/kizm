@@ -146,20 +146,12 @@ export function BodyCompositionChart({
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <p className="text-xs text-muted-foreground">
-            指標は1つ以上選択してください。
-          </p>
         </div>
       </div>
 
       {filteredLogs.length === 0 ? (
         <div className="flex min-h-80 items-center justify-center rounded-lg border border-dashed bg-muted/20 px-6 text-center">
-          <div>
-            <p className="font-medium">この期間のデータはありません</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              以前の記録を見るには、より長い期間を選択してください。
-            </p>
-          </div>
+          <p className="font-medium">この期間のデータはありません</p>
         </div>
       ) : (
         <ChartContainer

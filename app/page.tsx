@@ -4,13 +4,7 @@ import { connection } from "next/server"
 import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { MetricCard } from "@/components/metric-card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type FitnessLog, getMetricSummary } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 
@@ -40,14 +34,9 @@ export default async function Home() {
           <div className="flex size-10 items-center justify-center rounded-xl bg-foreground text-background shadow-sm">
             <Activity className="size-5" aria-hidden="true" />
           </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              フィットネス分析
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              身体組成の変化をひと目で確認
-            </p>
-          </div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            フィットネス分析
+          </h1>
         </header>
 
         {errorMessage ? (
@@ -60,24 +49,16 @@ export default async function Home() {
           <Alert className="bg-background p-4">
             <Database aria-hidden="true" />
             <AlertTitle>フィットネス記録がまだありません</AlertTitle>
-            <AlertDescription>
-              NotionのDaysデータソースに記録を追加すると、ここに身体組成が表示されます。
-            </AlertDescription>
           </Alert>
         ) : (
           <div className="space-y-8">
             <section aria-labelledby="current-metrics-heading">
-              <div className="mb-4">
-                <h2
-                  id="current-metrics-heading"
-                  className="text-lg font-semibold tracking-tight"
-                >
-                  現在の測定値
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  最新の有効値と、その直前の有効な記録からの変化
-                </p>
-              </div>
+              <h2
+                id="current-metrics-heading"
+                className="mb-4 text-lg font-semibold tracking-tight"
+              >
+                現在の測定値
+              </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <MetricCard
                   title="体重"
@@ -106,9 +87,6 @@ export default async function Home() {
                   <CardTitle id="body-composition-heading" className="text-lg">
                     身体組成
                   </CardTitle>
-                  <CardDescription>
-                    体重と筋肉量は左軸、体脂肪率は右軸で表示します。
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <BodyCompositionChart logs={logs} referenceDate={today()} />

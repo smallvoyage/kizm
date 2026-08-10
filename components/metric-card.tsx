@@ -1,12 +1,6 @@
 import { CalendarDays, Minus, TrendingDown, TrendingUp } from "lucide-react"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { MetricSummary } from "@/lib/fitness"
 import { cn } from "@/lib/utils"
 
@@ -48,9 +42,6 @@ export function MetricCard({
     <Card className="gap-5 shadow-sm">
       <CardHeader>
         <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
-        <CardDescription className="sr-only">
-          最新の{title}の記録
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-baseline gap-2">
