@@ -1,6 +1,6 @@
 "use client"
 
-import { type ReactNode, useMemo, useState } from "react"
+import { type ComponentProps, type ReactNode, useMemo, useState } from "react"
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
 
 import {
@@ -33,6 +33,8 @@ const periodLabels: Record<ChartPeriod, string> = {
   ALL: "全期間",
 }
 
+const tooltipOrder = ["calories", "protein", "fat", "carbs"]
+
 function formatAxisDate(date: string) {
   const [, month, day] = date.split("-")
   return `${Number(month)}/${Number(day)}`
@@ -47,6 +49,40 @@ function formatTooltipDate(date: ReactNode) {
     day: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`))
+}
+
+function NutritionTooltipContent(
+  props: ComponentProps<typeof ChartTooltipContent>
+) {
+  const payload = props.payload?.toSorted(
+    (a, b) =>
+      tooltipOrder.indexOf(String(a.dataKey)) -
+      tooltipOrder.indexOf(String(b.dataKey))
+  )
+
+  return (
+    <ChartTooltipContent
+      {...props}
+      payload={payload}
+      labelFormatter={formatTooltipDate}
+      formatter={(value, name, item) => (
+        <div className="flex flex-1 items-center justify-between gap-6">
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <span
+              className="h-3 w-1 rounded-full"
+              style={{ backgroundColor: item.color }}
+              aria-hidden="true"
+            />
+            {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
+          </span>
+          <span className="font-mono font-medium tabular-nums text-foreground">
+            {typeof value === "number" ? value.toFixed(1) : value}
+            {name === "calories" ? " kcal" : " g"}
+          </span>
+        </div>
+      )}
+    />
+  )
 }
 
 export function NutritionChart({
@@ -131,35 +167,7 @@ export function NutritionChart({
               width={46}
               unit=" kcal"
             />
-            <ChartTooltip
-              itemSorter={(item) =>
-                ["calories", "protein", "fat", "carbs"].indexOf(
-                  String(item.dataKey)
-                )
-              }
-              content={
-                <ChartTooltipContent
-                  labelFormatter={formatTooltipDate}
-                  formatter={(value, name, item) => (
-                    <div className="flex flex-1 items-center justify-between gap-6">
-                      <span className="flex items-center gap-2 text-muted-foreground">
-                        <span
-                          className="h-3 w-1 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                          aria-hidden="true"
-                        />
-                        {chartConfig[name as keyof typeof chartConfig]?.label ??
-                          name}
-                      </span>
-                      <span className="font-mono font-medium tabular-nums text-foreground">
-                        {typeof value === "number" ? value.toFixed(1) : value}
-                        {name === "calories" ? " kcal" : " g"}
-                      </span>
-                    </div>
-                  )}
-                />
-              }
-            />
+            <ChartTooltip content={<NutritionTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
             <Bar
               yAxisId="grams"
