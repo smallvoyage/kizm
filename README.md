@@ -2,7 +2,7 @@
 
 A personal fitness analytics dashboard for visualizing body composition, nutrition, activity, and workout progress from Notion data.
 
-Notionをデータ入力・保存先として使い、日々のフィットネスデータを見やすく可視化する個人用Webアプリです。現在のMVPはBody Composition（体重・体脂肪率・筋肉量）に対応しています。
+Notionをデータ入力・保存先として使い、日々のフィットネスデータを見やすく可視化する個人用Webアプリです。身体組成（体重・体脂肪率・筋肉量）と食事状況（カロリー・三大栄養素）に対応しています。
 
 ## 技術構成
 
@@ -24,6 +24,8 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 - 7日・30日・90日・全期間のフィルター（初期値は30日）
 - 欠損値、空データ、対象期間の空データ、設定不備、Notion APIエラーの表示
 - PC・スマートフォンに対応したレスポンシブUI
+- 最新の摂取カロリー・たんぱく質・脂質・炭水化物
+- 摂取カロリーと三大栄養素の7日・30日・90日・全期間チャート
 
 ## アーキテクチャ
 
@@ -31,6 +33,8 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 app/page.tsx                         Server Component / データ取得とページ構成
 components/body-composition-chart.tsx Client Component / フィルターとチャート操作
 components/metric-card.tsx           Current Metricsの表示
+components/nutrition-summary.tsx      最新の食事状況
+components/nutrition-chart.tsx        栄養バランスの期間別チャート
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理

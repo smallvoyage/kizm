@@ -3,9 +3,15 @@ import { connection } from "next/server"
 
 import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { MetricCard } from "@/components/metric-card"
+import { NutritionChart } from "@/components/nutrition-chart"
+import { NutritionSummary } from "@/components/nutrition-summary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { type FitnessLog, getMetricSummary } from "@/lib/fitness"
+import {
+  type FitnessLog,
+  getLatestNutritionLog,
+  getMetricSummary,
+} from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 
 function today(): string {
@@ -90,6 +96,24 @@ export default async function Home() {
                 </CardHeader>
                 <CardContent>
                   <BodyCompositionChart logs={logs} referenceDate={today()} />
+                </CardContent>
+              </Card>
+            </section>
+
+            <section aria-labelledby="nutrition-heading" className="space-y-4">
+              <h2
+                id="nutrition-heading"
+                className="text-lg font-semibold tracking-tight"
+              >
+                食事状況
+              </h2>
+              <NutritionSummary log={getLatestNutritionLog(logs)} />
+              <Card className="gap-6 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg">栄養バランスの推移</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <NutritionChart logs={logs} referenceDate={today()} />
                 </CardContent>
               </Card>
             </section>
