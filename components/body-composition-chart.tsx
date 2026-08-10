@@ -1,23 +1,16 @@
 "use client"
 
-import { type ReactNode, useMemo, useState } from "react"
+import { Minus, TrendingDown, TrendingUp } from "lucide-react"
+import { useMemo, useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import {
   type ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import {
-  type BodyCompositionMetric,
-  type ChartPeriod,
-  type FitnessLog,
-  filterLogsByPeriod,
-} from "@/lib/fitness"
+import type { BodyCompositionMetric, FitnessLog } from "@/lib/fitness"
+import { cn } from "@/lib/utils"
 
 const chartConfig = {
   weight: { label: "体重", color: "var(--chart-1)" },
@@ -28,28 +21,30 @@ const chartConfig = {
 const metricOptions: Array<{
   value: BodyCompositionMetric
   label: string
+  unit: "kg" | "%"
+  differenceUnit: "kg" | "pt"
 }> = [
-  { value: "weight", label: "体重" },
-  { value: "bodyFat", label: "体脂肪率" },
-  { value: "muscleMass", label: "筋肉量" },
+  { value: "weight", label: "体重", unit: "kg", differenceUnit: "kg" },
+  {
+    value: "bodyFat",
+    label: "体脂肪率",
+    unit: "%",
+    differenceUnit: "pt",
+  },
+  {
+    value: "muscleMass",
+    label: "筋肉量",
+    unit: "kg",
+    differenceUnit: "kg",
+  },
 ]
-
-const periodOptions: ChartPeriod[] = ["7D", "30D", "90D", "ALL"]
-const periodLabels: Record<ChartPeriod, string> = {
-  "7D": "7日",
-  "30D": "30日",
-  "90D": "90日",
-  ALL: "全期間",
-}
 
 function formatAxisDate(date: string) {
   const [, month, day] = date.split("-")
   return `${Number(month)}/${Number(day)}`
 }
 
-function formatTooltipDate(date: ReactNode) {
-  if (typeof date !== "string") return date
-
+function formatDate(date: string) {
   return new Intl.DateTimeFormat("ja-JP", {
     year: "numeric",
     month: "short",
@@ -58,207 +53,224 @@ function formatTooltipDate(date: ReactNode) {
   }).format(new Date(`${date}T00:00:00Z`))
 }
 
-type BodyCompositionChartProps = {
-  logs: FitnessLog[]
-  referenceDate: string
+function formatDifference(value: number): string {
+  if (value === 0) return "±0.0"
+  return `${value > 0 ? "+" : ""}${value.toFixed(1)}`
 }
 
-export function BodyCompositionChart({
-  logs,
-  referenceDate,
-}: BodyCompositionChartProps) {
-  const [period, setPeriod] = useState<ChartPeriod>("30D")
-  const [visibleMetrics, setVisibleMetrics] = useState<BodyCompositionMetric[]>(
-    ["weight", "bodyFat", "muscleMass"]
+function latestBodyCompositionLog(logs: FitnessLog[]) {
+  return logs.findLast((log) =>
+    metricOptions.some((metric) => log[metric.value] !== null)
+  )
+}
+
+type BodyCompositionChartProps = {
+  logs: FitnessLog[]
+}
+
+export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
+  const initialLog = latestBodyCompositionLog(logs)
+  const [selectedMetric, setSelectedMetric] =
+    useState<BodyCompositionMetric>("weight")
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    initialLog?.date ?? null
   )
 
-  const filteredLogs = useMemo(
-    () => filterLogsByPeriod(logs, period, referenceDate),
-    [logs, period, referenceDate]
+  const latestAxisDate = useMemo(
+    () => logs.findLast((log) => log[selectedMetric] !== null)?.date ?? null,
+    [logs, selectedMetric]
   )
+  const selectedLog =
+    logs.find((log) => log.date === selectedDate) ?? initialLog ?? null
+  const selectedOption =
+    metricOptions.find((option) => option.value === selectedMetric) ??
+    metricOptions[0]
 
-  const handlePeriodChange = (values: string[]) => {
-    const nextPeriod = values.at(-1) as ChartPeriod | undefined
-    if (nextPeriod) setPeriod(nextPeriod)
-  }
+  const summaries = Object.fromEntries(
+    metricOptions.map((metric) => {
+      const selectedIndex = selectedLog
+        ? logs.findIndex((log) => log.date === selectedLog.date)
+        : -1
+      const previousValue = logs
+        .slice(0, selectedIndex)
+        .findLast((log) => log[metric.value] !== null)?.[metric.value]
+      const value = selectedLog?.[metric.value] ?? null
 
-  const handleMetricsChange = (values: string[]) => {
-    if (values.length > 0) {
-      setVisibleMetrics(values as BodyCompositionMetric[])
-    }
-  }
+      return [
+        metric.value,
+        {
+          value,
+          difference:
+            value !== null && previousValue != null
+              ? value - previousValue
+              : null,
+        },
+      ]
+    })
+  ) as Record<
+    BodyCompositionMetric,
+    { value: number | null; difference: number | null }
+  >
+
+  const selectedValue = summaries[selectedMetric].value
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-4 px-2 sm:px-0 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            期間
-          </p>
-          <ToggleGroup
-            aria-label="グラフの表示期間"
-            value={[period]}
-            onValueChange={handlePeriodChange}
-            variant="outline"
-            spacing={0}
-            className="grid w-full grid-cols-4 sm:w-fit"
-          >
-            {periodOptions.map((option) => (
-              <ToggleGroupItem
-                key={option}
-                value={option}
-                aria-label={periodLabels[option]}
-                className="h-11 min-w-0 px-2 sm:h-8"
-              >
-                {periodLabels[option]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
+    <div className="space-y-5 sm:space-y-7">
+      <fieldset className="grid grid-cols-3 gap-2 sm:gap-4">
+        <legend className="sr-only">表示する身体組成の指標</legend>
+        {metricOptions.map((metric) => {
+          const summary = summaries[metric.value]
+          const isSelected = selectedMetric === metric.value
+          const DifferenceIcon =
+            summary.difference === null || summary.difference === 0
+              ? Minus
+              : summary.difference > 0
+                ? TrendingUp
+                : TrendingDown
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            指標
-          </p>
-          <ToggleGroup
-            aria-label="表示する指標"
-            value={visibleMetrics}
-            onValueChange={handleMetricsChange}
-            variant="outline"
-            spacing={0}
-            multiple
-            className="grid w-full grid-cols-3 sm:w-fit"
-          >
-            {metricOptions.map((option) => (
-              <ToggleGroupItem
-                key={option.value}
-                value={option.value}
-                aria-label={`${option.label}の表示を切り替え`}
-                disabled={
-                  visibleMetrics.length === 1 &&
-                  visibleMetrics.includes(option.value)
-                }
-                className="h-11 min-w-0 px-2 sm:h-8"
-              >
+          return (
+            <button
+              key={metric.value}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => setSelectedMetric(metric.value)}
+              className={cn(
+                "relative min-w-0 rounded-xl border bg-background px-2 py-3 text-left shadow-xs transition-[border-color,box-shadow,transform] outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:px-4 sm:py-4",
+                isSelected
+                  ? "border-foreground shadow-sm ring-2 ring-foreground"
+                  : "border-border hover:border-foreground/40"
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground sm:text-sm">
                 <span
-                  className="size-2 rounded-full"
-                  style={{ backgroundColor: chartConfig[option.value].color }}
+                  className="size-2 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: chartConfig[metric.value].color,
+                  }}
                   aria-hidden="true"
                 />
-                {option.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
-      </div>
-
-      {filteredLogs.length === 0 ? (
-        <div className="flex min-h-64 items-center justify-center rounded-lg border border-dashed bg-muted/20 px-6 text-center sm:min-h-80">
-          <p className="font-medium">この期間のデータはありません</p>
-        </div>
-      ) : (
-        <ChartContainer
-          config={chartConfig}
-          className="h-[300px] w-full sm:h-[440px]"
-        >
-          <LineChart
-            accessibilityLayer
-            data={filteredLogs}
-            margin={{ top: 8, right: 0, bottom: 8, left: 0 }}
-          >
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="date"
-              axisLine={false}
-              tickLine={false}
-              tickMargin={12}
-              minTickGap={28}
-              tickFormatter={formatAxisDate}
-            />
-            <YAxis
-              yAxisId="kg"
-              axisLine={false}
-              tickLine={false}
-              tickMargin={8}
-              width={38}
-              unit=" kg"
-              domain={["auto", "auto"]}
-            />
-            <YAxis
-              yAxisId="percent"
-              orientation="right"
-              axisLine={false}
-              tickLine={false}
-              tickMargin={8}
-              width={34}
-              unit="%"
-              domain={["auto", "auto"]}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  indicator="line"
-                  labelFormatter={formatTooltipDate}
-                  formatter={(value, name, item) => (
-                    <div className="flex flex-1 items-center justify-between gap-6">
-                      <span className="flex items-center gap-2 text-muted-foreground">
-                        <span
-                          className="h-3 w-1 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                          aria-hidden="true"
-                        />
-                        {chartConfig[name as keyof typeof chartConfig]?.label ??
-                          name}
-                      </span>
-                      <span className="font-mono font-medium tabular-nums text-foreground">
-                        {typeof value === "number" ? value.toFixed(1) : value}
-                        {name === "bodyFat" ? " %" : " kg"}
-                      </span>
-                    </div>
-                  )}
+                <span className="truncate">{metric.label}</span>
+                <span className="hidden font-normal min-[390px]:inline">
+                  ({metric.unit})
+                </span>
+              </span>
+              <span className="mt-1.5 flex items-baseline gap-1 sm:mt-2">
+                <span className="text-2xl leading-none font-semibold tracking-tight tabular-nums sm:text-3xl">
+                  {summary.value === null ? "—" : summary.value.toFixed(1)}
+                </span>
+                {summary.value !== null && (
+                  <span className="text-[10px] font-medium text-muted-foreground sm:text-xs">
+                    {metric.unit}
+                  </span>
+                )}
+              </span>
+              <span
+                className={cn(
+                  "mt-2 flex min-h-5 items-center gap-0.5 text-[10px] font-medium tabular-nums sm:text-xs",
+                  summary.difference === null && "text-muted-foreground"
+                )}
+              >
+                <DifferenceIcon
+                  className="size-3 shrink-0"
+                  aria-hidden="true"
                 />
-              }
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-            {visibleMetrics.includes("weight") && (
+                {summary.difference === null
+                  ? "比較なし"
+                  : `${formatDifference(summary.difference)} ${metric.differenceUnit}`}
+              </span>
+            </button>
+          )
+        })}
+      </fieldset>
+
+      <div className="space-y-3">
+        <div className="flex min-h-10 items-end justify-between gap-4 px-2 sm:px-0">
+          <div>
+            <p className="text-xs text-muted-foreground">選択中の測定日</p>
+            <p className="mt-0.5 font-medium">
+              {selectedLog ? formatDate(selectedLog.date) : "記録なし"}
+            </p>
+          </div>
+          {selectedValue !== null && (
+            <p
+              className="text-right text-sm font-semibold tabular-nums sm:text-base"
+              aria-live="polite"
+            >
+              {selectedOption.label} {selectedValue.toFixed(1)}
+              <span className="ml-1 text-xs font-medium text-muted-foreground">
+                {selectedOption.unit}
+              </span>
+            </p>
+          )}
+        </div>
+
+        {latestAxisDate === null ? (
+          <div className="flex min-h-64 items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 text-center sm:min-h-80">
+            <p className="font-medium">この指標のデータはありません</p>
+          </div>
+        ) : (
+          <ChartContainer
+            config={chartConfig}
+            className="h-[270px] w-full sm:h-[400px] [&_.recharts-responsive-container]:flex-1"
+          >
+            <LineChart
+              accessibilityLayer
+              data={logs}
+              margin={{ top: 16, right: 12, bottom: 8, left: 4 }}
+              onClick={({ activeLabel }) => {
+                if (typeof activeLabel === "string") {
+                  setSelectedDate(activeLabel)
+                }
+              }}
+            >
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                tickMargin={12}
+                ticks={latestAxisDate ? [latestAxisDate] : []}
+                interval={0}
+                tickFormatter={formatAxisDate}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tickMargin={8}
+                width={42}
+                domain={["auto", "auto"]}
+                tickFormatter={(value: number) => value.toFixed(1)}
+              />
+              <ChartTooltip
+                trigger="click"
+                cursor={false}
+                content={() => null}
+              />
               <Line
-                yAxisId="kg"
-                dataKey="weight"
+                dataKey={selectedMetric}
+                name={selectedOption.label}
                 type="monotone"
-                stroke="var(--color-weight)"
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 4 }}
+                stroke="var(--muted-foreground)"
+                strokeWidth={2}
+                strokeOpacity={0.45}
+                dot={{
+                  r: 4,
+                  fill: `var(--color-${selectedMetric})`,
+                  stroke: "var(--background)",
+                  strokeWidth: 2,
+                }}
+                activeDot={{
+                  r: 6,
+                  fill: `var(--color-${selectedMetric})`,
+                  stroke: "var(--background)",
+                  strokeWidth: 3,
+                }}
                 connectNulls={false}
               />
-            )}
-            {visibleMetrics.includes("bodyFat") && (
-              <Line
-                yAxisId="percent"
-                dataKey="bodyFat"
-                type="monotone"
-                stroke="var(--color-bodyFat)"
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 4 }}
-                connectNulls={false}
-              />
-            )}
-            {visibleMetrics.includes("muscleMass") && (
-              <Line
-                yAxisId="kg"
-                dataKey="muscleMass"
-                type="monotone"
-                stroke="var(--color-muscleMass)"
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 4 }}
-                connectNulls={false}
-              />
-            )}
-          </LineChart>
-        </ChartContainer>
-      )}
+            </LineChart>
+          </ChartContainer>
+        )}
+      </div>
     </div>
   )
 }
