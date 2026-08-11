@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>フィットネス分析</title>
+  <rect width="512" height="512" fill="#18181b" />
+  <path
+    d="M92 268h88l31-79 60 151 45-111 24 39h80"
+    fill="none"
+    stroke="#fafafa"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="36"
+  />
+</svg>
