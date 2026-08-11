@@ -18,6 +18,8 @@ const chartConfig = {
   muscleMass: { label: "筋肉量", color: "var(--chart-3)" },
 } satisfies ChartConfig
 
+const Y_AXIS_PADDING = 1
+
 const metricOptions: Array<{
   value: BodyCompositionMetric
   label: string
@@ -238,7 +240,10 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 tickLine={false}
                 tickMargin={8}
                 width={42}
-                domain={["auto", "auto"]}
+                domain={[
+                  (dataMin: number) => dataMin - Y_AXIS_PADDING,
+                  (dataMax: number) => dataMax + Y_AXIS_PADDING,
+                ]}
                 tickFormatter={(value: number) => value.toFixed(1)}
               />
               <ChartTooltip
