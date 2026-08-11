@@ -5,35 +5,30 @@ import type { NutritionGoals } from "@/lib/nutrition-goals"
 const metrics: Array<{
   key: NutritionMetric
   label: string
-  shortLabel: string
   unit: "kcal" | "g"
   color: string
 }> = [
   {
     key: "calories",
     label: "摂取カロリー",
-    shortLabel: "カロリー",
     unit: "kcal",
     color: "var(--chart-1)",
   },
   {
     key: "protein",
     label: "たんぱく質",
-    shortLabel: "P",
     unit: "g",
     color: "var(--chart-2)",
   },
   {
     key: "fat",
     label: "脂質",
-    shortLabel: "F",
     unit: "g",
     color: "var(--chart-3)",
   },
   {
     key: "carbs",
     label: "炭水化物",
-    shortLabel: "C",
     unit: "g",
     color: "var(--chart-4)",
   },
@@ -51,7 +46,7 @@ export function NutritionSummary({
   goals: NutritionGoals
 }) {
   return (
-    <div className="grid grid-cols-4 gap-1.5 min-[360px]:gap-2 sm:gap-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
       {metrics.map((metric) => {
         const value = log?.[metric.key] ?? null
         const goal = goals[metric.key]
@@ -63,20 +58,16 @@ export function NutritionSummary({
         return (
           <Card
             key={metric.key}
-            className="min-w-0 gap-2 shadow-sm [--card-spacing:--spacing(2)] sm:gap-4 sm:[--card-spacing:--spacing(4)]"
+            className="min-w-0 gap-3 shadow-sm [--card-spacing:--spacing(3)] sm:gap-4 sm:[--card-spacing:--spacing(4)]"
           >
-            <CardHeader className="items-center px-1 text-center sm:px-(--card-spacing)">
-              <CardTitle
-                aria-label={metric.label}
-                className="whitespace-nowrap text-[10px] text-muted-foreground sm:text-sm"
-              >
-                <span className="sm:hidden">{metric.shortLabel}</span>
-                <span className="hidden sm:inline">{metric.label}</span>
+            <CardHeader className="items-center text-center">
+              <CardTitle className="whitespace-nowrap text-sm text-muted-foreground">
+                {metric.label}
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col items-center gap-2 px-1 sm:gap-3 sm:px-(--card-spacing)">
+            <CardContent className="flex flex-col items-center gap-3">
               <div
-                className="relative size-12 shrink-0 sm:size-24"
+                className="relative size-20 shrink-0 min-[360px]:size-24 lg:size-28"
                 role="progressbar"
                 aria-label={`${metric.label}の目標達成率`}
                 aria-valuemin={0}
@@ -116,17 +107,17 @@ export function NutritionSummary({
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-                  <span className="text-[11px] font-semibold tracking-tight tabular-nums sm:text-2xl">
+                  <span className="text-xl font-semibold tracking-tight tabular-nums min-[360px]:text-2xl">
                     {value === null ? "—" : formatAmount(value)}
                   </span>
                   {value !== null && (
-                    <span className="mt-0.5 text-[7px] font-medium text-muted-foreground sm:mt-1 sm:text-xs">
+                    <span className="mt-1 text-xs font-medium text-muted-foreground">
                       {metric.unit}
                     </span>
                   )}
                 </div>
               </div>
-              <div className="space-y-1 text-center text-[9px] leading-tight sm:text-xs">
+              <div className="space-y-1 text-center text-xs leading-tight">
                 <p className="font-medium">
                   {remaining === null
                     ? "記録なし"
