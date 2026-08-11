@@ -266,7 +266,7 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                   stroke: "var(--background)",
                   strokeWidth: 3,
                 }}
-                connectNulls={false}
+                connectNulls={true}
               />
             </LineChart>
           </ChartContainer>
