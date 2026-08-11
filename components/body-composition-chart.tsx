@@ -255,6 +255,7 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 dataKey={selectedMetric}
                 name={selectedOption.label}
                 type="monotone"
+                isAnimationActive={false}
                 stroke="var(--muted-foreground)"
                 strokeWidth={2}
                 strokeOpacity={0.45}
@@ -270,7 +271,7 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                   stroke: "var(--background)",
                   strokeWidth: 3,
                 }}
-                connectNulls={false}
+                connectNulls={true}
               />
             </LineChart>
           </ChartContainer>
