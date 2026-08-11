@@ -49,6 +49,19 @@ export default async function Home() {
           </Alert>
         ) : (
           <div className="space-y-6 sm:space-y-8">
+            <section aria-labelledby="nutrition-heading" className="space-y-4">
+              <h2
+                id="nutrition-heading"
+                className="text-lg font-semibold tracking-tight"
+              >
+                食事状況
+              </h2>
+              <NutritionSummary
+                log={getLatestNutritionLog(logs)}
+                goals={NUTRITION_GOALS}
+              />
+            </section>
+
             <section aria-labelledby="body-composition-heading">
               <Card className="gap-5 shadow-sm sm:gap-6">
                 <CardHeader className="px-4 sm:px-(--card-spacing)">
@@ -63,19 +76,6 @@ export default async function Home() {
                   <BodyCompositionChart logs={logs} />
                 </CardContent>
               </Card>
-            </section>
-
-            <section aria-labelledby="nutrition-heading" className="space-y-4">
-              <h2
-                id="nutrition-heading"
-                className="text-lg font-semibold tracking-tight"
-              >
-                食事状況
-              </h2>
-              <NutritionSummary
-                log={getLatestNutritionLog(logs)}
-                goals={NUTRITION_GOALS}
-              />
             </section>
           </div>
         )}
