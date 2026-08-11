@@ -250,6 +250,7 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 dataKey={selectedMetric}
                 name={selectedOption.label}
                 type="monotone"
+                isAnimationActive={false}
                 stroke="var(--muted-foreground)"
                 strokeWidth={2}
                 strokeOpacity={0.45}
