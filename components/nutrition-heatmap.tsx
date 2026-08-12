@@ -3,13 +3,6 @@
 import { useMemo, useState } from "react"
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   type FitnessLog,
   getNutritionAchievement,
   hasNutritionData,
@@ -26,13 +19,6 @@ const achievementLabels: Record<NutritionAchievement, string> = {
   missed: "未達",
   near: "おおむね達成",
   achieved: "達成",
-}
-
-const achievementStyles: Record<NutritionAchievement, string> = {
-  none: "bg-muted ring-1 ring-inset ring-border",
-  missed: "bg-emerald-200 dark:bg-emerald-950",
-  near: "bg-emerald-500 dark:bg-emerald-700",
-  achieved: "bg-emerald-800 dark:bg-emerald-400",
 }
 
 const weekdayLabels = ["月", "火", "水", "木", "金", "土", "日"]
@@ -147,16 +133,32 @@ export function NutritionHeatmap({
     weeks.flat().find((day) => day.date === selectedDate) ?? null
   const selectedLog = selectedDay?.log ?? null
   const selectedAchievement = selectedDay?.achievement ?? "none"
+  const visibleDays = weeks.flat().filter((day) => !day.isFuture)
+  const achievementSummary = visibleDays.reduce(
+    (summary, day) => {
+      summary[day.achievement] += 1
+      return summary
+    },
+    { none: 0, missed: 0, near: 0, achieved: 0 }
+  )
 
   return (
-    <Card className="gap-5 shadow-sm sm:gap-6">
-      <CardHeader className="px-4 sm:px-(--card-spacing)">
-        <CardTitle className="text-lg sm:text-xl">目標達成カレンダー</CardTitle>
-        <CardDescription>直近12週間のカロリー・PFC目標</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5 px-3 sm:space-y-6 sm:px-(--card-spacing)">
-        <div className="mx-auto w-full max-w-2xl">
-          <div className="grid grid-cols-[1rem_repeat(12,minmax(0,1fr))] gap-x-1 min-[390px]:gap-x-1.5">
+    <section
+      className="nutrition-history"
+      aria-labelledby="history-heading"
+      aria-describedby="heatmap-summary"
+    >
+      <header className="nutrition-history-heading">
+        <div>
+          <h3 id="history-heading">12週間の達成状況</h3>
+          <p>カロリーとPFCを日ごとに判定</p>
+        </div>
+        <span className="nutrition-history-period">直近84日</span>
+      </header>
+
+      <div className="nutrition-heatmap">
+        <div className="nutrition-heatmap-grid">
+          <div className="nutrition-heatmap-months" aria-hidden="true">
             <div aria-hidden="true" />
             {weeks.map((week, index) => {
               const previousWeek = weeks[index - 1]
@@ -165,25 +167,19 @@ export function NutritionHeatmap({
                 ? formatMonth(previousWeek[0].date)
                 : null
               return (
-                <div
-                  key={week[0].date}
-                  className="h-5 overflow-visible whitespace-nowrap text-[9px] text-muted-foreground min-[390px]:text-[10px]"
-                  aria-hidden="true"
-                >
+                <span key={week[0].date}>
                   {month !== previousMonth ? month : ""}
-                </div>
+                </span>
               )
             })}
+          </div>
 
-            <div className="grid grid-rows-7 gap-y-1 min-[390px]:gap-y-1.5">
+          <div className="nutrition-heatmap-body">
+            <div className="nutrition-heatmap-weekdays" aria-hidden="true">
               {weekdayLabels.map((label, index) => (
                 <span
                   key={label}
-                  className={cn(
-                    "flex aspect-square items-center text-[9px] text-muted-foreground",
-                    index % 2 === 1 && "invisible"
-                  )}
-                  aria-hidden="true"
+                  className={cn(index % 2 === 1 && "is-hidden")}
                 >
                   {label}
                 </span>
@@ -191,135 +187,125 @@ export function NutritionHeatmap({
             </div>
 
             {weeks.map((week) => (
-              <div
-                key={week[0].date}
-                className="grid min-w-0 grid-rows-7 gap-y-1 min-[390px]:gap-y-1.5"
-              >
+              <div key={week[0].date} className="nutrition-heatmap-week">
                 {week.map((day) => {
                   const isSelected = selectedDate === day.date
-                  const label = `${formatDate(day.date)}、${achievementLabels[day.achievement]}`
 
                   return (
                     <button
                       key={day.date}
                       type="button"
+                      className="nutrition-heatmap-cell"
                       disabled={day.isFuture}
                       aria-label={
                         day.isFuture
                           ? `${formatDate(day.date)}、未来の日付`
-                          : label
+                          : `${formatDate(day.date)}、${achievementLabels[day.achievement]}`
                       }
                       aria-pressed={isSelected}
-                      title={day.isFuture ? undefined : label}
-                      onClick={() => setSelectedDate(day.date)}
-                      onFocus={() => setSelectedDate(day.date)}
-                      onMouseEnter={() => setSelectedDate(day.date)}
-                      className={cn(
-                        "aspect-square min-w-0 rounded-[3px] outline-none transition-[transform,box-shadow] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-90",
+                      data-achievement={day.achievement}
+                      data-future={day.isFuture ? "true" : undefined}
+                      data-selected={
+                        isSelected && !day.isFuture ? "true" : undefined
+                      }
+                      title={
                         day.isFuture
-                          ? "cursor-default bg-transparent"
-                          : achievementStyles[day.achievement],
-                        isSelected &&
-                          !day.isFuture &&
-                          "ring-2 ring-foreground ring-offset-1"
-                      )}
+                          ? undefined
+                          : `${formatDate(day.date)}、${achievementLabels[day.achievement]}`
+                      }
+                      onClick={() => setSelectedDate(day.date)}
                     />
                   )
                 })}
               </div>
             ))}
           </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-[10px] text-muted-foreground sm:text-xs">
-            {(Object.keys(achievementLabels) as NutritionAchievement[]).map(
-              (achievement) => (
-                <span key={achievement} className="flex items-center gap-1">
-                  <span
-                    className={cn(
-                      "size-3 rounded-[3px]",
-                      achievementStyles[achievement]
-                    )}
-                    aria-hidden="true"
-                  />
-                  {achievementLabels[achievement]}
-                </span>
-              )
-            )}
-          </div>
         </div>
 
-        <div
-          className="rounded-xl border bg-muted/25 p-4"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-semibold">{formatDate(selectedDate)}</p>
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-1 text-xs font-medium",
-                selectedAchievement === "none"
-                  ? "bg-muted text-muted-foreground"
-                  : "bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100"
+        <p id="heatmap-summary" className="sr-only">
+          達成 {achievementSummary.achieved}日、おおむね達成
+          {achievementSummary.near}日、未達 {achievementSummary.missed}
+          日、記録なし
+          {achievementSummary.none}日です。
+        </p>
+
+        <ul className="nutrition-heatmap-legend" aria-label="達成度の凡例">
+          {(Object.keys(achievementLabels) as NutritionAchievement[]).map(
+            (achievement) => (
+              <li key={achievement}>
+                <i data-achievement={achievement} aria-hidden="true" />
+                {achievementLabels[achievement]}
+              </li>
+            )
+          )}
+        </ul>
+      </div>
+
+      <article
+        className="nutrition-day-detail"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <header className="nutrition-day-detail-heading">
+          <div>
+            <p>選択した記録</p>
+            <h4>{formatDate(selectedDate)}</h4>
+          </div>
+          <span
+            className="nutrition-achievement"
+            data-achievement={selectedAchievement}
+          >
+            <i aria-hidden="true" />
+            {achievementLabels[selectedAchievement]}
+          </span>
+        </header>
+
+        <dl className="nutrition-day-values">
+          {[
+            ["カロリー", formatAmount(selectedLog?.calories ?? null, "kcal")],
+            [
+              "P（たんぱく質）",
+              formatAmount(selectedLog?.protein ?? null, "g"),
+            ],
+            ["F（脂質）", formatAmount(selectedLog?.fat ?? null, "g")],
+            ["C（炭水化物）", formatAmount(selectedLog?.carbs ?? null, "g")],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <dl className="nutrition-goal-status">
+          <div>
+            <dt>カロリー目標</dt>
+            <dd>
+              {goalStatus(
+                selectedLog?.calories ?? null,
+                goals.calories,
+                "calories"
               )}
-            >
-              {achievementLabels[selectedAchievement]}
-            </span>
+            </dd>
           </div>
-
-          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-            {[
-              ["カロリー", formatAmount(selectedLog?.calories ?? null, "kcal")],
-              [
-                "P（たんぱく質）",
-                formatAmount(selectedLog?.protein ?? null, "g"),
-              ],
-              ["F（脂質）", formatAmount(selectedLog?.fat ?? null, "g")],
-              ["C（炭水化物）", formatAmount(selectedLog?.carbs ?? null, "g")],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <dt className="text-xs text-muted-foreground">{label}</dt>
-                <dd className="mt-0.5 font-semibold tabular-nums">{value}</dd>
-              </div>
-            ))}
-          </dl>
-
-          <div className="mt-4 grid gap-2 border-t pt-4 text-sm sm:grid-cols-2">
-            <p className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">カロリー目標</span>
-              <span className="font-medium">
-                {goalStatus(
-                  selectedLog?.calories ?? null,
-                  goals.calories,
-                  "calories"
-                )}
-              </span>
-            </p>
-            <p className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">たんぱく質目標</span>
-              <span className="font-medium">
-                {goalStatus(
-                  selectedLog?.protein ?? null,
-                  goals.protein,
-                  "macro"
-                )}
-              </span>
-            </p>
-            <p className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">脂質目標</span>
-              <span className="font-medium">
-                {goalStatus(selectedLog?.fat ?? null, goals.fat, "macro")}
-              </span>
-            </p>
-            <p className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">炭水化物目標</span>
-              <span className="font-medium">
-                {goalStatus(selectedLog?.carbs ?? null, goals.carbs, "macro")}
-              </span>
-            </p>
+          <div>
+            <dt>たんぱく質目標</dt>
+            <dd>
+              {goalStatus(selectedLog?.protein ?? null, goals.protein, "macro")}
+            </dd>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          <div>
+            <dt>脂質目標</dt>
+            <dd>{goalStatus(selectedLog?.fat ?? null, goals.fat, "macro")}</dd>
+          </div>
+          <div>
+            <dt>炭水化物目標</dt>
+            <dd>
+              {goalStatus(selectedLog?.carbs ?? null, goals.carbs, "macro")}
+            </dd>
+          </div>
+        </dl>
+      </article>
+    </section>
   )
 }
