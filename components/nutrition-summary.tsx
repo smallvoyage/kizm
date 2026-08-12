@@ -59,8 +59,6 @@ export function NutritionSummary({
         const accessibleValue =
           value === null ? undefined : Math.min(Math.max(value, 0), goal)
         const metricStyle = {
-          "--metric-color": `var(--color-${metric.key})`,
-          "--metric-soft": `var(--color-${metric.key}-soft)`,
           "--nutrition-progress": progress / 100,
         } as CSSProperties
 
@@ -68,6 +66,7 @@ export function NutritionSummary({
           <article
             key={metric.key}
             className="nutrition-row"
+            data-nutrition-metric={metric.key}
             data-featured={index === 0 ? "true" : undefined}
             data-status={
               remaining === null ? "empty" : remaining < 0 ? "over" : "within"

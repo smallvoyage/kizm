@@ -5,6 +5,7 @@ import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { NutritionHeatmap } from "@/components/nutrition-heatmap"
 import { NutritionSummary } from "@/components/nutrition-summary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { WeeklyReview } from "@/components/weekly-review"
 import { type FitnessLog, getLatestNutritionLog } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
@@ -78,6 +79,8 @@ export default async function Home() {
           </Alert>
         ) : (
           <div className="dashboard-content">
+            <WeeklyReview logs={logs} />
+
             <section
               aria-labelledby="nutrition-heading"
               className="dashboard-section dashboard-section--nutrition"

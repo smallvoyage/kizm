@@ -34,6 +34,17 @@ The primary accent is blue. Additional chart colours are semantic data encodings
 not decorative accents, and remain confined to marks, progress rings, and active
 indicators.
 
+Nutrition colours are fixed across every summary, chart, goal, and detail view:
+
+- Calories: `--color-calories` (red)
+- Protein: `--color-protein` (blue)
+- Fat: `--color-fat` (amber)
+- Carbohydrates: `--color-carbs` (purple)
+
+Use the matching `-soft` token for tracks and selected surfaces. Every rendered
+nutrition metric must expose `data-nutrition-metric` so the shared mapping in
+`app/globals.css` remains the single component-level source of truth.
+
 ## Typography
 
 - Display: Geist Sans, weight 700, style normal
