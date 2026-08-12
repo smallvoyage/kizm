@@ -26,6 +26,7 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 - PC・スマートフォンに対応したレスポンシブUI
 - 最新の摂取カロリー・たんぱく質・脂質・炭水化物
 - 1日の目標に対するカロリー・三大栄養素の残量と達成状況
+- 直近12週間の食事目標達成状況と日別PFCを確認できるヒートマップ
 
 ## アーキテクチャ
 
@@ -33,6 +34,7 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 app/page.tsx                         Server Component / データ取得とページ構成
 components/body-composition-chart.tsx Client Component / フィルターとチャート操作
 components/nutrition-summary.tsx      最新の食事状況
+components/nutrition-heatmap.tsx      食事目標の達成状況と日別詳細
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
@@ -54,6 +56,8 @@ type FitnessLog = {
   muscleMass: number | null
 }
 ```
+
+食事ヒートマップの達成度は、カロリーとPFCすべてから判定します。カロリーが目標の90〜110%かつ、PFCがそれぞれ100%以上なら「達成」、カロリーが80〜120%かつ、PFCがそれぞれ80%以上なら「おおむね達成」、それ以外は「未達」です。栄養値がすべて未入力の日は「記録なし」として区別します。
 
 MVPではDays Data Sourceのみを使用します。Data Source Queryは100件ずつ全ページを取得し、Log Date昇順へ並べ替えます。値が未入力のnumberプロパティは `null` として扱い、Log Dateが未入力の行はチャート対象外にします。MealsとWorkoutsのIDは将来機能用で、現時点ではAPI queryを行いません。
 
