@@ -87,7 +87,7 @@ function formatAmount(value: number | null, unit: "kcal" | "g"): string {
 function goalStatus(
   value: number | null,
   goal: number,
-  kind: "calories" | "protein"
+  kind: "calories" | "macro"
 ): string {
   if (value === null) return "記録なし"
   const ratio = value / goal
@@ -152,7 +152,7 @@ export function NutritionHeatmap({
     <Card className="gap-5 shadow-sm sm:gap-6">
       <CardHeader className="px-4 sm:px-(--card-spacing)">
         <CardTitle className="text-lg sm:text-xl">目標達成カレンダー</CardTitle>
-        <CardDescription>直近12週間のカロリー・たんぱく質目標</CardDescription>
+        <CardDescription>直近12週間のカロリー・PFC目標</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5 px-3 sm:space-y-6 sm:px-(--card-spacing)">
         <div className="mx-auto w-full max-w-2xl">
@@ -301,8 +301,20 @@ export function NutritionHeatmap({
                 {goalStatus(
                   selectedLog?.protein ?? null,
                   goals.protein,
-                  "protein"
+                  "macro"
                 )}
+              </span>
+            </p>
+            <p className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">脂質目標</span>
+              <span className="font-medium">
+                {goalStatus(selectedLog?.fat ?? null, goals.fat, "macro")}
+              </span>
+            </p>
+            <p className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">炭水化物目標</span>
+              <span className="font-medium">
+                {goalStatus(selectedLog?.carbs ?? null, goals.carbs, "macro")}
               </span>
             </p>
           </div>

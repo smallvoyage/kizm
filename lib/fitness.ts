@@ -94,25 +94,29 @@ export function hasNutritionData(log: FitnessLog | null): boolean {
 
 export function getNutritionAchievement(
   log: FitnessLog | null,
-  goals: Pick<Record<NutritionMetric, number>, "calories" | "protein">
+  goals: Record<NutritionMetric, number>
 ): NutritionAchievement {
-  if (!hasNutritionData(log)) return "none"
+  if (!log || !hasNutritionData(log)) return "none"
 
-  const calories = log?.calories
-  const protein = log?.protein
-  if (calories === null || calories === undefined) return "missed"
-  if (protein === null || protein === undefined) return "missed"
+  const { calories, protein, fat, carbs } = log
+  if (calories === null || protein === null || fat === null || carbs === null) {
+    return "missed"
+  }
 
   const calorieRatio = calories / goals.calories
-  const proteinRatio = protein / goals.protein
+  const macroRatios = [
+    protein / goals.protein,
+    fat / goals.fat,
+    carbs / goals.carbs,
+  ]
   const caloriesAchieved = calorieRatio >= 0.9 && calorieRatio <= 1.1
-  const proteinAchieved = proteinRatio >= 1
+  const macrosAchieved = macroRatios.every((ratio) => ratio >= 1)
 
-  if (caloriesAchieved && proteinAchieved) return "achieved"
+  if (caloriesAchieved && macrosAchieved) return "achieved"
 
   const caloriesNear = calorieRatio >= 0.8 && calorieRatio <= 1.2
-  const proteinNear = proteinRatio >= 0.8
-  return caloriesNear && proteinNear ? "near" : "missed"
+  const macrosNear = macroRatios.every((ratio) => ratio >= 0.8)
+  return caloriesNear && macrosNear ? "near" : "missed"
 }
 
 export function filterLogsByPeriod(
