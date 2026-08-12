@@ -13,7 +13,6 @@ import {
 } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { FitnessLog, NutritionMetric } from "@/lib/fitness"
 import type { NutritionGoals } from "@/lib/nutrition-goals"
 import {
@@ -244,7 +243,7 @@ export function WeeklyReview({
 
   return (
     <section aria-labelledby="weekly-review-heading" className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
+      <div className="weekly-review-heading flex items-end justify-between gap-3">
         <div>
           <p className="text-xs font-medium tracking-wide text-muted-foreground">
             WEEKLY REVIEW
@@ -256,7 +255,7 @@ export function WeeklyReview({
             週間レビュー
           </h2>
         </div>
-        <div className="flex items-center rounded-xl border bg-background p-1 shadow-xs">
+        <div className="weekly-review-navigation flex items-center rounded-xl border bg-background p-1 shadow-xs">
           <button
             type="button"
             className="flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35"
@@ -281,19 +280,17 @@ export function WeeklyReview({
         </div>
       </div>
 
-      <Card className="overflow-hidden gap-0 shadow-sm">
-        <CardHeader className="border-b bg-muted/20 px-4 py-4 sm:px-(--card-spacing)">
+      <div className="weekly-review-panel overflow-hidden gap-0 shadow-sm">
+        <header className="weekly-review-panel-header border-b bg-muted/20 px-4 py-4 sm:px-(--card-spacing)">
           <div className="flex items-center gap-2">
             <CalendarDays
               className="size-5 text-muted-foreground"
               aria-hidden="true"
             />
-            <CardTitle className="text-base sm:text-lg">
-              この週のサマリー
-            </CardTitle>
+            <h3 className="text-base sm:text-lg">この週のサマリー</h3>
           </div>
-        </CardHeader>
-        <CardContent className="grid gap-6 px-4 py-5 lg:grid-cols-2 lg:px-(--card-spacing) lg:py-6">
+        </header>
+        <div className="weekly-review-panel-content grid gap-6 px-4 py-5 lg:grid-cols-2 lg:px-(--card-spacing) lg:py-6">
           <section
             aria-labelledby="weekly-nutrition-heading"
             className="min-w-0 space-y-4"
@@ -402,8 +399,8 @@ export function WeeklyReview({
               />
             </div>
           </section>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </section>
   )
 }

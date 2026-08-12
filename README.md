@@ -32,7 +32,6 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 ```text
 app/page.tsx                         Server Component / データ取得とページ構成
 components/body-composition-chart.tsx Client Component / フィルターとチャート操作
-components/metric-card.tsx           Current Metricsの表示
 components/nutrition-summary.tsx      最新の食事状況
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/notion.ts                         Notion Client、pagination、検証、正規化

@@ -1,7 +1,7 @@
 "use client"
 
 import { Minus, TrendingDown, TrendingUp } from "lucide-react"
-import { useMemo, useState } from "react"
+import { type CSSProperties, useMemo, useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import {
@@ -25,19 +25,32 @@ const metricOptions: Array<{
   label: string
   unit: "kg" | "%"
   differenceUnit: "kg" | "pt"
+  color: string
+  soft: string
 }> = [
-  { value: "weight", label: "体重", unit: "kg", differenceUnit: "kg" },
+  {
+    value: "weight",
+    label: "体重",
+    unit: "kg",
+    differenceUnit: "kg",
+    color: "var(--color-weight)",
+    soft: "var(--color-weight-soft)",
+  },
   {
     value: "bodyFat",
     label: "体脂肪率",
     unit: "%",
     differenceUnit: "pt",
+    color: "var(--color-body-fat)",
+    soft: "var(--color-body-fat-soft)",
   },
   {
     value: "muscleMass",
     label: "筋肉量",
     unit: "kg",
     differenceUnit: "kg",
+    color: "var(--color-muscle-mass)",
+    soft: "var(--color-muscle-mass-soft)",
   },
 ]
 
@@ -115,10 +128,14 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
   >
 
   const selectedValue = summaries[selectedMetric].value
+  const selectedMetricStyle = {
+    "--selected-metric-color": selectedOption.color,
+    "--selected-metric-soft": selectedOption.soft,
+  } as CSSProperties
 
   return (
-    <div className="space-y-5 sm:space-y-7">
-      <fieldset className="grid grid-cols-3 gap-2 sm:gap-4">
+    <div className="composition-workbench" style={selectedMetricStyle}>
+      <fieldset className="composition-selector">
         <legend className="sr-only">表示する身体組成の指標</legend>
         {metricOptions.map((metric) => {
           const summary = summaries[metric.value]
@@ -136,40 +153,27 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
               type="button"
               aria-pressed={isSelected}
               onClick={() => setSelectedMetric(metric.value)}
-              className={cn(
-                "relative min-w-0 rounded-xl border bg-background px-2 py-3 text-left shadow-xs transition-[border-color,box-shadow,transform] outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] sm:px-4 sm:py-4",
-                isSelected
-                  ? "border-foreground shadow-sm ring-2 ring-foreground"
-                  : "border-border hover:border-foreground/40"
-              )}
+              className={cn("composition-option", isSelected && "is-selected")}
+              style={
+                {
+                  "--metric-color": metric.color,
+                  "--metric-soft": metric.soft,
+                } as CSSProperties
+              }
             >
-              <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground sm:text-sm">
-                <span
-                  className="size-2 shrink-0 rounded-full"
-                  style={{
-                    backgroundColor: chartConfig[metric.value].color,
-                  }}
-                  aria-hidden="true"
-                />
-                <span className="truncate">{metric.label}</span>
-                <span className="hidden font-normal min-[390px]:inline">
-                  ({metric.unit})
-                </span>
+              <span className="composition-option-label">
+                <span>{metric.label}</span>
               </span>
-              <span className="mt-1.5 flex items-baseline gap-1 sm:mt-2">
-                <span className="text-2xl leading-none font-semibold tracking-tight tabular-nums sm:text-3xl">
+              <span className="composition-option-value">
+                <strong>
                   {summary.value === null ? "—" : summary.value.toFixed(1)}
-                </span>
-                {summary.value !== null && (
-                  <span className="text-[10px] font-medium text-muted-foreground sm:text-xs">
-                    {metric.unit}
-                  </span>
-                )}
+                </strong>
+                {summary.value !== null && <span>{metric.unit}</span>}
               </span>
               <span
                 className={cn(
-                  "mt-2 flex min-h-5 items-center gap-0.5 text-[10px] font-medium tabular-nums sm:text-xs",
-                  summary.difference === null && "text-muted-foreground"
+                  "composition-difference",
+                  summary.difference === null && "is-muted"
                 )}
               >
                 <DifferenceIcon
@@ -185,35 +189,32 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
         })}
       </fieldset>
 
-      <div className="space-y-3">
-        <div className="flex min-h-10 items-end justify-between gap-4 px-2 sm:px-0">
+      <div className="composition-chart-area">
+        <div className="composition-chart-meta">
           <div>
-            <p className="text-xs text-muted-foreground">選択中の測定日</p>
-            <p className="mt-0.5 font-medium">
+            <p>測定日</p>
+            <strong>
               {selectedLog ? formatDate(selectedLog.date) : "記録なし"}
-            </p>
+            </strong>
           </div>
           {selectedValue !== null && (
-            <p
-              className="text-right text-sm font-semibold tabular-nums sm:text-base"
-              aria-live="polite"
-            >
-              {selectedOption.label} {selectedValue.toFixed(1)}
-              <span className="ml-1 text-xs font-medium text-muted-foreground">
-                {selectedOption.unit}
-              </span>
-            </p>
+            <div className="composition-selected-value" aria-live="polite">
+              <p>{selectedOption.label}</p>
+              <strong>{selectedValue.toFixed(1)}</strong>
+              <span>{selectedOption.unit}</span>
+            </div>
           )}
         </div>
 
         {latestAxisDate === null ? (
-          <div className="flex min-h-64 items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 text-center sm:min-h-80">
-            <p className="font-medium">この指標のデータはありません</p>
+          <div className="composition-empty">
+            <p>この指標のデータはまだありません。</p>
           </div>
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="h-[270px] w-full sm:h-[400px] [&_.recharts-responsive-container]:flex-1"
+            initialDimension={{ width: 240, height: 272 }}
+            className="composition-chart [&_.recharts-responsive-container]:flex-1"
           >
             <LineChart
               accessibilityLayer
@@ -225,14 +226,13 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 }
               }}
             >
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <CartesianGrid vertical={false} stroke="var(--color-rule)" />
               <XAxis
                 dataKey="date"
                 axisLine={false}
                 tickLine={false}
                 tickMargin={12}
-                ticks={latestAxisDate ? [latestAxisDate] : []}
-                interval={0}
+                minTickGap={32}
                 tickFormatter={formatAxisDate}
               />
               <YAxis
@@ -256,18 +256,17 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 name={selectedOption.label}
                 type="monotone"
                 isAnimationActive={false}
-                stroke="var(--muted-foreground)"
-                strokeWidth={2}
-                strokeOpacity={0.45}
+                stroke={selectedOption.color}
+                strokeWidth={2.5}
                 dot={{
-                  r: 4,
-                  fill: `var(--color-${selectedMetric})`,
+                  r: 3.5,
+                  fill: selectedOption.color,
                   stroke: "var(--background)",
                   strokeWidth: 2,
                 }}
                 activeDot={{
-                  r: 6,
-                  fill: `var(--color-${selectedMetric})`,
+                  r: 5.5,
+                  fill: selectedOption.color,
                   stroke: "var(--background)",
                   strokeWidth: 3,
                 }}

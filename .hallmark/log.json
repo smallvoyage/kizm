@@ -1,0 +1,19 @@
+[
+  {
+    "date": "2026-08-12",
+    "scope": "app",
+    "macrostructure": "Stat-Led",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "soft, exact, health-data dense",
+    "enrichment": "none",
+    "brief": "Personal mobile fitness analytics dashboard redesign"
+  },
+  {
+    "date": "2026-08-12",
+    "macrostructure": "Workbench",
+    "theme": "Cobalt",
+    "enrichment": "none",
+    "brief": "Personal fitness analytics dashboard UI redesign"
+  }
+]
