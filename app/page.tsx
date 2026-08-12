@@ -79,7 +79,7 @@ export default async function Home() {
           </Alert>
         ) : (
           <div className="dashboard-content">
-            <WeeklyReview logs={logs} goals={NUTRITION_GOALS} />
+            <WeeklyReview logs={logs} />
 
             <section
               aria-labelledby="nutrition-heading"

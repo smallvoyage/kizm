@@ -7,12 +7,10 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react"
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 import type { FitnessLog, NutritionMetric } from "@/lib/fitness"
-import type { NutritionGoals } from "@/lib/nutrition-goals"
 import {
-  type GoalAchievement,
   getWeeklyReview,
   getWeekStart,
   shiftDate,
@@ -122,57 +120,6 @@ function AverageMetric({
   )
 }
 
-function GoalRow({
-  metric,
-  label,
-  achievement,
-}: {
-  metric: NutritionMetric
-  label: string
-  achievement: GoalAchievement
-}) {
-  const rate = achievement.rate ?? 0
-  const clampedRate = Math.min(Math.max(rate, 0), 100)
-  const progressStyle = {
-    "--weekly-progress": clampedRate / 100,
-  } as CSSProperties
-
-  return (
-    <div
-      className="weekly-goal"
-      data-nutrition-metric={metric}
-      data-empty={achievement.rate === null ? "true" : undefined}
-    >
-      <div className="weekly-goal-heading">
-        <div>
-          <p>{label}</p>
-          <span>
-            {achievement.recordedDays === 0
-              ? "対象の記録なし"
-              : `${achievement.achievedDays} / ${achievement.recordedDays} 記録日`}
-          </span>
-        </div>
-        <strong>
-          {achievement.rate === null ? "—" : `${Math.round(rate)}%`}
-        </strong>
-      </div>
-      <div
-        className="weekly-goal-track"
-        role="progressbar"
-        aria-label={`${label}の達成率`}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={achievement.rate === null ? undefined : Math.round(rate)}
-        aria-valuetext={
-          achievement.rate === null ? "記録なし" : `${Math.round(rate)}%`
-        }
-      >
-        <span style={progressStyle} />
-      </div>
-    </div>
-  )
-}
-
 function OptionalChange({
   label,
   change,
@@ -203,19 +150,13 @@ function OptionalChange({
   )
 }
 
-export function WeeklyReview({
-  logs,
-  goals,
-}: {
-  logs: FitnessLog[]
-  goals: NutritionGoals
-}) {
+export function WeeklyReview({ logs }: { logs: FitnessLog[] }) {
   const firstWeek = getWeekStart(logs[0]?.date ?? "")
   const latestWeek = getWeekStart(logs.at(-1)?.date ?? "")
   const [selectedWeek, setSelectedWeek] = useState(latestWeek)
   const review = useMemo(
-    () => (selectedWeek ? getWeeklyReview(logs, selectedWeek, goals) : null),
-    [goals, logs, selectedWeek]
+    () => (selectedWeek ? getWeeklyReview(logs, selectedWeek) : null),
+    [logs, selectedWeek]
   )
 
   if (!review || !selectedWeek || !firstWeek || !latestWeek) return null
@@ -281,23 +222,6 @@ export function WeeklyReview({
               />
             ))}
           </div>
-
-          <section
-            className="weekly-goals"
-            aria-labelledby="weekly-goals-heading"
-          >
-            <h4 id="weekly-goals-heading">目標を満たした日</h4>
-            <GoalRow
-              metric="calories"
-              label="カロリー"
-              achievement={review.nutrition.calorieGoal}
-            />
-            <GoalRow
-              metric="protein"
-              label="たんぱく質"
-              achievement={review.nutrition.proteinGoal}
-            />
-          </section>
         </section>
 
         <section

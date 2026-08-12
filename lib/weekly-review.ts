@@ -3,7 +3,6 @@ import type {
   FitnessLog,
   NutritionMetric,
 } from "@/lib/fitness"
-import type { NutritionGoals } from "@/lib/nutrition-goals"
 
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
 
@@ -11,12 +10,6 @@ export type WeeklyAverage = {
   value: number | null
   previousDifference: number | null
   recordedDays: number
-}
-
-export type GoalAchievement = {
-  achievedDays: number
-  recordedDays: number
-  rate: number | null
 }
 
 export type WeeklyMetricChange = {
@@ -30,8 +23,6 @@ export type WeeklyReview = {
   endDate: string
   nutrition: {
     averages: Record<NutritionMetric, WeeklyAverage>
-    calorieGoal: GoalAchievement
-    proteinGoal: GoalAchievement
   }
   bodyComposition: {
     weight: WeeklyMetricChange
@@ -106,25 +97,6 @@ function getAverage(
   }
 }
 
-function getGoalAchievement(
-  logs: FitnessLog[],
-  metric: "calories" | "protein",
-  goal: number
-): GoalAchievement {
-  const values = logs
-    .map((log) => log[metric])
-    .filter((value): value is number => value !== null)
-  const achievedDays = values.filter((value) =>
-    metric === "calories" ? value <= goal : value >= goal
-  ).length
-
-  return {
-    achievedDays,
-    recordedDays: values.length,
-    rate: values.length === 0 ? null : (achievedDays / values.length) * 100,
-  }
-}
-
 function getMetricChange(
   logs: FitnessLog[],
   metric: BodyCompositionMetric
@@ -149,8 +121,7 @@ function logsInRange(logs: FitnessLog[], startDate: string, endDate: string) {
 
 export function getWeeklyReview(
   logs: FitnessLog[],
-  weekStart: string,
-  goals: NutritionGoals
+  weekStart: string
 ): WeeklyReview | null {
   const endDate = shiftDate(weekStart, 6)
   const previousStartDate = shiftDate(weekStart, -7)
@@ -182,8 +153,6 @@ export function getWeeklyReview(
     endDate,
     nutrition: {
       averages,
-      calorieGoal: getGoalAchievement(weeklyLogs, "calories", goals.calories),
-      proteinGoal: getGoalAchievement(weeklyLogs, "protein", goals.protein),
     },
     bodyComposition: {
       weight: getMetricChange(weeklyLogs, "weight"),
