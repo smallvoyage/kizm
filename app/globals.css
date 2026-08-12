@@ -1538,6 +1538,7 @@ body {
 }
 
 .weekly-average[data-featured="true"] .weekly-average-value strong {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
 }
 
