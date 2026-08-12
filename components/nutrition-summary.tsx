@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react"
+
 import type { FitnessLog, NutritionMetric } from "@/lib/fitness"
 import type { NutritionGoals } from "@/lib/nutrition-goals"
 
@@ -49,44 +51,55 @@ export function NutritionSummary({
           value === null ? 0 : Math.min(Math.max((value / goal) * 100, 0), 100)
         const accessibleValue =
           value === null ? undefined : Math.min(Math.max(value, 0), goal)
+        const metricStyle = {
+          "--metric-color": `var(--color-${metric.key})`,
+          "--metric-soft": `var(--color-${metric.key}-soft)`,
+          "--nutrition-progress": `${progress * 3.6}deg`,
+        } as CSSProperties
+
         return (
-          <article key={metric.key} className="nutrition-metric">
-            <div className="nutrition-metric-topline">
+          <article
+            key={metric.key}
+            className="nutrition-metric"
+            style={metricStyle}
+          >
+            <header className="nutrition-metric-heading">
               <h3>{metric.label}</h3>
+              <p>
+                目標 {formatAmount(goal)} {metric.unit}
+              </p>
+            </header>
+
+            <div className="nutrition-metric-reading">
+              <div
+                className="nutrition-progress"
+                role="progressbar"
+                aria-label={`${metric.label}の目標達成率`}
+                aria-valuemin={0}
+                aria-valuemax={goal}
+                aria-valuenow={accessibleValue}
+                aria-valuetext={
+                  value === null
+                    ? "記録なし"
+                    : `${formatAmount(value)} ${metric.unit}、目標 ${formatAmount(goal)} ${metric.unit}`
+                }
+              >
+                <span>{value === null ? "—" : `${Math.round(progress)}%`}</span>
+              </div>
               <p className="nutrition-value">
                 <strong>{value === null ? "—" : formatAmount(value)}</strong>
                 {value !== null && <span>{metric.unit}</span>}
               </p>
             </div>
-            <div
-              className="nutrition-progress"
-              role="progressbar"
-              aria-label={`${metric.label}の目標達成率`}
-              aria-valuemin={0}
-              aria-valuemax={goal}
-              aria-valuenow={accessibleValue}
-              aria-valuetext={
-                value === null
-                  ? "記録なし"
-                  : `${formatAmount(value)} ${metric.unit}、目標 ${formatAmount(goal)} ${metric.unit}`
-              }
-            >
-              <span style={{ transform: `scaleX(${progress / 100})` }} />
-            </div>
-            <div className="nutrition-meta">
-              <p>
-                {remaining === null
-                  ? "記録なし"
-                  : remaining > 0
-                    ? `残り ${formatAmount(remaining)} ${metric.unit}`
-                    : remaining === 0
-                      ? "目標達成"
-                      : `${formatAmount(Math.abs(remaining))} ${metric.unit} 超過`}
-              </p>
-              <p>
-                目標 {formatAmount(goal)} {metric.unit}
-              </p>
-            </div>
+            <p className="nutrition-meta">
+              {remaining === null
+                ? "記録なし"
+                : remaining > 0
+                  ? `残り ${formatAmount(remaining)} ${metric.unit}`
+                  : remaining === 0
+                    ? "目標達成"
+                    : `${formatAmount(Math.abs(remaining))} ${metric.unit} 超過`}
+            </p>
           </article>
         )
       })}

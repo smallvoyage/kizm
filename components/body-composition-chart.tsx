@@ -1,7 +1,7 @@
 "use client"
 
 import { Minus, TrendingDown, TrendingUp } from "lucide-react"
-import { useMemo, useState } from "react"
+import { type CSSProperties, useMemo, useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import {
@@ -25,19 +25,32 @@ const metricOptions: Array<{
   label: string
   unit: "kg" | "%"
   differenceUnit: "kg" | "pt"
+  color: string
+  soft: string
 }> = [
-  { value: "weight", label: "体重", unit: "kg", differenceUnit: "kg" },
+  {
+    value: "weight",
+    label: "体重",
+    unit: "kg",
+    differenceUnit: "kg",
+    color: "var(--color-weight)",
+    soft: "var(--color-weight-soft)",
+  },
   {
     value: "bodyFat",
     label: "体脂肪率",
     unit: "%",
     differenceUnit: "pt",
+    color: "var(--color-body-fat)",
+    soft: "var(--color-body-fat-soft)",
   },
   {
     value: "muscleMass",
     label: "筋肉量",
     unit: "kg",
     differenceUnit: "kg",
+    color: "var(--color-muscle-mass)",
+    soft: "var(--color-muscle-mass-soft)",
   },
 ]
 
@@ -115,9 +128,13 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
   >
 
   const selectedValue = summaries[selectedMetric].value
+  const selectedMetricStyle = {
+    "--selected-metric-color": selectedOption.color,
+    "--selected-metric-soft": selectedOption.soft,
+  } as CSSProperties
 
   return (
-    <div className="composition-workbench">
+    <div className="composition-workbench" style={selectedMetricStyle}>
       <fieldset className="composition-selector">
         <legend className="sr-only">表示する身体組成の指標</legend>
         {metricOptions.map((metric) => {
@@ -137,10 +154,15 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
               aria-pressed={isSelected}
               onClick={() => setSelectedMetric(metric.value)}
               className={cn("composition-option", isSelected && "is-selected")}
+              style={
+                {
+                  "--metric-color": metric.color,
+                  "--metric-soft": metric.soft,
+                } as CSSProperties
+              }
             >
               <span className="composition-option-label">
                 <span>{metric.label}</span>
-                <span>({metric.unit})</span>
               </span>
               <span className="composition-option-value">
                 <strong>
@@ -170,16 +192,17 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
       <div className="composition-chart-area">
         <div className="composition-chart-meta">
           <div>
-            <p>選択中の測定日</p>
+            <p>測定日</p>
             <strong>
               {selectedLog ? formatDate(selectedLog.date) : "記録なし"}
             </strong>
           </div>
           {selectedValue !== null && (
-            <p className="composition-selected-value" aria-live="polite">
-              {selectedOption.label} {selectedValue.toFixed(1)}
+            <div className="composition-selected-value" aria-live="polite">
+              <p>{selectedOption.label}</p>
+              <strong>{selectedValue.toFixed(1)}</strong>
               <span>{selectedOption.unit}</span>
-            </p>
+            </div>
           )}
         </div>
 
@@ -203,7 +226,7 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 }
               }}
             >
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <CartesianGrid vertical={false} stroke="var(--color-rule)" />
               <XAxis
                 dataKey="date"
                 axisLine={false}
@@ -233,18 +256,17 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 name={selectedOption.label}
                 type="monotone"
                 isAnimationActive={false}
-                stroke="var(--muted-foreground)"
-                strokeWidth={2}
-                strokeOpacity={0.45}
+                stroke={selectedOption.color}
+                strokeWidth={2.5}
                 dot={{
-                  r: 4,
-                  fill: `var(--color-${selectedMetric})`,
+                  r: 3.5,
+                  fill: selectedOption.color,
                   stroke: "var(--background)",
                   strokeWidth: 2,
                 }}
                 activeDot={{
-                  r: 6,
-                  fill: `var(--color-${selectedMetric})`,
+                  r: 5.5,
+                  fill: selectedOption.color,
                   stroke: "var(--background)",
                   strokeWidth: 3,
                 }}

@@ -8,6 +8,17 @@ import { type FitnessLog, getLatestNutritionLog } from "@/lib/fitness"
 import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
 import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
 
+function formatRecordDate(date: string | null | undefined) {
+  if (!date) return "記録日なし"
+
+  return new Intl.DateTimeFormat("ja-JP", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`))
+}
+
 export default async function Home() {
   await connection()
 
@@ -24,17 +35,18 @@ export default async function Home() {
   }
 
   const latestNutritionLog = getLatestNutritionLog(logs)
+  const latestRecordDate = logs.at(-1)?.date ?? null
 
   return (
     <main className="fitness-shell">
       <div className="dashboard-frame">
         <header className="dashboard-header">
-          <div className="dashboard-wordmark">
+          <h1 className="dashboard-wordmark">
             <span className="dashboard-mark" aria-hidden="true">
               <Activity />
             </span>
-            <span>フィットネス分析</span>
-          </div>
+            <span>フィットネス</span>
+          </h1>
           <div className="dashboard-source">
             <Database aria-hidden="true" />
             <span>Notion</span>
@@ -57,24 +69,22 @@ export default async function Home() {
             </AlertDescription>
           </Alert>
         ) : (
-          <div className="dashboard-workbench">
-            <div className="dashboard-intro">
-              <h1>今の状態と、これまでの変化。</h1>
-              <p>最新の食事記録と身体組成を、同じ時間軸で確認できます。</p>
-            </div>
-
+          <div className="dashboard-content">
             <section
               aria-labelledby="nutrition-heading"
-              className="dashboard-section"
+              className="dashboard-section dashboard-section--nutrition"
             >
               <header className="dashboard-section-heading">
                 <div>
                   <h2 id="nutrition-heading">食事状況</h2>
-                  <p>目標に対する最新記録</p>
+                  <p>1日の目標に対する最新記録</p>
                 </div>
-                <p className="dashboard-section-date">
-                  {latestNutritionLog?.date ?? "記録日なし"}
-                </p>
+                <time
+                  className="dashboard-section-date"
+                  dateTime={latestNutritionLog?.date}
+                >
+                  {formatRecordDate(latestNutritionLog?.date)}
+                </time>
               </header>
               <NutritionSummary
                 log={latestNutritionLog}
@@ -88,8 +98,8 @@ export default async function Home() {
             >
               <header className="dashboard-section-heading">
                 <div>
-                  <h2 id="body-composition-heading">身体組成の推移</h2>
-                  <p>指標を選んで、記録日ごとの変化を確認</p>
+                  <h2 id="body-composition-heading">身体組成</h2>
+                  <p>指標を選んで、記録ごとの変化を確認</p>
                 </div>
               </header>
               <BodyCompositionChart logs={logs} />
@@ -98,7 +108,12 @@ export default async function Home() {
         )}
 
         <footer className="dashboard-footer">
-          <p>個人の記録 · Notion から取得</p>
+          <p>Notionから取得</p>
+          {latestRecordDate && (
+            <time dateTime={latestRecordDate}>
+              最終記録 {formatRecordDate(latestRecordDate)}
+            </time>
+          )}
         </footer>
       </div>
     </main>
