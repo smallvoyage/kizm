@@ -1170,7 +1170,7 @@ body {
 
 /* Hallmark · genre: modern-minimal · macrostructure: Stat-Led
  * design-system: design.md · designed-as-app · mobile-only
- * nutrition UI critique: P5 H5 E5 S5 R5 V5
+ * dashboard UI critique: P5 H5 E5 S5 R5 V5
  */
 :root {
   --background: var(--color-paper);
@@ -1302,7 +1302,97 @@ body {
   padding-block: var(--space-md) var(--space-2xl);
 }
 
-.weekly-review-panel {
+.weekly-review {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-md);
+}
+
+.weekly-review-heading {
+  display: block;
+}
+
+.weekly-review-navigation {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  border: var(--rule-hairline) solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-card);
+}
+
+.weekly-review-navigation button {
+  display: grid;
+  min-width: calc(var(--space-xl) + var(--space-2xs));
+  min-height: calc(var(--space-xl) + var(--space-2xs));
+  place-items: center;
+  border: 0;
+  border-radius: calc(var(--radius-control) - var(--space-2xs));
+  background: transparent;
+  color: var(--color-neutral);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.weekly-review-navigation button svg {
+  width: var(--space-lg);
+  height: var(--space-lg);
+  stroke-width: 2;
+}
+
+.weekly-review-navigation button:focus-visible {
+  outline: var(--rule-strong) solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.weekly-review-navigation button:active:not(:disabled) {
+  transform: translateY(var(--rule-hairline));
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+
+.weekly-review-navigation button:disabled {
+  color: var(--color-rule-2);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.weekly-review-navigation > p {
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: var(--space-3xs);
+  padding-inline: var(--space-xs);
+  text-align: center;
+}
+
+.weekly-review-navigation strong {
+  color: var(--color-ink);
+  font-family: var(--font-outlier);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.weekly-review-navigation p span {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.weekly-review-sheet {
+  min-width: 0;
+  overflow: clip;
   border: var(--rule-hairline) solid var(--color-rule);
   border-radius: var(--radius-panel);
   background: var(--color-paper-2);
@@ -1310,34 +1400,396 @@ body {
   box-shadow: var(--shadow-card);
 }
 
-.weekly-review-heading {
+.weekly-review-group {
   display: grid;
-  gap: var(--space-sm);
+  min-width: 0;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-md);
 }
 
-.weekly-review-heading h2 {
+.weekly-review-group + .weekly-review-group {
+  border-block-start: var(--rule-hairline) solid var(--color-rule);
+}
+
+.weekly-review-group-heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.weekly-review-group-heading h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.weekly-review-group-heading p {
+  flex: 0 0 auto;
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.weekly-review-navigation {
-  width: 100%;
-  justify-content: space-between;
-  border-color: var(--color-rule);
-  background: var(--color-paper-2);
-}
-
-.weekly-review-panel-header {
-  border-color: var(--color-rule);
-}
-
-.weekly-review-panel-header h3 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-
-.weekly-review-panel-content {
+.weekly-averages {
+  display: grid;
   min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.weekly-average {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-xs);
+  padding-block-start: var(--space-md);
+}
+
+.weekly-average:not([data-featured="true"]) {
+  padding-inline: var(--space-sm);
+}
+
+.weekly-average:not([data-featured="true"]) + .weekly-average {
+  border-inline-start: var(--rule-hairline) solid var(--color-rule);
+}
+
+.weekly-average[data-featured="true"] {
+  grid-column: 1 / -1;
+  grid-template-areas:
+    "label"
+    "value"
+    "meta";
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  padding-block: 0 var(--space-lg);
+  border-block-end: var(--rule-hairline) solid var(--color-rule);
+}
+
+.weekly-average-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-neutral);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.weekly-average-label > span {
+  width: var(--space-2xs);
+  height: var(--space-2xs);
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--weekly-metric-color);
+}
+
+.weekly-average[data-featured="true"] .weekly-average-label {
+  grid-area: label;
+}
+
+.weekly-average-value {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.weekly-average[data-featured="true"] .weekly-average-value {
+  grid-area: value;
+}
+
+.weekly-average-value strong {
+  font-family: var(--font-outlier);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.weekly-average[data-featured="true"] .weekly-average-value strong {
+  font-size: var(--text-2xl);
+}
+
+.weekly-average-value > span {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.weekly-average-meta {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-3xs);
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.weekly-average[data-featured="true"] .weekly-average-meta {
+  display: flex;
+  grid-area: meta;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.weekly-comparison {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-2xs);
+  color: var(--color-neutral);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.weekly-comparison svg {
+  width: var(--space-sm);
+  height: var(--space-sm);
+  flex: 0 0 auto;
+  stroke-width: 2;
+}
+
+.weekly-average[data-empty="true"] .weekly-average-value,
+.weekly-average[data-empty="true"] .weekly-average-meta {
+  color: var(--color-muted);
+}
+
+.weekly-goals {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-md);
+  border-block-start: var(--rule-hairline) solid var(--color-rule);
+}
+
+.weekly-goals h4 {
+  font-size: var(--text-sm);
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.weekly-goal {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-xs);
+}
+
+.weekly-goal-heading {
+  display: flex;
+  min-width: 0;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.weekly-goal-heading > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-3xs);
+}
+
+.weekly-goal-heading p {
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.weekly-goal-heading span {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.weekly-goal-heading strong {
+  flex: 0 0 auto;
+  color: var(--color-ink);
+  font-family: var(--font-outlier);
+  font-size: var(--text-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.weekly-goal-track {
+  width: 100%;
+  height: var(--space-2xs);
+  overflow: clip;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+.weekly-goal-track > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(var(--weekly-progress));
+  transform-origin: left center;
+  border-radius: inherit;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  transition: transform var(--dur-long) var(--ease-out);
+}
+
+.weekly-goal[data-empty="true"] .weekly-goal-track > span {
+  opacity: 0;
+}
+
+.weekly-weight {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-lg);
+}
+
+.weekly-weight-average {
+  display: grid;
+  min-width: 0;
+  grid-template-areas:
+    "label comparison"
+    "value value";
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-xs) var(--space-md);
+}
+
+.weekly-weight-average > p {
+  grid-area: label;
+  color: var(--color-neutral);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.weekly-weight-average > div {
+  display: flex;
+  grid-area: value;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.weekly-weight-average strong {
+  font-family: var(--font-outlier);
+  font-size: var(--text-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.07em;
+  line-height: 0.88;
+}
+
+.weekly-weight-average > div span {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.weekly-weight-average > .weekly-comparison {
+  grid-area: comparison;
+  justify-self: end;
+}
+
+.weekly-weight-range {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block: var(--rule-hairline) solid var(--color-rule);
+}
+
+.weekly-weight-range > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2xs);
+  padding-block: var(--space-sm);
+  text-align: center;
+}
+
+.weekly-weight-range > div + div {
+  border-inline-start: var(--rule-hairline) solid var(--color-rule);
+}
+
+.weekly-weight-range dt {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.weekly-weight-range dd {
+  color: var(--color-ink);
+  font-family: var(--font-outlier);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+.weekly-weight-range dd span {
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+}
+
+.weekly-changes {
+  display: grid;
+  min-width: 0;
+}
+
+.weekly-change {
+  display: flex;
+  min-width: 0;
+  min-height: calc(var(--space-xl) + var(--space-2xs));
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  border-block-start: var(--rule-hairline) solid var(--color-rule);
+}
+
+.weekly-change dt {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-3xs);
+}
+
+.weekly-change dt > span {
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.weekly-change small {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekly-change dd {
+  flex: 0 0 auto;
+  color: var(--color-ink);
+  font-family: var(--font-outlier);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
 }
 
 .dashboard-section {
@@ -2127,12 +2579,15 @@ body {
     padding-inline: var(--space-sm);
   }
 
-  .weekly-review-heading {
-    display: flex;
+  .weekly-review-group {
+    padding-inline: var(--space-lg);
   }
+}
 
-  .weekly-review-navigation {
-    width: auto;
+@media (hover: hover) and (pointer: fine) {
+  .weekly-review-navigation button:not(:disabled):hover {
+    background: var(--color-paper-3);
+    color: var(--color-ink);
   }
 }
 
@@ -2143,6 +2598,15 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .weekly-review-navigation button,
+  .weekly-goal-track > span {
+    transition-duration: 0ms;
+  }
+
+  .weekly-review-navigation button:active:not(:disabled) {
+    transform: none;
+  }
+
   .nutrition-heatmap-cell {
     transition-duration: 0ms;
   }

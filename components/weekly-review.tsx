@@ -1,17 +1,13 @@
 "use client"
 
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  CircleGauge,
   Minus,
-  Scale,
   TrendingDown,
   TrendingUp,
-  Utensils,
 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { type CSSProperties, useMemo, useState } from "react"
 
 import type { FitnessLog, NutritionMetric } from "@/lib/fitness"
 import type { NutritionGoals } from "@/lib/nutrition-goals"
@@ -27,18 +23,12 @@ import {
 const nutritionMetrics: Array<{
   key: NutritionMetric
   label: string
-  shortLabel: string
   unit: "kcal" | "g"
 }> = [
-  {
-    key: "calories",
-    label: "平均摂取カロリー",
-    shortLabel: "カロリー",
-    unit: "kcal",
-  },
-  { key: "protein", label: "平均たんぱく質", shortLabel: "P", unit: "g" },
-  { key: "fat", label: "平均脂質", shortLabel: "F", unit: "g" },
-  { key: "carbs", label: "平均炭水化物", shortLabel: "C", unit: "g" },
+  { key: "calories", label: "摂取カロリー", unit: "kcal" },
+  { key: "protein", label: "たんぱく質", unit: "g" },
+  { key: "fat", label: "脂質", unit: "g" },
+  { key: "carbs", label: "炭水化物", unit: "g" },
 ]
 
 function formatDate(date: string) {
@@ -59,60 +49,80 @@ function formatDifference(value: number, digits = 1) {
   return `${value > 0 ? "+" : ""}${value.toFixed(digits)}`
 }
 
-function Comparison({ value, unit }: { value: number | null; unit: string }) {
+function Comparison({
+  value,
+  unit,
+  compact = false,
+}: {
+  value: number | null
+  unit: string
+  compact?: boolean
+}) {
   const Icon =
     value === null || value === 0
       ? Minus
       : value > 0
         ? TrendingUp
         : TrendingDown
+  const label =
+    value === null
+      ? "前週比較なし"
+      : `前週比 ${formatDifference(value)} ${unit}`
 
   return (
-    <span className="inline-flex min-h-5 items-center gap-1 text-[11px] font-medium text-muted-foreground tabular-nums">
-      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-      {value === null
-        ? "前週比較なし"
-        : `前週比 ${formatDifference(value)} ${unit}`}
+    <span className="weekly-comparison">
+      <Icon aria-hidden="true" />
+      <span aria-hidden={compact && value !== null ? "true" : undefined}>
+        {compact && value !== null
+          ? `${formatDifference(value)} ${unit}`
+          : label}
+      </span>
+      {compact && value !== null && <span className="sr-only">{label}</span>}
     </span>
   )
 }
 
-function AverageCard({
-  label,
-  shortLabel,
+function AverageMetric({
+  metric,
   average,
-  unit,
+  featured = false,
 }: {
-  label: string
-  shortLabel: string
+  metric: (typeof nutritionMetrics)[number]
   average: WeeklyAverage
-  unit: string
+  featured?: boolean
 }) {
+  const metricStyle = {
+    "--weekly-metric-color": `var(--color-${metric.key})`,
+  } as CSSProperties
+
   return (
-    <div className="min-w-0 rounded-xl border bg-muted/20 p-3 sm:p-4">
-      <p className="text-xs font-medium text-muted-foreground sm:text-sm">
-        <span className="sm:hidden">{shortLabel}</span>
-        <span className="hidden sm:inline">{label}</span>
+    <article
+      className="weekly-average"
+      data-featured={featured ? "true" : undefined}
+      data-empty={average.value === null ? "true" : undefined}
+      style={metricStyle}
+    >
+      <p className="weekly-average-label">
+        <span aria-hidden="true" />
+        {metric.label}
       </p>
-      <p className="mt-2 flex items-baseline gap-1">
-        <span className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
-          {formatValue(average.value)}
+      <p className="weekly-average-value">
+        <strong>{formatValue(average.value)}</strong>
+        {average.value !== null && <span>{metric.unit}</span>}
+      </p>
+      <div className="weekly-average-meta">
+        <Comparison
+          value={average.previousDifference}
+          unit={metric.unit}
+          compact={!featured}
+        />
+        <span>
+          {average.recordedDays === 0
+            ? "記録なし"
+            : `${average.recordedDays}日平均`}
         </span>
-        {average.value !== null && (
-          <span className="text-xs font-medium text-muted-foreground">
-            {unit}
-          </span>
-        )}
-      </p>
-      <div className="mt-2">
-        <Comparison value={average.previousDifference} unit={unit} />
       </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        {average.recordedDays === 0
-          ? "記録なし"
-          : `${average.recordedDays}日分の平均`}
-      </p>
-    </div>
+    </article>
   )
 }
 
@@ -124,24 +134,31 @@ function GoalRow({
   achievement: GoalAchievement
 }) {
   const rate = achievement.rate ?? 0
+  const clampedRate = Math.min(Math.max(rate, 0), 100)
+  const progressStyle = {
+    "--weekly-progress": clampedRate / 100,
+  } as CSSProperties
 
   return (
-    <div className="space-y-2 rounded-xl border p-3 sm:p-4">
-      <div className="flex items-start justify-between gap-3">
+    <div
+      className="weekly-goal"
+      data-empty={achievement.rate === null ? "true" : undefined}
+    >
+      <div className="weekly-goal-heading">
         <div>
-          <p className="text-sm font-medium">{label}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p>{label}</p>
+          <span>
             {achievement.recordedDays === 0
               ? "対象の記録なし"
               : `${achievement.achievedDays} / ${achievement.recordedDays} 記録日`}
-          </p>
+          </span>
         </div>
-        <span className="text-xl font-semibold tabular-nums">
-          {achievement.rate === null ? "—" : `${Math.round(achievement.rate)}%`}
-        </span>
+        <strong>
+          {achievement.rate === null ? "—" : `${Math.round(rate)}%`}
+        </strong>
       </div>
       <div
-        className="h-2 overflow-hidden rounded-full bg-muted"
+        className="weekly-goal-track"
         role="progressbar"
         aria-label={`${label}の達成率`}
         aria-valuemin={0}
@@ -151,39 +168,8 @@ function GoalRow({
           achievement.rate === null ? "記録なし" : `${Math.round(rate)}%`
         }
       >
-        <div
-          className="h-full rounded-full bg-foreground transition-[width]"
-          style={{ width: `${Math.min(Math.max(rate, 0), 100)}%` }}
-        />
+        <span style={progressStyle} />
       </div>
-    </div>
-  )
-}
-
-function BodyMetric({
-  label,
-  value,
-  unit,
-}: {
-  label: string
-  value: number | null
-  unit: string
-}) {
-  return (
-    <div className="rounded-xl border bg-muted/20 p-3 sm:p-4">
-      <p className="text-xs font-medium text-muted-foreground sm:text-sm">
-        {label}
-      </p>
-      <p className="mt-2 flex items-baseline gap-1">
-        <span className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
-          {formatValue(value)}
-        </span>
-        {value !== null && (
-          <span className="text-xs font-medium text-muted-foreground">
-            {unit}
-          </span>
-        )}
-      </p>
     </div>
   )
 }
@@ -200,20 +186,20 @@ function OptionalChange({
   if (change.start === null && change.end === null) return null
 
   return (
-    <div className="flex min-h-12 items-center justify-between gap-3 rounded-xl border px-3 py-2.5 sm:px-4">
-      <div>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">
+    <div className="weekly-change">
+      <dt>
+        <span>{label}</span>
+        <small>
           {change.start === null || change.end === null
             ? "比較できる記録なし"
             : `${formatValue(change.start)} → ${formatValue(change.end)} ${unit}`}
-        </p>
-      </div>
-      <span className="shrink-0 font-semibold tabular-nums">
+        </small>
+      </dt>
+      <dd>
         {change.difference === null
           ? "—"
           : `${formatDifference(change.difference)} ${unit}`}
-      </span>
+      </dd>
     </div>
   )
 }
@@ -240,166 +226,144 @@ export function WeeklyReview({
   const canGoPrevious = previousWeek !== null && previousWeek >= firstWeek
   const canGoNext = nextWeek !== null && nextWeek <= latestWeek
   const weight = review.bodyComposition.weight
+  const weightAverage = review.bodyComposition.weightAverage
 
   return (
-    <section aria-labelledby="weekly-review-heading" className="space-y-4">
-      <div className="weekly-review-heading flex items-end justify-between gap-3">
+    <section aria-labelledby="weekly-review-heading" className="weekly-review">
+      <header className="dashboard-section-heading weekly-review-heading">
         <div>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground">
-            WEEKLY REVIEW
-          </p>
-          <h2
-            id="weekly-review-heading"
-            className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl"
-          >
-            週間レビュー
-          </h2>
+          <h2 id="weekly-review-heading">週間レビュー</h2>
+          <p>1週間の平均と目標達成を前週と比較</p>
         </div>
-        <div className="weekly-review-navigation flex items-center rounded-xl border bg-background p-1 shadow-xs">
-          <button
-            type="button"
-            className="flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35"
-            onClick={() => previousWeek && setSelectedWeek(previousWeek)}
-            disabled={!canGoPrevious}
-            aria-label="前の週を表示"
-          >
-            <ChevronLeft className="size-5" aria-hidden="true" />
-          </button>
-          <p className="min-w-28 px-2 text-center text-sm font-medium tabular-nums sm:min-w-36">
-            {formatDate(review.startDate)} – {formatDate(review.endDate)}
-          </p>
-          <button
-            type="button"
-            className="flex size-11 items-center justify-center rounded-lg transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35"
-            onClick={() => nextWeek && setSelectedWeek(nextWeek)}
-            disabled={!canGoNext}
-            aria-label="次の週を表示"
-          >
-            <ChevronRight className="size-5" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
+      </header>
 
-      <div className="weekly-review-panel overflow-hidden gap-0 shadow-sm">
-        <header className="weekly-review-panel-header border-b bg-muted/20 px-4 py-4 sm:px-(--card-spacing)">
-          <div className="flex items-center gap-2">
-            <CalendarDays
-              className="size-5 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <h3 className="text-base sm:text-lg">この週のサマリー</h3>
+      <nav className="weekly-review-navigation" aria-label="表示する週を選択">
+        <button
+          type="button"
+          onClick={() => previousWeek && setSelectedWeek(previousWeek)}
+          disabled={!canGoPrevious}
+          aria-label="前の週を表示"
+        >
+          <ChevronLeft aria-hidden="true" />
+        </button>
+        <p aria-live="polite" aria-atomic="true">
+          <strong>
+            {formatDate(review.startDate)}–{formatDate(review.endDate)}
+          </strong>
+          <span>{selectedWeek === latestWeek ? "最新の週" : "過去の週"}</span>
+        </p>
+        <button
+          type="button"
+          onClick={() => nextWeek && setSelectedWeek(nextWeek)}
+          disabled={!canGoNext}
+          aria-label="次の週を表示"
+        >
+          <ChevronRight aria-hidden="true" />
+        </button>
+      </nav>
+
+      <div className="weekly-review-sheet">
+        <section
+          className="weekly-review-group"
+          aria-labelledby="weekly-nutrition-heading"
+        >
+          <header className="weekly-review-group-heading">
+            <h3 id="weekly-nutrition-heading">食事</h3>
+            <p>記録日の1日平均</p>
+          </header>
+
+          <div className="weekly-averages">
+            {nutritionMetrics.map((metric, index) => (
+              <AverageMetric
+                key={metric.key}
+                metric={metric}
+                average={review.nutrition.averages[metric.key]}
+                featured={index === 0}
+              />
+            ))}
           </div>
-        </header>
-        <div className="weekly-review-panel-content grid gap-6 px-4 py-5 lg:grid-cols-2 lg:px-(--card-spacing) lg:py-6">
-          <section
-            aria-labelledby="weekly-nutrition-heading"
-            className="min-w-0 space-y-4"
-          >
-            <div className="flex items-center gap-2">
-              <Utensils
-                className="size-5 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <h3 id="weekly-nutrition-heading" className="font-semibold">
-                食事
-              </h3>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              {nutritionMetrics.map((metric) => (
-                <AverageCard
-                  key={metric.key}
-                  label={metric.label}
-                  shortLabel={metric.shortLabel}
-                  average={review.nutrition.averages[metric.key]}
-                  unit={metric.unit}
-                />
-              ))}
-            </div>
-            <div className="space-y-2.5">
-              <div className="flex items-center gap-2 pt-1">
-                <CircleGauge
-                  className="size-4 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <h4 className="text-sm font-semibold">目標達成</h4>
-              </div>
-              <GoalRow
-                label="カロリー目標"
-                achievement={review.nutrition.calorieGoal}
-              />
-              <GoalRow
-                label="たんぱく質目標"
-                achievement={review.nutrition.proteinGoal}
-              />
-            </div>
-          </section>
 
           <section
-            aria-labelledby="weekly-body-heading"
-            className="min-w-0 space-y-4 lg:border-l lg:pl-6"
+            className="weekly-goals"
+            aria-labelledby="weekly-goals-heading"
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Scale
-                  className="size-5 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <h3 id="weekly-body-heading" className="font-semibold">
-                  身体組成
-                </h3>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {review.bodyComposition.recordedDays === 0
-                  ? "記録なし"
-                  : `${review.bodyComposition.recordedDays}日記録`}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              <BodyMetric label="週初の体重" value={weight.start} unit="kg" />
-              <BodyMetric label="週末の体重" value={weight.end} unit="kg" />
-              <BodyMetric
-                label="週内の増減"
-                value={weight.difference}
-                unit="kg"
-              />
-              <div className="rounded-xl border bg-muted/20 p-3 sm:p-4">
-                <p className="text-xs font-medium text-muted-foreground sm:text-sm">
-                  7日平均体重
-                </p>
-                <p className="mt-2 flex items-baseline gap-1">
-                  <span className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
-                    {formatValue(review.bodyComposition.weightAverage.value)}
-                  </span>
-                  {review.bodyComposition.weightAverage.value !== null && (
-                    <span className="text-xs font-medium text-muted-foreground">
-                      kg
-                    </span>
-                  )}
-                </p>
-                <div className="mt-2">
-                  <Comparison
-                    value={
-                      review.bodyComposition.weightAverage.previousDifference
-                    }
-                    unit="kg"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2.5">
-              <OptionalChange
-                label="体脂肪率の増減"
-                change={review.bodyComposition.bodyFat}
-                unit="pt"
-              />
-              <OptionalChange
-                label="筋肉量の増減"
-                change={review.bodyComposition.muscleMass}
-                unit="kg"
-              />
-            </div>
+            <h4 id="weekly-goals-heading">目標を満たした日</h4>
+            <GoalRow
+              label="カロリー"
+              achievement={review.nutrition.calorieGoal}
+            />
+            <GoalRow
+              label="たんぱく質"
+              achievement={review.nutrition.proteinGoal}
+            />
           </section>
-        </div>
+        </section>
+
+        <section
+          className="weekly-review-group"
+          aria-labelledby="weekly-body-heading"
+        >
+          <header className="weekly-review-group-heading">
+            <h3 id="weekly-body-heading">身体組成</h3>
+            <p>
+              {review.bodyComposition.recordedDays === 0
+                ? "この週の記録なし"
+                : `${review.bodyComposition.recordedDays}日分の記録`}
+            </p>
+          </header>
+
+          <div
+            className="weekly-weight"
+            data-empty={weightAverage.value === null ? "true" : undefined}
+          >
+            <div className="weekly-weight-average">
+              <p>7日平均体重</p>
+              <div>
+                <strong>{formatValue(weightAverage.value)}</strong>
+                {weightAverage.value !== null && <span>kg</span>}
+              </div>
+              <Comparison value={weightAverage.previousDifference} unit="kg" />
+            </div>
+
+            <dl className="weekly-weight-range">
+              <div>
+                <dt>週初</dt>
+                <dd>
+                  {formatValue(weight.start)}
+                  {weight.start !== null && <span> kg</span>}
+                </dd>
+              </div>
+              <div>
+                <dt>週末</dt>
+                <dd>
+                  {formatValue(weight.end)}
+                  {weight.end !== null && <span> kg</span>}
+                </dd>
+              </div>
+              <div>
+                <dt>週内</dt>
+                <dd>
+                  {weight.difference === null
+                    ? "—"
+                    : `${formatDifference(weight.difference)} kg`}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <dl className="weekly-changes">
+            <OptionalChange
+              label="体脂肪率"
+              change={review.bodyComposition.bodyFat}
+              unit="pt"
+            />
+            <OptionalChange
+              label="筋肉量"
+              change={review.bodyComposition.muscleMass}
+              unit="kg"
+            />
+          </dl>
+        </section>
       </div>
     </section>
   )
