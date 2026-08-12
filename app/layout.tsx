@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   applicationName: "フィットネス分析",
   title: "フィットネス分析",
-  description: "Notionと連携した個人用フィットネス分析ダッシュボードです。",
+  description: "身体組成と栄養を確認する個人用フィットネスダッシュボードです。",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -28,7 +28,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#18181b",
+  themeColor: "oklch(0.972 0.008 250)",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
