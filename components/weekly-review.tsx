@@ -91,16 +91,12 @@ function AverageMetric({
   average: WeeklyAverage
   featured?: boolean
 }) {
-  const metricStyle = {
-    "--weekly-metric-color": `var(--color-${metric.key})`,
-  } as CSSProperties
-
   return (
     <article
       className="weekly-average"
+      data-nutrition-metric={metric.key}
       data-featured={featured ? "true" : undefined}
       data-empty={average.value === null ? "true" : undefined}
-      style={metricStyle}
     >
       <p className="weekly-average-label">
         <span aria-hidden="true" />
@@ -127,9 +123,11 @@ function AverageMetric({
 }
 
 function GoalRow({
+  metric,
   label,
   achievement,
 }: {
+  metric: NutritionMetric
   label: string
   achievement: GoalAchievement
 }) {
@@ -142,6 +140,7 @@ function GoalRow({
   return (
     <div
       className="weekly-goal"
+      data-nutrition-metric={metric}
       data-empty={achievement.rate === null ? "true" : undefined}
     >
       <div className="weekly-goal-heading">
@@ -289,10 +288,12 @@ export function WeeklyReview({
           >
             <h4 id="weekly-goals-heading">目標を満たした日</h4>
             <GoalRow
+              metric="calories"
               label="カロリー"
               achievement={review.nutrition.calorieGoal}
             />
             <GoalRow
+              metric="protein"
               label="たんぱく質"
               achievement={review.nutrition.proteinGoal}
             />

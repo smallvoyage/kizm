@@ -7,6 +7,7 @@ import {
   getNutritionAchievement,
   hasNutritionData,
   type NutritionAchievement,
+  type NutritionMetric,
 } from "@/lib/fitness"
 import type { NutritionGoals } from "@/lib/nutrition-goals"
 import { cn } from "@/lib/utils"
@@ -141,6 +142,46 @@ export function NutritionHeatmap({
     },
     { none: 0, missed: 0, near: 0, achieved: 0 }
   )
+  const selectedNutrition: Array<{
+    metric: NutritionMetric
+    label: string
+    goalLabel: string
+    value: string
+    status: string
+  }> = [
+    {
+      metric: "calories",
+      label: "カロリー",
+      goalLabel: "カロリー目標",
+      value: formatAmount(selectedLog?.calories ?? null, "kcal"),
+      status: goalStatus(
+        selectedLog?.calories ?? null,
+        goals.calories,
+        "calories"
+      ),
+    },
+    {
+      metric: "protein",
+      label: "たんぱく質",
+      goalLabel: "たんぱく質目標",
+      value: formatAmount(selectedLog?.protein ?? null, "g"),
+      status: goalStatus(selectedLog?.protein ?? null, goals.protein, "macro"),
+    },
+    {
+      metric: "fat",
+      label: "脂質",
+      goalLabel: "脂質目標",
+      value: formatAmount(selectedLog?.fat ?? null, "g"),
+      status: goalStatus(selectedLog?.fat ?? null, goals.fat, "macro"),
+    },
+    {
+      metric: "carbs",
+      label: "炭水化物",
+      goalLabel: "炭水化物目標",
+      value: formatAmount(selectedLog?.carbs ?? null, "g"),
+      status: goalStatus(selectedLog?.carbs ?? null, goals.carbs, "macro"),
+    },
+  ]
 
   return (
     <section
@@ -261,49 +302,21 @@ export function NutritionHeatmap({
         </header>
 
         <dl className="nutrition-day-values">
-          {[
-            ["カロリー", formatAmount(selectedLog?.calories ?? null, "kcal")],
-            [
-              "P（たんぱく質）",
-              formatAmount(selectedLog?.protein ?? null, "g"),
-            ],
-            ["F（脂質）", formatAmount(selectedLog?.fat ?? null, "g")],
-            ["C（炭水化物）", formatAmount(selectedLog?.carbs ?? null, "g")],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{value}</dd>
+          {selectedNutrition.map((item) => (
+            <div key={item.metric} data-nutrition-metric={item.metric}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
             </div>
           ))}
         </dl>
 
         <dl className="nutrition-goal-status">
-          <div>
-            <dt>カロリー目標</dt>
-            <dd>
-              {goalStatus(
-                selectedLog?.calories ?? null,
-                goals.calories,
-                "calories"
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>たんぱく質目標</dt>
-            <dd>
-              {goalStatus(selectedLog?.protein ?? null, goals.protein, "macro")}
-            </dd>
-          </div>
-          <div>
-            <dt>脂質目標</dt>
-            <dd>{goalStatus(selectedLog?.fat ?? null, goals.fat, "macro")}</dd>
-          </div>
-          <div>
-            <dt>炭水化物目標</dt>
-            <dd>
-              {goalStatus(selectedLog?.carbs ?? null, goals.carbs, "macro")}
-            </dd>
-          </div>
+          {selectedNutrition.map((item) => (
+            <div key={item.metric} data-nutrition-metric={item.metric}>
+              <dt>{item.goalLabel}</dt>
+              <dd>{item.status}</dd>
+            </div>
+          ))}
         </dl>
       </article>
     </section>

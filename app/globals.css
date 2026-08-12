@@ -1207,6 +1207,26 @@ body {
   --sidebar-ring: var(--color-focus);
 }
 
+[data-nutrition-metric="calories"] {
+  --metric-color: var(--color-calories);
+  --metric-soft: var(--color-calories-soft);
+}
+
+[data-nutrition-metric="protein"] {
+  --metric-color: var(--color-protein);
+  --metric-soft: var(--color-protein-soft);
+}
+
+[data-nutrition-metric="fat"] {
+  --metric-color: var(--color-fat);
+  --metric-soft: var(--color-fat-soft);
+}
+
+[data-nutrition-metric="carbs"] {
+  --metric-color: var(--color-carbs);
+  --metric-soft: var(--color-carbs-soft);
+}
+
 html,
 body {
   overflow-x: clip;
@@ -1488,7 +1508,7 @@ body {
   height: var(--space-2xs);
   flex: 0 0 auto;
   border-radius: var(--radius-pill);
-  background: var(--weekly-metric-color);
+  background: var(--metric-color);
 }
 
 .weekly-average[data-featured="true"] .weekly-average-label {
@@ -1605,10 +1625,25 @@ body {
 }
 
 .weekly-goal-heading p {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   color: var(--color-ink);
   font-size: var(--text-sm);
   font-weight: 700;
   line-height: 1.2;
+}
+
+.weekly-goal-heading p::before,
+.nutrition-row-heading h3::before,
+.nutrition-day-values dt::before,
+.nutrition-goal-status dt::before {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--metric-color);
+  content: "";
 }
 
 .weekly-goal-heading span {
@@ -1634,7 +1669,7 @@ body {
   height: var(--space-2xs);
   overflow: clip;
   border-radius: var(--radius-pill);
-  background: var(--color-accent-soft);
+  background: var(--metric-soft);
   color: var(--color-ink);
 }
 
@@ -1645,7 +1680,7 @@ body {
   transform: scaleX(var(--weekly-progress));
   transform-origin: left center;
   border-radius: inherit;
-  background: var(--color-accent);
+  background: var(--metric-color);
   color: var(--color-accent-ink);
   transition: transform var(--dur-long) var(--ease-out);
 }
@@ -1882,6 +1917,9 @@ body {
 }
 
 .nutrition-row-heading h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   min-width: 0;
   color: var(--color-ink);
   font-size: var(--text-sm);
@@ -2248,6 +2286,9 @@ body {
 }
 
 .nutrition-day-values dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   color: var(--color-muted);
   font-size: var(--text-xs);
   line-height: 1.35;
@@ -2283,7 +2324,10 @@ body {
 }
 
 .nutrition-goal-status dt {
+  display: flex;
   min-width: 0;
+  align-items: center;
+  gap: var(--space-xs);
   color: var(--color-muted);
 }
 
