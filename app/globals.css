@@ -1533,7 +1533,7 @@ body {
   font-family: var(--font-outlier);
   font-size: var(--text-lg);
   font-weight: 600;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.025em;
   line-height: 1;
 }
 
@@ -1638,7 +1638,7 @@ body {
   font-size: var(--text-display);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.07em;
+  letter-spacing: -0.025em;
   line-height: 0.88;
 }
 
@@ -1869,7 +1869,7 @@ body {
   font-family: var(--font-outlier);
   font-size: var(--text-md);
   font-weight: 600;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.025em;
   line-height: 1;
 }
 
@@ -2212,7 +2212,7 @@ body {
   font-size: var(--text-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.025em;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -2361,7 +2361,7 @@ body {
   font-family: var(--font-display);
   font-size: clamp(1.25rem, 5.7vw, 1.625rem);
   font-weight: 600;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.025em;
   line-height: 1;
 }
 
@@ -2451,7 +2451,7 @@ body {
   font-size: var(--text-display);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.07em;
+  letter-spacing: -0.025em;
   line-height: 0.9;
 }
 

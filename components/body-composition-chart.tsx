@@ -10,6 +10,7 @@ import {
   ChartTooltip,
 } from "@/components/ui/chart"
 import type { BodyCompositionMetric, FitnessLog } from "@/lib/fitness"
+import { formatNumber } from "@/lib/format-number"
 import { cn } from "@/lib/utils"
 
 const chartConfig = {
@@ -70,7 +71,10 @@ function formatDate(date: string) {
 
 function formatDifference(value: number): string {
   if (value === 0) return "±0.0"
-  return `${value > 0 ? "+" : ""}${value.toFixed(1)}`
+  return `${value > 0 ? "+" : ""}${formatNumber(value, {
+    fractionDigits: 1,
+    fixed: true,
+  })}`
 }
 
 function latestBodyCompositionLog(logs: FitnessLog[]) {
@@ -166,7 +170,12 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
               </span>
               <span className="composition-option-value">
                 <strong>
-                  {summary.value === null ? "—" : summary.value.toFixed(1)}
+                  {summary.value === null
+                    ? "—"
+                    : formatNumber(summary.value, {
+                        fractionDigits: 1,
+                        fixed: true,
+                      })}
                 </strong>
                 {summary.value !== null && <span>{metric.unit}</span>}
               </span>
@@ -200,7 +209,12 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
           {selectedValue !== null && (
             <div className="composition-selected-value" aria-live="polite">
               <p>{selectedOption.label}</p>
-              <strong>{selectedValue.toFixed(1)}</strong>
+              <strong>
+                {formatNumber(selectedValue, {
+                  fractionDigits: 1,
+                  fixed: true,
+                })}
+              </strong>
               <span>{selectedOption.unit}</span>
             </div>
           )}
@@ -244,7 +258,9 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                   (dataMin: number) => dataMin - Y_AXIS_PADDING,
                   (dataMax: number) => dataMax + Y_AXIS_PADDING,
                 ]}
-                tickFormatter={(value: number) => value.toFixed(1)}
+                tickFormatter={(value: number) =>
+                  formatNumber(value, { fractionDigits: 1, fixed: true })
+                }
               />
               <ChartTooltip
                 trigger="click"
