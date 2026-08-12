@@ -9,6 +9,7 @@ import {
   type NutritionAchievement,
   type NutritionMetric,
 } from "@/lib/fitness"
+import { formatNumber } from "@/lib/format-number"
 import type { NutritionGoals } from "@/lib/nutrition-goals"
 import { cn } from "@/lib/utils"
 
@@ -67,8 +68,7 @@ function formatMonth(date: string): string {
 
 function formatAmount(value: number | null, unit: "kcal" | "g"): string {
   if (value === null) return "—"
-  const amount = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)
-  return `${amount} ${unit}`
+  return `${formatNumber(value)} ${unit}`
 }
 
 function goalStatus(

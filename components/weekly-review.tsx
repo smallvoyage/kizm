@@ -10,6 +10,7 @@ import {
 import { useMemo, useState } from "react"
 
 import type { FitnessLog, NutritionMetric } from "@/lib/fitness"
+import { formatNumber } from "@/lib/format-number"
 import {
   getWeeklyReview,
   getWeekStart,
@@ -39,12 +40,16 @@ function formatDate(date: string) {
 
 function formatValue(value: number | null, digits = 1) {
   if (value === null) return "—"
-  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(digits)
+  return formatNumber(value, { fractionDigits: digits })
 }
 
 function formatDifference(value: number, digits = 1) {
-  if (value === 0) return `±${value.toFixed(digits)}`
-  return `${value > 0 ? "+" : ""}${value.toFixed(digits)}`
+  const formattedValue = formatNumber(value, {
+    fractionDigits: digits,
+    fixed: true,
+  })
+  if (value === 0) return `±${formattedValue}`
+  return `${value > 0 ? "+" : ""}${formattedValue}`
 }
 
 function Comparison({

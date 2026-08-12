@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react"
 
 import type { FitnessLog, NutritionMetric } from "@/lib/fitness"
+import { formatNumber } from "@/lib/format-number"
 import type { NutritionGoals } from "@/lib/nutrition-goals"
 
 const metrics: Array<{
@@ -30,15 +31,11 @@ const metrics: Array<{
   },
 ]
 
-function formatAmount(value: number): string {
-  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)
-}
-
 function formatStatus(remaining: number | null, unit: "kcal" | "g"): string {
   if (remaining === null) return "記録なし"
-  if (remaining > 0) return `残り ${formatAmount(remaining)} ${unit}`
+  if (remaining > 0) return `残り ${formatNumber(remaining)} ${unit}`
   if (remaining === 0) return "目標達成"
-  return `${formatAmount(Math.abs(remaining))} ${unit} 超過`
+  return `${formatNumber(Math.abs(remaining))} ${unit} 超過`
 }
 
 export function NutritionSummary({
@@ -79,9 +76,9 @@ export function NutritionSummary({
             </header>
 
             <p className="nutrition-row-value">
-              <strong>{value === null ? "—" : formatAmount(value)}</strong>
+              <strong>{value === null ? "—" : formatNumber(value)}</strong>
               <span>
-                / {formatAmount(goal)} {metric.unit}
+                / {formatNumber(goal)} {metric.unit}
               </span>
             </p>
 
@@ -95,7 +92,7 @@ export function NutritionSummary({
               aria-valuetext={
                 value === null
                   ? "記録なし"
-                  : `${formatAmount(value)} ${metric.unit}、目標 ${formatAmount(goal)} ${metric.unit}`
+                  : `${formatNumber(value)} ${metric.unit}、目標 ${formatNumber(goal)} ${metric.unit}`
               }
             >
               <span />
