@@ -50,7 +50,7 @@ mobile-width at larger viewports.
 ## Motion
 
 - Easings: `--ease-out`, `--ease-in`, and `--ease-in-out` from `tokens.css`
-- Progress rings and pressed controls communicate state changes
+- Progress indicators and pressed controls communicate state changes
 - No page-load or scroll-linked reveals on mobile
 - Reduced motion: spatial transitions removed, functional state remains
 
