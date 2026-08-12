@@ -27,6 +27,7 @@ Modern-minimal, tuned toward a soft and exact personal-health interface.
 - `--color-muted`: oklch(0.46 0.014 250)
 - `--color-neutral`: oklch(0.36 0.016 250)
 - `--color-accent`: oklch(0.52 0.19 253)
+- `--color-accent-mid`: oklch(0.72 0.11 253)
 - `--color-focus`: oklch(0.48 0.22 253)
 
 The primary accent is blue. Additional chart colours are semantic data encodings,
@@ -103,6 +104,7 @@ mobile-width at larger viewports.
   --color-muted: oklch(0.46 0.014 250);
   --color-neutral: oklch(0.36 0.016 250);
   --color-accent: oklch(0.52 0.19 253);
+  --color-accent-mid: oklch(0.72 0.11 253);
   --color-accent-ink: oklch(0.985 0.006 250);
   --color-focus: oklch(0.48 0.22 253);
 
@@ -155,6 +157,7 @@ mobile-width at larger viewports.
   --color-ink-2: oklch(0.3 0.014 250);
   --color-ink: oklch(0.19 0.014 250);
   --color-accent: oklch(0.52 0.19 253);
+  --color-accent-mid: oklch(0.72 0.11 253);
   --color-focus: oklch(0.48 0.22 253);
   --font-display: var(--font-geist-sans);
   --font-body: var(--font-geist-sans);
@@ -196,6 +199,7 @@ mobile-width at larger viewports.
     "control-border": { "$value": "oklch(0.66 0.014 250)", "$type": "color" },
     "muted": { "$value": "oklch(0.46 0.014 250)", "$type": "color" },
     "accent": { "$value": "oklch(0.52 0.19 253)", "$type": "color" },
+    "accent-mid": { "$value": "oklch(0.72 0.11 253)", "$type": "color" },
     "focus": { "$value": "oklch(0.48 0.22 253)", "$type": "color" }
   },
   "font": {

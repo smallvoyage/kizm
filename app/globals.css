@@ -1170,7 +1170,7 @@ body {
 
 /* Hallmark · genre: modern-minimal · macrostructure: Stat-Led
  * design-system: design.md · designed-as-app · mobile-only
- * nutrition-summary critique: P5 H5 E5 S5 R5 V5
+ * nutrition UI critique: P5 H5 E5 S5 R5 V5
  */
 :root {
   --background: var(--color-paper);
@@ -1501,6 +1501,347 @@ body {
   background: var(--metric-color);
 }
 
+.nutrition-history {
+  min-width: 0;
+  overflow: clip;
+  border: var(--rule-hairline) solid var(--color-rule);
+  border-radius: var(--radius-panel);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-card);
+}
+
+.nutrition-history-heading,
+.nutrition-day-detail-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.nutrition-history-heading {
+  padding: var(--space-md);
+  border-block-end: var(--rule-hairline) solid var(--color-rule);
+}
+
+.nutrition-history-heading > div,
+.nutrition-day-detail-heading > div {
+  min-width: 0;
+}
+
+.nutrition-history-heading h3,
+.nutrition-day-detail-heading h4 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.nutrition-history-heading h3 {
+  font-size: var(--text-sm);
+  line-height: 1.25;
+}
+
+.nutrition-history-heading p,
+.nutrition-day-detail-heading p {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.nutrition-history-heading p {
+  margin-block-start: var(--space-3xs);
+}
+
+.nutrition-history-period {
+  flex: 0 0 auto;
+  color: var(--color-neutral);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nutrition-heatmap {
+  min-width: 0;
+  padding: var(--space-md);
+}
+
+.nutrition-heatmap-grid {
+  min-width: 0;
+}
+
+.nutrition-heatmap-months,
+.nutrition-heatmap-body {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: var(--space-md) repeat(12, minmax(0, 1fr));
+  gap: var(--space-3xs);
+}
+
+.nutrition-heatmap-months {
+  min-height: var(--space-lg);
+  align-items: start;
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.nutrition-heatmap-months span {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.nutrition-heatmap-weekdays,
+.nutrition-heatmap-week {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: repeat(7, minmax(0, 1fr));
+  gap: var(--space-3xs);
+}
+
+.nutrition-heatmap-weekdays span,
+.nutrition-heatmap-cell {
+  aspect-ratio: 1;
+}
+
+.nutrition-heatmap-weekdays span {
+  display: grid;
+  place-items: center start;
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  line-height: 1;
+}
+
+.nutrition-heatmap-weekdays .is-hidden {
+  visibility: hidden;
+}
+
+.nutrition-heatmap-cell,
+.nutrition-heatmap-legend i,
+.nutrition-achievement i {
+  display: block;
+  border: var(--rule-hairline) solid transparent;
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+
+.nutrition-heatmap-cell {
+  position: relative;
+  appearance: none;
+  min-width: 0;
+  padding: 0;
+  border-radius: var(--space-3xs);
+  outline: var(--rule-strong) solid transparent;
+  outline-offset: var(--space-3xs);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    opacity var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.nutrition-heatmap-cell[data-achievement="none"],
+.nutrition-heatmap-legend i[data-achievement="none"] {
+  border-color: var(--color-rule-2);
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+}
+
+.nutrition-heatmap-cell[data-achievement="missed"],
+.nutrition-heatmap-legend i[data-achievement="missed"] {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+.nutrition-heatmap-cell[data-achievement="near"],
+.nutrition-heatmap-legend i[data-achievement="near"] {
+  background: var(--color-accent-mid);
+  color: var(--color-ink);
+}
+
+.nutrition-heatmap-cell[data-achievement="achieved"],
+.nutrition-heatmap-legend i[data-achievement="achieved"] {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.nutrition-heatmap-cell[data-future="true"] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-ink);
+}
+
+.nutrition-heatmap-cell[data-selected="true"] {
+  z-index: var(--z-raised);
+  outline-color: var(--color-ink);
+}
+
+.nutrition-heatmap-cell:focus-visible {
+  z-index: var(--z-raised);
+  outline-color: var(--color-focus);
+}
+
+.nutrition-heatmap-cell:active {
+  transform: scale(0.88);
+}
+
+.nutrition-heatmap-cell:disabled {
+  cursor: not-allowed;
+}
+
+.nutrition-heatmap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  margin-block-start: var(--space-md);
+  padding: 0;
+  color: var(--color-neutral);
+  font-size: var(--text-xs);
+  list-style: none;
+}
+
+.nutrition-heatmap-legend > li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  white-space: nowrap;
+}
+
+.nutrition-heatmap-legend i {
+  width: var(--space-sm);
+  height: var(--space-sm);
+  flex: 0 0 auto;
+}
+
+.nutrition-day-detail {
+  min-width: 0;
+  padding: var(--space-md);
+  border-block-start: var(--rule-hairline) solid var(--color-rule);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+}
+
+.nutrition-day-detail-heading h4 {
+  margin-block-start: var(--space-3xs);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.nutrition-achievement {
+  display: inline-flex;
+  min-height: 2rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding-inline: var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper-3);
+  color: var(--color-neutral);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nutrition-achievement i {
+  width: var(--space-xs);
+  height: var(--space-xs);
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+}
+
+.nutrition-achievement[data-achievement="missed"] {
+  background: var(--color-error-soft);
+  color: var(--color-neutral);
+}
+
+.nutrition-achievement[data-achievement="missed"] i {
+  background: var(--color-error);
+}
+
+.nutrition-achievement[data-achievement="near"] {
+  background: var(--color-fat-soft);
+  color: var(--color-neutral);
+}
+
+.nutrition-achievement[data-achievement="near"] i {
+  background: var(--color-fat);
+}
+
+.nutrition-achievement[data-achievement="achieved"] {
+  background: var(--color-muscle-mass-soft);
+  color: var(--color-neutral);
+}
+
+.nutrition-achievement[data-achievement="achieved"] i {
+  background: var(--color-success);
+}
+
+.nutrition-day-values {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin-block-start: var(--space-lg);
+}
+
+.nutrition-day-values > div {
+  min-width: 0;
+}
+
+.nutrition-day-values dt {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.nutrition-day-values dd {
+  margin-block-start: var(--space-3xs);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.nutrition-goal-status {
+  display: grid;
+  min-width: 0;
+  margin-block-start: var(--space-lg);
+  border-block-start: var(--rule-hairline) solid var(--color-rule);
+}
+
+.nutrition-goal-status > div {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  border-block-end: var(--rule-hairline) solid var(--color-rule);
+  font-size: var(--text-sm);
+}
+
+.nutrition-goal-status dt {
+  min-width: 0;
+  color: var(--color-muted);
+}
+
+.nutrition-goal-status dd {
+  flex: 0 0 auto;
+  color: var(--color-ink);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .composition-workbench {
   display: grid;
   min-width: 0;
@@ -1761,6 +2102,10 @@ body {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .nutrition-heatmap-cell:not(:disabled):hover {
+    opacity: 0.72;
+  }
+
   .composition-option:hover {
     background: var(--color-paper-3);
     color: var(--color-ink);
@@ -1798,6 +2143,14 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .nutrition-heatmap-cell {
+    transition-duration: 0ms;
+  }
+
+  .nutrition-heatmap-cell:active {
+    transform: none;
+  }
+
   .composition-option {
     transition-duration: 0ms;
   }
