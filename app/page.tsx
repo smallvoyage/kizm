@@ -2,6 +2,7 @@ import { Activity, Database, TriangleAlert } from "lucide-react"
 import { connection } from "next/server"
 
 import { BodyCompositionChart } from "@/components/body-composition-chart"
+import { NutritionHeatmap } from "@/components/nutrition-heatmap"
 import { NutritionSummary } from "@/components/nutrition-summary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +12,13 @@ import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
 
 export default async function Home() {
   await connection()
+
+  const referenceDate = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Tokyo",
+  }).format(new Date())
 
   let logs: FitnessLog[] = []
   let errorMessage: string | null = null
@@ -59,6 +67,11 @@ export default async function Home() {
               <NutritionSummary
                 log={getLatestNutritionLog(logs)}
                 goals={NUTRITION_GOALS}
+              />
+              <NutritionHeatmap
+                logs={logs}
+                goals={NUTRITION_GOALS}
+                referenceDate={referenceDate}
               />
             </section>
 

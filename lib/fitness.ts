@@ -13,6 +13,7 @@ export type FitnessLog = {
 export type BodyCompositionMetric = "weight" | "bodyFat" | "muscleMass"
 export type NutritionMetric = "calories" | "protein" | "fat" | "carbs"
 export type ChartPeriod = "7D" | "30D" | "90D" | "ALL"
+export type NutritionAchievement = "none" | "missed" | "near" | "achieved"
 
 export type MetricSummary = {
   value: number | null
@@ -29,6 +30,13 @@ const PERIOD_DAYS: Record<Exclude<ChartPeriod, "ALL">, number> = {
   "30D": 30,
   "90D": 90,
 }
+
+const NUTRITION_METRICS: NutritionMetric[] = [
+  "calories",
+  "protein",
+  "fat",
+  "carbs",
+]
 
 function toUtcDay(date: string): number | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
@@ -73,11 +81,38 @@ export function getBodyCompositionSummary(
 export function getLatestNutritionLog(logs: FitnessLog[]): FitnessLog | null {
   return (
     logs.findLast((log) =>
-      (["calories", "protein", "fat", "carbs"] as const).some(
-        (metric) => log[metric] !== null
-      )
+      NUTRITION_METRICS.some((metric) => log[metric] !== null)
     ) ?? null
   )
+}
+
+export function hasNutritionData(log: FitnessLog | null): boolean {
+  return (
+    log !== null && NUTRITION_METRICS.some((metric) => log[metric] !== null)
+  )
+}
+
+export function getNutritionAchievement(
+  log: FitnessLog | null,
+  goals: Pick<Record<NutritionMetric, number>, "calories" | "protein">
+): NutritionAchievement {
+  if (!hasNutritionData(log)) return "none"
+
+  const calories = log?.calories
+  const protein = log?.protein
+  if (calories === null || calories === undefined) return "missed"
+  if (protein === null || protein === undefined) return "missed"
+
+  const calorieRatio = calories / goals.calories
+  const proteinRatio = protein / goals.protein
+  const caloriesAchieved = calorieRatio >= 0.9 && calorieRatio <= 1.1
+  const proteinAchieved = proteinRatio >= 1
+
+  if (caloriesAchieved && proteinAchieved) return "achieved"
+
+  const caloriesNear = calorieRatio >= 0.8 && calorieRatio <= 1.2
+  const proteinNear = proteinRatio >= 0.8
+  return caloriesNear && proteinNear ? "near" : "missed"
 }
 
 export function filterLogsByPeriod(
