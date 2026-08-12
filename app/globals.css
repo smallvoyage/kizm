@@ -2060,6 +2060,12 @@ body {
   color: var(--color-ink);
 }
 
+.nutrition-heatmap-cell[data-achievement="partial"],
+.nutrition-heatmap-legend i[data-achievement="partial"] {
+  background: var(--color-accent-faint);
+  color: var(--color-ink);
+}
+
 .nutrition-heatmap-cell[data-achievement="near"],
 .nutrition-heatmap-legend i[data-achievement="near"] {
   background: var(--color-accent-mid);
@@ -2164,6 +2170,15 @@ body {
 
 .nutrition-achievement[data-achievement="missed"] i {
   background: var(--color-error);
+}
+
+.nutrition-achievement[data-achievement="partial"] {
+  background: var(--color-accent-soft);
+  color: var(--color-neutral);
+}
+
+.nutrition-achievement[data-achievement="partial"] i {
+  background: var(--color-accent-mid);
 }
 
 .nutrition-achievement[data-achievement="near"] {
