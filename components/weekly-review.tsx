@@ -285,7 +285,7 @@ export function WeeklyReview({ logs }: { logs: FitnessLog[] }) {
             <OptionalChange
               label="体脂肪率"
               change={review.bodyComposition.bodyFat}
-              unit="pt"
+              unit="%"
             />
             <OptionalChange
               label="筋肉量"
