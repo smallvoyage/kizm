@@ -57,13 +57,7 @@ export default async function Home() {
             </span>
             <span>フィットネス</span>
           </h1>
-          <div className="dashboard-actions">
-            <div className="dashboard-source">
-              <Database aria-hidden="true" />
-              <span>Notion</span>
-            </div>
-            <RefreshButton />
-          </div>
+          <RefreshButton />
         </header>
 
         {errorMessage ? (
