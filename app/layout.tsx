@@ -14,6 +14,7 @@ const japaneseFont = LINE_Seed_JP({
   variable: "--font-japanese",
   weight: ["400", "700"],
   subsets: ["latin"],
+  preload: false,
   display: "swap",
   adjustFontFallback: false,
 })
