@@ -2104,18 +2104,19 @@ body {
 
 .nutrition-heatmap-legend {
   display: grid;
-  grid-template-columns: repeat(5, max-content);
-  justify-content: space-between;
-  gap: var(--space-3xs);
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: var(--space-xs) var(--space-2xs);
   margin-block-start: var(--space-md);
   padding: 0;
   color: var(--color-neutral);
-  font-size: clamp(0.625rem, 2.8vw, var(--text-xs));
+  font-size: 0.625rem;
   list-style: none;
 }
 
 .nutrition-heatmap-legend > li {
-  display: inline-flex;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   align-items: center;
   gap: var(--space-3xs);
   white-space: nowrap;
@@ -2552,6 +2553,18 @@ body {
 
   .weekly-review-group {
     padding-inline: var(--space-lg);
+  }
+
+  .nutrition-heatmap-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-sm);
+    font-size: var(--text-xs);
+  }
+
+  .nutrition-heatmap-legend > li {
+    flex-direction: row;
+    gap: var(--space-2xs);
   }
 }
 
