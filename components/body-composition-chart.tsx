@@ -25,7 +25,7 @@ const metricOptions: Array<{
   value: BodyCompositionMetric
   label: string
   unit: "kg" | "%"
-  differenceUnit: "kg" | "pt"
+  differenceUnit: "kg" | "%"
   color: string
   soft: string
 }> = [
@@ -41,7 +41,7 @@ const metricOptions: Array<{
     value: "bodyFat",
     label: "体脂肪率",
     unit: "%",
-    differenceUnit: "pt",
+    differenceUnit: "%",
     color: "var(--color-body-fat)",
     soft: "var(--color-body-fat-soft)",
   },
