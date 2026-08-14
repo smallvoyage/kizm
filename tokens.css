@@ -1,6 +1,6 @@
 /* Hallmark · genre: modern-minimal · macrostructure: Stat-Led · tone: soft utilitarian · anchor hue: blue · design-system: design.md · designed-as-app
  * theme: custom · vibe: "soft, exact, health-data dense" · paper: oklch(0.972 0.008 250) · accent: oklch(0.52 0.19 253)
- * display: Geist Sans · body: Geist Sans · axes: light / geometric-sans / cool
+ * display: IBM Plex Sans JP · body: IBM Plex Sans JP · axes: light / humanist-sans / cool
  * enrichment: none · context: user-provided · Hallmark v1.1.0
  * Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V5
  * contrast: pass (40–41) · slop: pass (42–45) · honest: pass (46) · chrome: pass (47)
@@ -42,8 +42,8 @@
   --color-muscle-mass: oklch(0.51 0.145 155);
   --color-muscle-mass-soft: oklch(0.93 0.03 155);
 
-  --font-display: var(--font-geist-sans);
-  --font-body: var(--font-geist-sans);
+  --font-display: var(--font-app-sans);
+  --font-body: var(--font-app-sans);
   --font-outlier: var(--font-geist-mono);
 
   --space-3xs: 0.125rem;
