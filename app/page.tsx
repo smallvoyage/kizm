@@ -4,6 +4,7 @@ import { connection } from "next/server"
 import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { NutritionHeatmap } from "@/components/nutrition-heatmap"
 import { NutritionSummary } from "@/components/nutrition-summary"
+import { RefreshButton } from "@/components/refresh-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { WeeklyReview } from "@/components/weekly-review"
 import { type FitnessLog, getLatestNutritionLog } from "@/lib/fitness"
@@ -56,9 +57,12 @@ export default async function Home() {
             </span>
             <span>フィットネス</span>
           </h1>
-          <div className="dashboard-source">
-            <Database aria-hidden="true" />
-            <span>Notion</span>
+          <div className="dashboard-actions">
+            <div className="dashboard-source">
+              <Database aria-hidden="true" />
+              <span>Notion</span>
+            </div>
+            <RefreshButton />
           </div>
         </header>
 
