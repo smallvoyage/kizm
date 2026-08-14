@@ -39,10 +39,7 @@ const NUTRITION_METRICS: NutritionMetric[] = [
   "carbs",
 ]
 
-export function calculateEstimatedOneRepMax(
-  weightKg: number,
-  reps: number
-): number {
+function calculateEstimatedOneRepMax(weightKg: number, reps: number): number {
   return weightKg * (1 + reps / 30)
 }
 
