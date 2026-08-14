@@ -1316,6 +1316,53 @@ body {
   height: 0.875rem;
 }
 
+.dashboard-refresh {
+  display: grid;
+  width: calc(var(--space-xl) + var(--space-2xs));
+  height: calc(var(--space-xl) + var(--space-2xs));
+  flex: 0 0 auto;
+  place-items: center;
+  border: var(--rule-hairline) solid var(--color-rule);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper-2);
+  color: var(--color-neutral);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+.dashboard-refresh svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2.25;
+}
+
+.dashboard-refresh:focus-visible {
+  outline: var(--rule-strong) solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.dashboard-refresh:active:not(:disabled) {
+  transform: translateY(var(--rule-hairline));
+}
+
+.dashboard-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dashboard-refresh[data-state="loading"] svg {
+  animation: dashboard-refresh-spin 800ms linear infinite;
+}
+
+@keyframes dashboard-refresh-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 .dashboard-content {
   display: grid;
   gap: var(--space-xl);
@@ -2526,6 +2573,11 @@ body {
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .dashboard-refresh:not(:disabled):hover {
+    background: var(--color-paper-3);
+    color: var(--color-ink);
+  }
+
   .nutrition-heatmap-cell:not(:disabled):hover {
     opacity: 0.72;
   }
@@ -2570,6 +2622,18 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dashboard-refresh {
+    transition-duration: 0ms;
+  }
+
+  .dashboard-refresh:active:not(:disabled) {
+    transform: none;
+  }
+
+  .dashboard-refresh[data-state="loading"] svg {
+    animation: none;
+  }
+
   .weekly-review-navigation button {
     transition-duration: 0ms;
   }
