@@ -19,6 +19,7 @@ const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
 const achievementLabels: Record<NutritionAchievement, string> = {
   none: "記録なし",
   missed: "未達",
+  partial: "一部達成",
   near: "おおむね達成",
   achieved: "達成",
 }
@@ -140,7 +141,7 @@ export function NutritionHeatmap({
       summary[day.achievement] += 1
       return summary
     },
-    { none: 0, missed: 0, near: 0, achieved: 0 }
+    { none: 0, missed: 0, partial: 0, near: 0, achieved: 0 }
   )
   const selectedNutrition: Array<{
     metric: NutritionMetric
@@ -265,7 +266,8 @@ export function NutritionHeatmap({
 
         <p id="heatmap-summary" className="sr-only">
           達成 {achievementSummary.achieved}日、おおむね達成
-          {achievementSummary.near}日、未達 {achievementSummary.missed}
+          {achievementSummary.near}日、一部達成
+          {achievementSummary.partial}日、未達 {achievementSummary.missed}
           日、記録なし
           {achievementSummary.none}日です。
         </p>

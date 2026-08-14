@@ -12,7 +12,12 @@ export type FitnessLog = {
 
 export type BodyCompositionMetric = "weight" | "bodyFat" | "muscleMass"
 export type NutritionMetric = "calories" | "protein" | "fat" | "carbs"
-export type NutritionAchievement = "none" | "missed" | "near" | "achieved"
+export type NutritionAchievement =
+  | "none"
+  | "missed"
+  | "partial"
+  | "near"
+  | "achieved"
 
 const NUTRITION_METRICS: NutritionMetric[] = [
   "calories",
@@ -58,5 +63,9 @@ export function getNutritionAchievement(
 
   const caloriesNear = calorieRatio >= 0.8 && calorieRatio <= 1.2
   const macrosNear = macroRatios.every((ratio) => ratio >= 0.8)
-  return caloriesNear && macrosNear ? "near" : "missed"
+  if (caloriesNear && macrosNear) return "near"
+
+  const caloriesPartial = calorieRatio >= 0.6 && calorieRatio <= 1.4
+  const macrosPartial = macroRatios.every((ratio) => ratio >= 0.6)
+  return caloriesPartial && macrosPartial ? "partial" : "missed"
 }
