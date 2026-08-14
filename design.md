@@ -47,8 +47,8 @@ nutrition metric must expose `data-nutrition-metric` so the shared mapping in
 
 ## Typography
 
-- Display: Geist Sans, weight 700, style normal
-- Body: Geist Sans, weight 400
+- Display: Noto Sans JP, weight 700, style normal
+- Body: Noto Sans JP, weight 400
 - Numeric outlier: Geist Mono, weight 600
 - Display tracking: -0.035em
 - Type scale anchor: `--text-display = clamp(2.75rem, 13vw, 4.25rem)`
@@ -87,7 +87,7 @@ mobile-width at larger viewports.
 ## What pages MUST share
 
 - Cool, softly tinted paper and white-tinted raised surfaces
-- Geist Sans UI and Geist Mono measurements
+- Noto Sans JP UI and Geist Mono measurements
 - Blue interaction accent and semantic data colours
 - Rounded 16–24 px panels with restrained borders and one whisper shadow
 - Mobile-width composition and safe-area padding
@@ -119,8 +119,8 @@ mobile-width at larger viewports.
   --color-accent-ink: oklch(0.985 0.006 250);
   --color-focus: oklch(0.48 0.22 253);
 
-  --font-display: var(--font-geist-sans);
-  --font-body: var(--font-geist-sans);
+  --font-display: var(--font-app-sans);
+  --font-body: var(--font-app-sans);
   --font-outlier: var(--font-geist-mono);
 
   --space-3xs: 0.125rem;
@@ -170,8 +170,8 @@ mobile-width at larger viewports.
   --color-accent: oklch(0.52 0.19 253);
   --color-accent-mid: oklch(0.72 0.11 253);
   --color-focus: oklch(0.48 0.22 253);
-  --font-display: var(--font-geist-sans);
-  --font-body: var(--font-geist-sans);
+  --font-display: var(--font-app-sans);
+  --font-body: var(--font-app-sans);
   --font-outlier: var(--font-geist-mono);
   --spacing-3xs: 0.125rem;
   --spacing-2xs: 0.25rem;
@@ -214,8 +214,8 @@ mobile-width at larger viewports.
     "focus": { "$value": "oklch(0.48 0.22 253)", "$type": "color" }
   },
   "font": {
-    "display": { "$value": "Geist Sans", "$type": "fontFamily" },
-    "body": { "$value": "Geist Sans", "$type": "fontFamily" },
+    "display": { "$value": "Noto Sans JP", "$type": "fontFamily" },
+    "body": { "$value": "Noto Sans JP", "$type": "fontFamily" },
     "outlier": { "$value": "Geist Mono", "$type": "fontFamily" }
   },
   "space": {
