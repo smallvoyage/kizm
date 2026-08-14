@@ -47,9 +47,9 @@ nutrition metric must expose `data-nutrition-metric` so the shared mapping in
 
 ## Typography
 
-- Display: Geist Sans, weight 700, style normal
-- Body: Geist Sans, weight 400
-- Numeric outlier: Geist Mono, weight 600
+- Display: Roboto for Latin and numerals, Zen Kaku Gothic New for Japanese, weight 700, style normal
+- Body: Roboto for Latin and numerals, Zen Kaku Gothic New for Japanese, weight 400
+- Numeric outlier: Roboto, weight 600
 - Display tracking: -0.035em
 - Type scale anchor: `--text-display = clamp(2.75rem, 13vw, 4.25rem)`
 
@@ -87,7 +87,7 @@ mobile-width at larger viewports.
 ## What pages MUST share
 
 - Cool, softly tinted paper and white-tinted raised surfaces
-- Geist Sans UI and Geist Mono measurements
+- Roboto Latin and numerals with Zen Kaku Gothic New Japanese text
 - Blue interaction accent and semantic data colours
 - Rounded 16–24 px panels with restrained borders and one whisper shadow
 - Mobile-width composition and safe-area padding
@@ -119,9 +119,9 @@ mobile-width at larger viewports.
   --color-accent-ink: oklch(0.985 0.006 250);
   --color-focus: oklch(0.48 0.22 253);
 
-  --font-display: var(--font-geist-sans);
-  --font-body: var(--font-geist-sans);
-  --font-outlier: var(--font-geist-mono);
+  --font-display: var(--font-latin), var(--font-japanese);
+  --font-body: var(--font-latin), var(--font-japanese);
+  --font-outlier: var(--font-latin);
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;
@@ -170,9 +170,9 @@ mobile-width at larger viewports.
   --color-accent: oklch(0.52 0.19 253);
   --color-accent-mid: oklch(0.72 0.11 253);
   --color-focus: oklch(0.48 0.22 253);
-  --font-display: var(--font-geist-sans);
-  --font-body: var(--font-geist-sans);
-  --font-outlier: var(--font-geist-mono);
+  --font-display: var(--font-latin), var(--font-japanese);
+  --font-body: var(--font-latin), var(--font-japanese);
+  --font-outlier: var(--font-latin);
   --spacing-3xs: 0.125rem;
   --spacing-2xs: 0.25rem;
   --spacing-xs: 0.5rem;
@@ -214,9 +214,9 @@ mobile-width at larger viewports.
     "focus": { "$value": "oklch(0.48 0.22 253)", "$type": "color" }
   },
   "font": {
-    "display": { "$value": "Geist Sans", "$type": "fontFamily" },
-    "body": { "$value": "Geist Sans", "$type": "fontFamily" },
-    "outlier": { "$value": "Geist Mono", "$type": "fontFamily" }
+    "display": { "$value": ["Roboto", "Zen Kaku Gothic New"], "$type": "fontFamily" },
+    "body": { "$value": ["Roboto", "Zen Kaku Gothic New"], "$type": "fontFamily" },
+    "outlier": { "$value": "Roboto", "$type": "fontFamily" }
   },
   "space": {
     "xs": { "$value": "0.5rem", "$type": "dimension" },
