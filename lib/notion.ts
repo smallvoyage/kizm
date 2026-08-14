@@ -9,6 +9,9 @@ import {
 
 import type { FitnessLog } from "@/lib/fitness"
 
+const FITNESS_HISTORY_DAYS = 84
+const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
+
 const PROPERTY_NAMES = {
   date: "Log Date",
   steps: "Steps",
@@ -117,12 +120,29 @@ function toFitnessLog(page: PageObjectResponse): FitnessLog | null {
   }
 }
 
+function getHistoryStartDate() {
+  const referenceDate = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Tokyo",
+  }).format(new Date())
+  const referenceTime = new Date(`${referenceDate}T00:00:00Z`).getTime()
+
+  return new Date(
+    referenceTime - (FITNESS_HISTORY_DAYS - 1) * DAY_IN_MILLISECONDS
+  )
+    .toISOString()
+    .slice(0, 10)
+}
+
 export async function getFitnessLogs(): Promise<FitnessLog[]> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const daysDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_DAYS_DATA_SOURCE_ID"
   )
   const notion = new Client({ auth: token, notionVersion: "2026-03-11" })
+  const historyStartDate = getHistoryStartDate()
 
   try {
     const dataSource = await notion.dataSources.retrieve({
@@ -138,6 +158,16 @@ export async function getFitnessLogs(): Promise<FitnessLog[]> {
         data_source_id: daysDataSourceId,
         page_size: 100,
         start_cursor: startCursor,
+        filter: {
+          property: PROPERTY_NAMES.date,
+          date: { on_or_after: historyStartDate },
+        },
+        sorts: [
+          {
+            property: PROPERTY_NAMES.date,
+            direction: "ascending",
+          },
+        ],
       })
       pages.push(...response.results.filter(isFullPage))
       startCursor = response.has_more
@@ -149,7 +179,6 @@ export async function getFitnessLogs(): Promise<FitnessLog[]> {
     return pages
       .map(toFitnessLog)
       .filter((log): log is FitnessLog => log !== null)
-      .sort((a, b) => a.date.localeCompare(b.date))
   } catch (error: unknown) {
     if (error instanceof FitnessDataError) throw error
 
