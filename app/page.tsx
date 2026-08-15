@@ -2,6 +2,7 @@ import { Activity, Database, TriangleAlert } from "lucide-react"
 import { connection } from "next/server"
 
 import { BodyCompositionChart } from "@/components/body-composition-chart"
+import { FitnessExport } from "@/components/fitness-export"
 import { NutritionHeatmap } from "@/components/nutrition-heatmap"
 import { NutritionSummary } from "@/components/nutrition-summary"
 import { RefreshButton } from "@/components/refresh-button"
@@ -45,6 +46,7 @@ export default async function Home() {
   }
 
   const latestNutritionLog = getLatestNutritionLog(logs)
+  const latestLog = logs.at(-1) ?? null
   const latestRecordDate = logs.at(-1)?.date ?? null
 
   return (
@@ -57,7 +59,10 @@ export default async function Home() {
             </span>
             <span>フィットネス</span>
           </h1>
-          <RefreshButton />
+          <div className="dashboard-actions">
+            <FitnessExport log={latestLog} />
+            <RefreshButton />
+          </div>
         </header>
 
         {errorMessage ? (

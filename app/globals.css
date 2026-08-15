@@ -1,6 +1,106 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../tokens.css";
+
+/* Hallmark · component: export control · genre: modern-minimal · theme: design.md
+ * states: default · hover · focus · active · disabled · loading · error · success
+ * contrast: pass (46–50)
+ */
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.fitness-export-button {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  border: var(--rule-hairline) solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--color-accent);
+  background: var(--color-paper-2);
+  font: 600 var(--text-sm) / 1 var(--font-body);
+  white-space: nowrap;
+  transition:
+    transform var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    background var(--dur-micro) var(--ease-out);
+}
+
+.fitness-export-button svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.fitness-export-button:focus-visible {
+  outline: var(--rule-strong) solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.fitness-export-button:active {
+  transform: translateY(var(--rule-hairline));
+}
+
+.fitness-export-button:disabled {
+  border-color: var(--color-rule-2);
+  color: var(--color-muted);
+  background: var(--color-paper-3);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.fitness-export-button[data-state="loading"] svg {
+  animation: export-spin 800ms linear infinite;
+}
+
+.fitness-export-button[data-state="success"] {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.fitness-export-button[data-state="error"] {
+  border-color: var(--color-error);
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+@keyframes export-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fitness-export-button:not(:disabled):hover {
+    color: var(--color-accent-ink);
+    background: var(--color-accent);
+  }
+}
+
+@media (max-width: 359px) {
+  .fitness-export-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .fitness-export-button {
+    width: 2.75rem;
+    padding-inline: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fitness-export-button {
+    transition: none;
+  }
+}
 /* ejected from shadcn@4.16.2 */
 @theme inline {
   @keyframes accordion-down {
