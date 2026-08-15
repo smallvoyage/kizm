@@ -5,6 +5,7 @@ import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { NutritionHeatmap } from "@/components/nutrition-heatmap"
 import { NutritionSummary } from "@/components/nutrition-summary"
 import { RefreshButton } from "@/components/refresh-button"
+import { TrainingRecordExport } from "@/components/training-record-export"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { WeeklyReview } from "@/components/weekly-review"
 import { type FitnessLog, getLatestNutritionLog } from "@/lib/fitness"
@@ -46,6 +47,7 @@ export default async function Home() {
 
   const latestNutritionLog = getLatestNutritionLog(logs)
   const latestRecordDate = logs.at(-1)?.date ?? null
+  const latestLog = logs.at(-1) ?? null
 
   return (
     <main className="fitness-shell">
@@ -57,7 +59,10 @@ export default async function Home() {
             </span>
             <span>フィットネス</span>
           </h1>
-          <RefreshButton />
+          <div className="dashboard-header-actions">
+            {latestLog && <TrainingRecordExport log={latestLog} />}
+            <RefreshButton />
+          </div>
         </header>
 
         {errorMessage ? (
