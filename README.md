@@ -42,7 +42,8 @@ lib/fitness-data.ts                   Days / Workoutsのデータ取得契約
 lib/fitness-data-source.ts            使用するデータソースのエントリポイント
 lib/notion-client.ts                  Notion Client生成とトークン設定
 lib/notion-errors.ts                  Notion SDKエラーの安全なドメインエラー変換
-lib/notion.ts                         pagination、検証、正規化
+lib/notion.ts                         pagination、検証
+lib/notion-mapper.ts                  Notion Pageからドメインモデルへの変換
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
 lib/nutrition-goals.ts                1日の栄養目標のサーバー側設定
 ```

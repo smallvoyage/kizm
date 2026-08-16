@@ -12,49 +12,31 @@ import {
 } from "@/lib/fitness-data"
 import { createNotionClient } from "@/lib/notion-client"
 import { toFitnessDataError } from "@/lib/notion-errors"
+import {
+  mapNotionPageToFitnessLog,
+  mapNotionPageToWorkoutSet,
+  NOTION_DAY_PROPERTY_NAMES,
+  NOTION_WORKOUT_PROPERTY_NAMES,
+} from "@/lib/notion-mapper"
 
 const FITNESS_HISTORY_DAYS = 84
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
 
-const PROPERTY_NAMES = {
-  date: "Log Date",
-  steps: "Steps",
-  calories: "Total Calories",
-  protein: "Total Protein g",
-  legacyProtein: "Total Protein",
-  fat: "Total Fat g",
-  carbs: "Total Carbs g",
-  weight: "Weight kg",
-  bodyFat: "Body Fat %",
-  muscleMass: "Muscle Mass kg",
-} as const
-
 const REQUIRED_PROPERTY_TYPES = {
-  [PROPERTY_NAMES.date]: "date",
-  [PROPERTY_NAMES.weight]: "number",
-  [PROPERTY_NAMES.bodyFat]: "number",
-  [PROPERTY_NAMES.muscleMass]: "number",
-} as const
-
-const WORKOUT_PROPERTY_NAMES = {
-  date: "Exercised Day",
-  category: "Category",
-  exercise: "Exercise",
-  weight: "Weight kg",
-  reps: "Reps",
-  setCount: "Set Count",
+  [NOTION_DAY_PROPERTY_NAMES.date]: "date",
+  [NOTION_DAY_PROPERTY_NAMES.weight]: "number",
+  [NOTION_DAY_PROPERTY_NAMES.bodyFat]: "number",
+  [NOTION_DAY_PROPERTY_NAMES.muscleMass]: "number",
 } as const
 
 const REQUIRED_WORKOUT_PROPERTY_TYPES = {
-  [WORKOUT_PROPERTY_NAMES.date]: "title",
-  [WORKOUT_PROPERTY_NAMES.category]: "select",
-  [WORKOUT_PROPERTY_NAMES.exercise]: "select",
-  [WORKOUT_PROPERTY_NAMES.weight]: "rich_text",
-  [WORKOUT_PROPERTY_NAMES.reps]: "number",
-  [WORKOUT_PROPERTY_NAMES.setCount]: "number",
+  [NOTION_WORKOUT_PROPERTY_NAMES.date]: "title",
+  [NOTION_WORKOUT_PROPERTY_NAMES.category]: "select",
+  [NOTION_WORKOUT_PROPERTY_NAMES.exercise]: "select",
+  [NOTION_WORKOUT_PROPERTY_NAMES.weight]: "rich_text",
+  [NOTION_WORKOUT_PROPERTY_NAMES.reps]: "number",
+  [NOTION_WORKOUT_PROPERTY_NAMES.setCount]: "number",
 } as const
-
-type PageProperty = PageObjectResponse["properties"][string]
 
 const schemaValidationPromises = new Map<string, Promise<void>>()
 
@@ -66,59 +48,6 @@ function getRequiredEnvironmentVariable(name: string): string {
     )
   }
   return value
-}
-
-function getNumber(
-  properties: PageObjectResponse["properties"],
-  ...names: string[]
-) {
-  for (const name of names) {
-    const property: PageProperty | undefined = properties[name]
-
-    if (property?.type === "number") {
-      return property.number
-    }
-
-    if (property?.type === "rollup" && property.rollup.type === "number") {
-      return property.rollup.number
-    }
-  }
-
-  return null
-}
-
-function getDate(properties: PageObjectResponse["properties"], name: string) {
-  const property: PageProperty | undefined = properties[name]
-  return property?.type === "date" ? (property.date?.start ?? null) : null
-}
-
-function getPlainText(property: PageProperty | undefined): string | null {
-  if (property?.type === "title") {
-    return (
-      property.title
-        .map((item) => item.plain_text)
-        .join("")
-        .trim() || null
-    )
-  }
-  if (property?.type === "rich_text") {
-    return (
-      property.rich_text
-        .map((item) => item.plain_text)
-        .join("")
-        .trim() || null
-    )
-  }
-  return null
-}
-
-function isCalendarDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-
-  const date = new Date(`${value}T00:00:00Z`)
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  )
 }
 
 function validateProperties(properties: Record<string, { type: string }>) {
@@ -188,68 +117,6 @@ async function ensureValidDataSourceSchema(
   }
 }
 
-function toFitnessLog(page: PageObjectResponse): FitnessLog | null {
-  const { properties } = page
-  const date = getDate(properties, PROPERTY_NAMES.date)?.slice(0, 10) ?? null
-  if (!date) return null
-
-  return {
-    date,
-    steps: getNumber(properties, PROPERTY_NAMES.steps),
-    calories: getNumber(properties, PROPERTY_NAMES.calories),
-    protein: getNumber(
-      properties,
-      PROPERTY_NAMES.protein,
-      PROPERTY_NAMES.legacyProtein
-    ),
-    fat: getNumber(properties, PROPERTY_NAMES.fat),
-    carbs: getNumber(properties, PROPERTY_NAMES.carbs),
-    weight: getNumber(properties, PROPERTY_NAMES.weight),
-    bodyFat: getNumber(properties, PROPERTY_NAMES.bodyFat),
-    muscleMass: getNumber(properties, PROPERTY_NAMES.muscleMass),
-  }
-}
-
-function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
-  const { properties } = page
-  const date = getPlainText(properties[WORKOUT_PROPERTY_NAMES.date])?.slice(
-    0,
-    10
-  )
-  const categoryProperty = properties[WORKOUT_PROPERTY_NAMES.category]
-  const category =
-    categoryProperty?.type === "select"
-      ? (categoryProperty.select?.name.trim() ?? "未分類")
-      : "未分類"
-  const exerciseProperty = properties[WORKOUT_PROPERTY_NAMES.exercise]
-  const exercise =
-    exerciseProperty?.type === "select"
-      ? (exerciseProperty.select?.name.trim() ?? null)
-      : null
-  const weightText = getPlainText(properties[WORKOUT_PROPERTY_NAMES.weight])
-  const weightKg = weightText === null ? Number.NaN : Number(weightText)
-  const reps = getNumber(properties, WORKOUT_PROPERTY_NAMES.reps)
-  const setCount = getNumber(properties, WORKOUT_PROPERTY_NAMES.setCount)
-
-  if (
-    !date ||
-    !isCalendarDate(date) ||
-    !exercise ||
-    !Number.isFinite(weightKg) ||
-    weightKg < 0 ||
-    reps === null ||
-    !Number.isFinite(reps) ||
-    reps <= 0 ||
-    setCount === null ||
-    !Number.isSafeInteger(setCount) ||
-    setCount <= 0
-  ) {
-    return null
-  }
-
-  return { date, category, exercise, weightKg, reps, setCount }
-}
-
 function getHistoryStartDate() {
   const referenceDate = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
@@ -291,12 +158,12 @@ async function fetchFitnessLogs(): Promise<DaysResult> {
         page_size: 100,
         start_cursor: startCursor,
         filter: {
-          property: PROPERTY_NAMES.date,
+          property: NOTION_DAY_PROPERTY_NAMES.date,
           date: { on_or_after: historyStartDate },
         },
         sorts: [
           {
-            property: PROPERTY_NAMES.date,
+            property: NOTION_DAY_PROPERTY_NAMES.date,
             direction: "ascending",
           },
         ],
@@ -312,7 +179,7 @@ async function fetchFitnessLogs(): Promise<DaysResult> {
         data_source_id: daysDataSourceId,
         page_size: 1,
         filter: {
-          property: PROPERTY_NAMES.date,
+          property: NOTION_DAY_PROPERTY_NAMES.date,
           date: { before: historyStartDate },
         },
       })
@@ -325,7 +192,7 @@ async function fetchFitnessLogs(): Promise<DaysResult> {
 
     return {
       logs: pages
-        .map(toFitnessLog)
+        .map(mapNotionPageToFitnessLog)
         .filter((log): log is FitnessLog => log !== null),
       hasOlderLogs: false,
     }
@@ -363,7 +230,7 @@ async function getWorkoutSets(): Promise<WorkoutSet[]> {
     } while (startCursor)
 
     return pages
-      .map(toWorkoutSet)
+      .map(mapNotionPageToWorkoutSet)
       .filter((set): set is WorkoutSet => set !== null)
       .sort((a, b) => a.date.localeCompare(b.date))
   } catch (error: unknown) {
