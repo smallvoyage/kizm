@@ -15,7 +15,7 @@ export const NOTION_DAY_PROPERTY_NAMES = {
   muscleMass: "Muscle Mass kg",
 } as const
 
-export const NOTION_WORKOUT_PROPERTY_NAMES = {
+const NOTION_WORKOUT_PROPERTY_NAMES = {
   date: "Exercised Day",
   category: "Category",
   exercise: "Exercise",
