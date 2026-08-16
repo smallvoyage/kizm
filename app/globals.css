@@ -647,9 +647,11 @@
   }
 }
 
-/* Hallmark · component: export dialog · genre: modern-minimal · theme: design.md
+/* Hallmark · component: workout export dialog · genre: modern-minimal · theme: design.md
  * states: default · hover · focus · active · disabled · loading · error · success
- * contrast: pass (46–50)
+ * contrast: pass (40–41) · honest: pass (46) · chrome: pass (47)
+ * tokens: pass (48) · responsive: pass (34, 49–57) · icons: pass (30)
+ * Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4
  */
 .dashboard-header-actions,
 .record-export-trigger,
@@ -700,7 +702,10 @@
 }
 
 .record-export-dialog {
+  position: fixed;
+  inset: 0;
   width: min(calc(100% - var(--space-lg)), 30rem);
+  height: fit-content;
   max-width: none;
   max-height: calc(100dvh - var(--space-lg));
   margin: auto;
@@ -709,11 +714,13 @@
   border-radius: var(--radius-panel);
   background: var(--color-paper-2);
   color: var(--color-ink);
-  box-shadow: 0 var(--space-xs) var(--space-xl) oklch(0.19 0.014 250 / 0.18);
+  box-shadow: 0 var(--space-xs) var(--space-xl)
+    color-mix(in oklch, var(--color-ink) 18%, transparent);
+  overscroll-behavior: contain;
 }
 
 .record-export-dialog::backdrop {
-  background: oklch(0.19 0.014 250 / 0.52);
+  background: color-mix(in oklch, var(--color-ink) 52%, transparent);
 }
 
 .record-export-panel {
@@ -728,21 +735,24 @@
   margin-block-end: var(--space-lg);
 }
 
-.record-export-eyebrow {
-  margin-block-end: var(--space-2xs);
-  color: var(--color-accent);
-  font-family: var(--font-outlier);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.record-export-heading {
+  min-width: 0;
+}
+
+.record-export-heading p {
+  margin-block-start: var(--space-2xs);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
 }
 
 .record-export-panel h2 {
+  min-width: 0;
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: clamp(var(--text-md), 6.5vw, var(--text-lg));
   font-style: normal;
   font-weight: 700;
   letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
 }
 
 .record-export-close {
@@ -771,6 +781,7 @@
   background: var(--color-paper-3);
   color: var(--color-muted);
   font-size: var(--text-sm);
+  scrollbar-width: thin;
 }
 
 .record-export-preview img {
@@ -778,6 +789,40 @@
   width: 100%;
   height: auto;
   border-radius: var(--radius-card);
+}
+
+.record-export-status {
+  display: grid;
+  max-width: 18rem;
+  justify-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  color: var(--color-neutral);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.record-export-status > svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-accent);
+}
+
+.record-export-status[data-state="error"] > svg {
+  color: var(--color-error);
+}
+
+.record-export-status button {
+  min-height: 2.75rem;
+  padding-inline: var(--space-md);
+  border: var(--rule-hairline) solid var(--color-control-border);
+  border-radius: var(--radius-input);
+  background: var(--color-paper-2);
+  color: var(--color-ink-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .record-export-actions {
@@ -808,12 +853,21 @@
 
 .record-export-action:last-child {
   background: var(--color-paper-2);
-  color: var(--color-accent);
+  color: var(--color-ink-2);
 }
 
 .record-export-action:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.record-export-status button:focus-visible {
+  outline: var(--rule-strong) solid var(--color-focus);
+  outline-offset: var(--space-3xs);
+}
+
+.record-export-status button:active {
+  transform: translateY(var(--space-3xs));
 }
 
 .record-export-actions svg {
@@ -841,7 +895,8 @@
 
 @media (hover: hover) and (pointer: fine) {
   .record-export-trigger:hover,
-  .record-export-close:hover {
+  .record-export-close:hover,
+  .record-export-status button:hover {
     background: var(--color-paper-3);
   }
 
@@ -852,13 +907,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .record-export-trigger,
-  .record-export-action {
+  .record-export-action,
+  .record-export-status button {
     transition-duration: 0ms;
   }
 
   .record-export-trigger:active,
   .record-export-close:active,
-  .record-export-action:active:not(:disabled) {
+  .record-export-action:active:not(:disabled),
+  .record-export-status button:active {
     transform: none;
   }
 }

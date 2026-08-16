@@ -70,7 +70,13 @@ export default async function Home() {
 
   const latestNutritionLog = getLatestNutritionLog(logs)
   const latestRecordDate = logs.at(-1)?.date ?? null
-  const latestLog = logs.at(-1) ?? null
+  const latestWorkoutDate = workoutSets.reduce(
+    (latest, set) => (set.date > latest ? set.date : latest),
+    ""
+  )
+  const latestWorkoutSets = workoutSets.filter(
+    (set) => set.date === latestWorkoutDate
+  )
   const hasSourceError = Boolean(errorMessage || workoutErrorMessage)
   const hasNoRecords = logs.length === 0 && workoutSets.length === 0
   const shouldShowEmptyState = !hasSourceError && hasNoRecords
@@ -86,10 +92,10 @@ export default async function Home() {
             <span>フィットネス</span>
           </h1>
           <div className="dashboard-header-actions">
-            {latestLog && (
+            {latestWorkoutSets.length > 0 && (
               <TrainingRecordExport
-                key={JSON.stringify(latestLog)}
-                log={latestLog}
+                key={JSON.stringify(latestWorkoutSets)}
+                workoutSets={latestWorkoutSets}
               />
             )}
             <RefreshButton />

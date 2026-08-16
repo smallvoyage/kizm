@@ -1,15 +1,45 @@
 "use client"
 
-import { Download, ImageIcon, Share2, X } from "lucide-react"
+import {
+  CircleAlert,
+  Download,
+  ImageIcon,
+  LoaderCircle,
+  Share2,
+  X,
+} from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
-import type { FitnessLog } from "@/lib/fitness"
+import type { WorkoutSet } from "@/lib/fitness"
+import { formatNumber } from "@/lib/format-number"
 
 type ExportState = "idle" | "rendering" | "ready" | "error"
 
+type WorkoutGroup = {
+  exercise: string
+  sets: WorkoutSet[]
+}
+
+type RenderedRecord = {
+  blob: Blob
+  height: number
+}
+
+type PreviewImage = RenderedRecord & {
+  url: string
+}
+
 const CARD_WIDTH = 1080
-const CARD_HEIGHT = 1350
+const MIN_CARD_HEIGHT = 1350
+const CARD_PADDING = 72
+const CONTENT_PANEL_TOP = 298
+const CONTENT_TOP = 356
+const CONTENT_PANEL_BOTTOM_PADDING = 28
+const FOOTER_HEIGHT = 142
+const EXERCISE_HEADER_HEIGHT = 64
+const SET_LINE_HEIGHT = 54
+const SET_COLUMNS = 3
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ja-JP", {
@@ -21,10 +51,32 @@ function formatDate(date: string) {
   }).format(new Date(`${date}T00:00:00Z`))
 }
 
-function formatMetric(value: number | null, unit: string) {
-  return value === null
-    ? "—"
-    : `${value.toLocaleString("ja-JP", { maximumFractionDigits: 1 })} ${unit}`
+function formatShortDate(date: string) {
+  return new Intl.DateTimeFormat("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`))
+}
+
+function groupWorkoutSets(workoutSets: WorkoutSet[]) {
+  const groups = new Map<string, WorkoutSet[]>()
+
+  for (const set of workoutSets) {
+    const exerciseSets = groups.get(set.exercise) ?? []
+    exerciseSets.push(set)
+    groups.set(set.exercise, exerciseSets)
+  }
+
+  return [...groups].map(([exercise, sets]) => ({ exercise, sets }))
+}
+
+function getGroupHeight(group: WorkoutGroup) {
+  return (
+    EXERCISE_HEADER_HEIGHT +
+    Math.ceil(group.sets.length / SET_COLUMNS) * SET_LINE_HEIGHT
+  )
 }
 
 function roundedRect(
@@ -37,203 +89,257 @@ function roundedRect(
 ) {
   context.beginPath()
   context.roundRect(x, y, width, height, radius)
-  context.fill()
 }
 
-async function renderRecord(log: FitnessLog) {
+function setFittedFont(
+  context: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  fontFamily: string
+) {
+  let fontSize = 32
+  context.font = `700 ${fontSize}px ${fontFamily}`
+  while (fontSize > 18 && context.measureText(text).width > maxWidth) {
+    fontSize -= 1
+    context.font = `700 ${fontSize}px ${fontFamily}`
+  }
+}
+
+function getToken(styles: CSSStyleDeclaration, name: string) {
+  return styles.getPropertyValue(name).trim()
+}
+
+async function renderRecord(
+  workoutSets: WorkoutSet[]
+): Promise<RenderedRecord> {
   await document.fonts.ready
 
+  const groups = groupWorkoutSets(workoutSets)
+  const contentHeight = groups.reduce(
+    (height, group) => height + getGroupHeight(group),
+    0
+  )
+  const cardHeight = Math.max(
+    MIN_CARD_HEIGHT,
+    CONTENT_TOP + contentHeight + FOOTER_HEIGHT
+  )
   const canvas = document.createElement("canvas")
   canvas.width = CARD_WIDTH
-  canvas.height = CARD_HEIGHT
+  canvas.height = cardHeight
   const context = canvas.getContext("2d")
   if (!context) throw new Error("Canvas is not available")
 
-  context.fillStyle = "#f3f6fb"
-  context.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+  const styles = getComputedStyle(document.documentElement)
+  const color = (name: string) => getToken(styles, name)
+  const bodyFont = getComputedStyle(document.body).fontFamily
+  const date = workoutSets[0]?.date ?? ""
+  const totalSets = workoutSets.length
 
-  context.fillStyle = "#245ad6"
-  roundedRect(context, 72, 72, 112, 112, 32)
-  context.strokeStyle = "#ffffff"
-  context.lineWidth = 12
-  context.lineCap = "round"
-  context.beginPath()
-  context.moveTo(98, 132)
-  context.lineTo(119, 132)
-  context.lineTo(134, 105)
-  context.lineTo(157, 150)
-  context.lineTo(171, 125)
-  context.stroke()
+  context.fillStyle = color("--color-paper")
+  context.fillRect(0, 0, CARD_WIDTH, cardHeight)
 
-  context.fillStyle = "#18202d"
-  context.font = '700 42px Inter, "LINE Seed JP", sans-serif'
-  context.fillText("FITNESS RECORD", 214, 125)
-  context.fillStyle = "#657084"
-  context.font = '500 28px Inter, "LINE Seed JP", sans-serif'
-  context.fillText("積み重ねを、次の一歩へ。", 214, 171)
+  context.fillStyle = color("--color-accent")
+  roundedRect(context, CARD_PADDING, 76, 52, 12, 6)
+  context.fill()
 
-  context.fillStyle = "#ffffff"
-  roundedRect(context, 72, 246, 936, 958, 56)
+  context.fillStyle = color("--color-muted")
+  context.font = `600 27px ${bodyFont}`
+  context.fillText(formatDate(date), CARD_PADDING, 146)
 
-  context.fillStyle = "#657084"
-  context.font = '600 28px Inter, "LINE Seed JP", sans-serif'
-  context.fillText(formatDate(log.date), 132, 326)
-  context.fillStyle = "#18202d"
-  context.font = '700 64px Inter, "LINE Seed JP", sans-serif'
-  context.fillText("今日の記録", 132, 414)
+  context.fillStyle = color("--color-ink")
+  context.font = `700 72px ${bodyFont}`
+  context.fillText("筋トレMEMO", CARD_PADDING, 238)
 
-  const steps = log.steps ?? 0
-  const stepProgress = Math.min(steps / 10_000, 1)
-  context.strokeStyle = "#e0e8f5"
-  context.lineWidth = 34
-  context.beginPath()
-  context.arc(306, 638, 142, -Math.PI / 2, Math.PI * 1.5)
-  context.stroke()
-  context.strokeStyle = "#245ad6"
-  context.beginPath()
-  context.arc(
-    306,
-    638,
-    142,
-    -Math.PI / 2,
-    -Math.PI / 2 + Math.PI * 2 * stepProgress
+  context.textAlign = "right"
+  context.fillStyle = color("--color-accent")
+  context.font = `700 31px ${bodyFont}`
+  context.fillText(
+    `${formatNumber(groups.length)}種目  /  ${formatNumber(totalSets)}セット`,
+    CARD_WIDTH - CARD_PADDING,
+    232
   )
-  context.stroke()
-  context.textAlign = "center"
-  context.fillStyle = "#657084"
-  context.font = '600 26px Inter, "LINE Seed JP", sans-serif'
-  context.fillText("STEPS", 306, 609)
-  context.fillStyle = "#18202d"
-  context.font = '700 54px Inter, "LINE Seed JP", sans-serif'
-  context.fillText(log.steps?.toLocaleString("ja-JP") ?? "—", 306, 676)
-  context.fillStyle = "#657084"
-  context.font = '500 23px Inter, "LINE Seed JP", sans-serif'
-  context.fillText("歩", 306, 717)
   context.textAlign = "start"
 
-  const metrics = [
-    { label: "体重", value: formatMetric(log.weight, "kg"), color: "#245ad6" },
-    {
-      label: "体脂肪率",
-      value: formatMetric(log.bodyFat, "%"),
-      color: "#c34082",
-    },
-    {
-      label: "筋肉量",
-      value: formatMetric(log.muscleMass, "kg"),
-      color: "#2a8b67",
-    },
-  ]
+  context.fillStyle = color("--color-paper-2")
+  roundedRect(
+    context,
+    CARD_PADDING,
+    CONTENT_PANEL_TOP,
+    CARD_WIDTH - CARD_PADDING * 2,
+    CONTENT_TOP -
+      CONTENT_PANEL_TOP +
+      contentHeight +
+      CONTENT_PANEL_BOTTOM_PADDING,
+    30
+  )
+  context.fill()
 
-  metrics.forEach((metric, index) => {
-    const y = 502 + index * 150
-    context.fillStyle = "#f3f6fb"
-    roundedRect(context, 520, y, 416, 118, 28)
-    context.fillStyle = metric.color
-    roundedRect(context, 550, y + 29, 10, 60, 5)
-    context.fillStyle = "#657084"
-    context.font = '600 23px Inter, "LINE Seed JP", sans-serif'
-    context.fillText(metric.label, 586, y + 45)
-    context.fillStyle = "#18202d"
-    context.font = '700 35px Inter, "LINE Seed JP", sans-serif'
-    context.fillText(metric.value, 586, y + 88)
+  let groupTop = CONTENT_TOP
+  groups.forEach((group, groupIndex) => {
+    if (groupIndex > 0) {
+      context.fillStyle = color("--color-rule")
+      context.fillRect(
+        CARD_PADDING + 34,
+        groupTop - 1,
+        CARD_WIDTH - CARD_PADDING * 2 - 68,
+        2
+      )
+    }
+
+    context.fillStyle = color("--color-muted")
+    context.font = `600 23px ${bodyFont}`
+    context.fillText(
+      String(groupIndex + 1).padStart(2, "0"),
+      CARD_PADDING + 34,
+      groupTop + 38
+    )
+
+    context.fillStyle = color("--color-ink")
+    setFittedFont(context, group.exercise, 620, bodyFont)
+    context.fillText(group.exercise, CARD_PADDING + 88, groupTop + 40)
+
+    context.textAlign = "right"
+    context.fillStyle = color("--color-muted")
+    context.font = `600 22px ${bodyFont}`
+    context.fillText(
+      `${formatNumber(group.sets.length)}セット`,
+      CARD_WIDTH - CARD_PADDING - 34,
+      groupTop + 38
+    )
+    context.textAlign = "start"
+
+    const setsLeft = CARD_PADDING + 88
+    const setColumnWidth = 252
+    group.sets.forEach((set, setIndex) => {
+      const column = setIndex % SET_COLUMNS
+      const row = Math.floor(setIndex / SET_COLUMNS)
+      const x = setsLeft + column * setColumnWidth
+      const y = groupTop + EXERCISE_HEADER_HEIGHT + row * SET_LINE_HEIGHT
+
+      context.fillStyle = color("--color-accent-soft")
+      roundedRect(context, x, y, 224, 40, 12)
+      context.fill()
+
+      context.fillStyle = color("--color-ink-2")
+      context.font = `600 23px ${bodyFont}`
+      context.fillText(
+        `${String(setIndex + 1).padStart(2, "0")}  ${formatNumber(set.weightKg, { fractionDigits: 1 })} kg × ${formatNumber(set.reps)} 回`,
+        x + 14,
+        y + 28
+      )
+    })
+
+    groupTop += getGroupHeight(group)
   })
 
-  context.fillStyle = "#e0e5ed"
-  context.fillRect(132, 917, 804, 2)
-  context.fillStyle = "#657084"
-  context.font = '500 25px Inter, "LINE Seed JP", sans-serif'
-  context.fillText("食事", 132, 986)
-  const nutrition = [
-    ["カロリー", formatMetric(log.calories, "kcal")],
-    ["たんぱく質", formatMetric(log.protein, "g")],
-    ["脂質", formatMetric(log.fat, "g")],
-    ["炭水化物", formatMetric(log.carbs, "g")],
-  ]
-  nutrition.forEach(([label, value], index) => {
-    const x = 132 + index * 201
-    context.fillStyle = "#657084"
-    context.font = '500 20px Inter, "LINE Seed JP", sans-serif'
-    context.fillText(label, x, 1040)
-    context.fillStyle = "#18202d"
-    context.font = '700 27px Inter, "LINE Seed JP", sans-serif'
-    context.fillText(value, x, 1085)
-  })
-
-  context.fillStyle = "#657084"
-  context.font = '600 24px Inter, "LINE Seed JP", sans-serif'
-  context.fillText("FITNESS ANALYTICS", 72, 1282)
+  const footerY = cardHeight - 68
+  context.fillStyle = color("--color-muted")
+  context.font = `600 23px ${bodyFont}`
+  context.fillText("FITNESS ANALYTICS", CARD_PADDING, footerY)
   context.textAlign = "right"
-  context.fillText("#トレーニング記録", 1008, 1282)
+  context.fillText("#トレーニング記録", CARD_WIDTH - CARD_PADDING, footerY)
 
-  return new Promise<Blob>((resolve, reject) => {
+  const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
-      (blob) =>
-        blob ? resolve(blob) : reject(new Error("Image generation failed")),
+      (result) =>
+        result ? resolve(result) : reject(new Error("Image generation failed")),
       "image/png"
     )
   })
+
+  return { blob, height: cardHeight }
 }
 
-export function TrainingRecordExport({ log }: { log: FitnessLog }) {
+export function TrainingRecordExport({
+  workoutSets,
+}: {
+  workoutSets: WorkoutSet[]
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [state, setState] = useState<ExportState>("idle")
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [imageBlob, setImageBlob] = useState<Blob | null>(null)
+  const [preview, setPreview] = useState<PreviewImage | null>(null)
+  const date = workoutSets[0]?.date ?? ""
 
   useEffect(
     () => () => {
-      if (imageUrl) URL.revokeObjectURL(imageUrl)
+      if (preview) URL.revokeObjectURL(preview.url)
     },
-    [imageUrl]
+    [preview]
   )
 
-  const open = async () => {
-    dialogRef.current?.showModal()
-    if (state === "ready") return
+  const generate = async () => {
     setState("rendering")
     try {
-      const blob = await renderRecord(log)
-      setImageBlob(blob)
-      setImageUrl(URL.createObjectURL(blob))
+      const rendered = await renderRecord(workoutSets)
+      const url = URL.createObjectURL(rendered.blob)
+      setPreview((current) => {
+        if (current) URL.revokeObjectURL(current.url)
+        return { ...rendered, url }
+      })
       setState("ready")
     } catch {
       setState("error")
     }
   }
 
-  const filename = `fitness-record-${log.date}.png`
+  const open = () => {
+    dialogRef.current?.showModal()
+    requestAnimationFrame(() => dialogRef.current?.focus())
+    if (state !== "ready" && state !== "rendering") void generate()
+  }
+
+  const filename = `training-record-${date}.png`
 
   const download = () => {
-    if (!imageUrl) return
+    if (!preview) return
     const anchor = document.createElement("a")
-    anchor.href = imageUrl
+    anchor.href = preview.url
     anchor.download = filename
     anchor.click()
   }
 
   const share = async () => {
-    if (!imageBlob) return
-    const file = new File([imageBlob], filename, { type: "image/png" })
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: "トレーニング記録" })
+    if (!preview) return
+    const file = new File([preview.blob], filename, { type: "image/png" })
+    if (!navigator.canShare?.({ files: [file] })) {
+      download()
       return
     }
-    download()
+
+    try {
+      await navigator.share({ files: [file], title: "トレーニング記録" })
+    } catch (error: unknown) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        download()
+      }
+    }
   }
 
   return (
     <>
       <button type="button" className="record-export-trigger" onClick={open}>
         <ImageIcon aria-hidden="true" />
-        <span>画像にする</span>
+        <span>記録を画像化</span>
       </button>
-      <dialog ref={dialogRef} className="record-export-dialog">
+      <dialog
+        ref={dialogRef}
+        className="record-export-dialog"
+        aria-labelledby="record-export-title"
+        tabIndex={-1}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) event.currentTarget.close()
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") event.currentTarget.close()
+        }}
+      >
         <div className="record-export-panel">
           <header>
-            <div>
-              <p className="record-export-eyebrow">SHARE YOUR PROGRESS</p>
-              <h2>記録を画像にする</h2>
+            <div className="record-export-heading">
+              <h2 id="record-export-title">トレーニング記録</h2>
+              <p>
+                {formatShortDate(date)} · {workoutSets.length}セット
+              </p>
             </div>
             <button
               type="button"
@@ -245,17 +351,32 @@ export function TrainingRecordExport({ log }: { log: FitnessLog }) {
             </button>
           </header>
 
-          <div className="record-export-preview" aria-live="polite">
-            {state === "rendering" && <p>画像を作成しています…</p>}
-            {state === "error" && (
-              <p>画像を作成できませんでした。もう一度お試しください。</p>
+          <div
+            className="record-export-preview"
+            aria-live="polite"
+            aria-busy={state === "rendering"}
+          >
+            {state === "rendering" && (
+              <div className="record-export-status" data-state="loading">
+                <LoaderCircle aria-hidden="true" />
+                <p>画像を作成しています…</p>
+              </div>
             )}
-            {imageUrl && (
+            {state === "error" && (
+              <div className="record-export-status" data-state="error">
+                <CircleAlert aria-hidden="true" />
+                <p>画像を作成できませんでした。</p>
+                <button type="button" onClick={() => void generate()}>
+                  もう一度作る
+                </button>
+              </div>
+            )}
+            {preview && state === "ready" && (
               <Image
-                src={imageUrl}
-                alt={`${formatDate(log.date)}のトレーニング記録`}
+                src={preview.url}
+                alt={`${formatDate(date)}のトレーニング記録。${workoutSets.length}セット。`}
                 width={CARD_WIDTH}
-                height={CARD_HEIGHT}
+                height={preview.height}
                 unoptimized
               />
             )}
@@ -265,7 +386,7 @@ export function TrainingRecordExport({ log }: { log: FitnessLog }) {
             <button
               className="record-export-action"
               type="button"
-              onClick={share}
+              onClick={() => void share()}
               disabled={state !== "ready"}
             >
               <Share2 aria-hidden="true" />
@@ -282,7 +403,7 @@ export function TrainingRecordExport({ log }: { log: FitnessLog }) {
             </button>
           </div>
           <p className="record-export-note">
-            1080 × 1350 px のPNG画像として書き出します
+            1080 px幅のPNG画像として書き出します
           </p>
         </div>
       </dialog>
