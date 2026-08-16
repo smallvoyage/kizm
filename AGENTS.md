@@ -15,6 +15,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 狭い画面でも横スクロールやコンテンツの欠けが発生せず、主要な情報と操作が無理なく表示されることを確認する。
 - タッチ操作を前提として、操作要素には十分な大きさと間隔を確保する。
 
+## テスト配置方針
+
+- unit testは原則として対象実装と同じディレクトリに配置する。
+- 実装をディレクトリ化する場合は、実装とテストに具体的な名前を付ける（例: `weekly-review/weekly-review.ts` と `weekly-review/weekly-review.test.ts`）。
+- `index.ts` は外部公開する要素の再エクスポートに限定する。
+- E2Eテストや複数モジュールを横断するintegration testは、この方針の対象外とする。
+
 ## Code Review Rules
 
 - レビューコメント、指摘内容、要約は日本語で記述する。
