@@ -16,7 +16,7 @@ import {
   NOTION_DAY_PROPERTY_NAMES,
   NOTION_WORKOUT_PROPERTY_NAMES,
 } from "@/lib/notion-mapper"
-import { queryAllFullPages } from "@/lib/notion-pagination"
+import { queryAllFullPages } from "@/lib/notion-pagination/notion-pagination"
 
 const FITNESS_HISTORY_DAYS = 84
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000

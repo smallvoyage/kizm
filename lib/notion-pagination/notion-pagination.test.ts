@@ -5,7 +5,7 @@ import type {
 } from "@notionhq/client"
 import { describe, expect, test, vi } from "vitest"
 
-import { queryAllFullPages } from "@/lib/notion-pagination"
+import { queryAllFullPages } from "@/lib/notion-pagination/notion-pagination"
 
 function createFullPage(id: string): PageObjectResponse {
   return {
