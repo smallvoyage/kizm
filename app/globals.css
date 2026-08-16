@@ -851,11 +851,6 @@
     transform var(--dur-micro) var(--ease-out);
 }
 
-.record-export-action:last-child {
-  background: var(--color-paper-2);
-  color: var(--color-ink-2);
-}
-
 .record-export-action:disabled {
   cursor: not-allowed;
   opacity: 0.45;

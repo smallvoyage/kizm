@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  CircleAlert,
-  Download,
-  ImageIcon,
-  LoaderCircle,
-  Share2,
-  X,
-} from "lucide-react"
+import { CircleAlert, ImageIcon, LoaderCircle, Share2, X } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
@@ -360,15 +353,6 @@ export function TrainingRecordExport({
             >
               <Share2 aria-hidden="true" />
               共有する
-            </button>
-            <button
-              className="record-export-action"
-              type="button"
-              onClick={download}
-              disabled={state !== "ready"}
-            >
-              <Download aria-hidden="true" />
-              保存する
             </button>
           </div>
           <p className="record-export-note">
