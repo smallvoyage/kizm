@@ -133,7 +133,6 @@ async function renderRecord(
   const color = (name: string) => getToken(styles, name)
   const bodyFont = getComputedStyle(document.body).fontFamily
   const date = workoutSets[0]?.date ?? ""
-  const totalSets = workoutSets.length
 
   context.fillStyle = color("--color-paper")
   context.fillRect(0, 0, CARD_WIDTH, cardHeight)
@@ -148,17 +147,7 @@ async function renderRecord(
 
   context.fillStyle = color("--color-ink")
   context.font = `700 72px ${bodyFont}`
-  context.fillText("筋トレMEMO", CARD_PADDING, 238)
-
-  context.textAlign = "right"
-  context.fillStyle = color("--color-accent")
-  context.font = `700 31px ${bodyFont}`
-  context.fillText(
-    `${formatNumber(groups.length)}種目  /  ${formatNumber(totalSets)}セット`,
-    CARD_WIDTH - CARD_PADDING,
-    232
-  )
-  context.textAlign = "start"
+  context.fillText("トレーニング記録", CARD_PADDING, 238)
 
   context.fillStyle = color("--color-paper-2")
   roundedRect(
@@ -186,30 +175,12 @@ async function renderRecord(
       )
     }
 
-    context.fillStyle = color("--color-muted")
-    context.font = `600 23px ${bodyFont}`
-    context.fillText(
-      String(groupIndex + 1).padStart(2, "0"),
-      CARD_PADDING + 34,
-      groupTop + 38
-    )
-
     context.fillStyle = color("--color-ink")
-    setFittedFont(context, group.exercise, 620, bodyFont)
-    context.fillText(group.exercise, CARD_PADDING + 88, groupTop + 40)
+    setFittedFont(context, group.exercise, 820, bodyFont)
+    context.fillText(group.exercise, CARD_PADDING + 34, groupTop + 40)
 
-    context.textAlign = "right"
-    context.fillStyle = color("--color-muted")
-    context.font = `600 22px ${bodyFont}`
-    context.fillText(
-      `${formatNumber(group.sets.length)}セット`,
-      CARD_WIDTH - CARD_PADDING - 34,
-      groupTop + 38
-    )
-    context.textAlign = "start"
-
-    const setsLeft = CARD_PADDING + 88
-    const setColumnWidth = 252
+    const setsLeft = CARD_PADDING + 34
+    const setColumnWidth = 284
     group.sets.forEach((set, setIndex) => {
       const column = setIndex % SET_COLUMNS
       const row = Math.floor(setIndex / SET_COLUMNS)
@@ -217,13 +188,13 @@ async function renderRecord(
       const y = groupTop + EXERCISE_HEADER_HEIGHT + row * SET_LINE_HEIGHT
 
       context.fillStyle = color("--color-accent-soft")
-      roundedRect(context, x, y, 224, 40, 12)
+      roundedRect(context, x, y, 256, 40, 12)
       context.fill()
 
       context.fillStyle = color("--color-ink-2")
       context.font = `600 23px ${bodyFont}`
       context.fillText(
-        `${String(setIndex + 1).padStart(2, "0")}  ${formatNumber(set.weightKg, { fractionDigits: 1 })} kg × ${formatNumber(set.reps)} 回`,
+        `${formatNumber(set.weightKg, { fractionDigits: 1 })} kg × ${formatNumber(set.reps)} 回`,
         x + 14,
         y + 28
       )
@@ -337,9 +308,7 @@ export function TrainingRecordExport({
           <header>
             <div className="record-export-heading">
               <h2 id="record-export-title">トレーニング記録</h2>
-              <p>
-                {formatShortDate(date)} · {workoutSets.length}セット
-              </p>
+              <p>{formatShortDate(date)}</p>
             </div>
             <button
               type="button"
