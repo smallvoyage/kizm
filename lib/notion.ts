@@ -6,7 +6,9 @@ import {
   isNotionClientError,
   type PageObjectResponse,
 } from "@notionhq/client"
+import { unstable_cache } from "next/cache"
 
+import { FITNESS_LOGS_CACHE_TAG } from "@/lib/cache-tags"
 import type { FitnessLog, WorkoutSet } from "@/lib/fitness"
 
 const PROPERTY_NAMES = {
@@ -204,7 +206,7 @@ function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
   return { date, exercise, weightKg, reps }
 }
 
-export async function getFitnessLogs(): Promise<FitnessLog[]> {
+async function fetchFitnessLogs(): Promise<FitnessLog[]> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const daysDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_DAYS_DATA_SOURCE_ID"
@@ -306,3 +308,12 @@ export async function getWorkoutSets(): Promise<WorkoutSet[]> {
     )
   }
 }
+
+export const getFitnessLogs = unstable_cache(
+  fetchFitnessLogs,
+  [FITNESS_LOGS_CACHE_TAG],
+  {
+    revalidate: 300,
+    tags: [FITNESS_LOGS_CACHE_TAG],
+  }
+)
