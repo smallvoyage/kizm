@@ -2,6 +2,7 @@
   "name": "fitness-analytics",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "doctor": "node scripts/doctor.mjs",
     "test:doctor": "node --test scripts/doctor.test.mjs",
