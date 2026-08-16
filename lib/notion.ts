@@ -45,6 +45,7 @@ const WORKOUT_PROPERTY_NAMES = {
   exercise: "Exercise",
   weight: "Weight kg",
   reps: "Reps",
+  setCount: "Set Count",
 } as const
 
 const REQUIRED_WORKOUT_PROPERTY_TYPES = {
@@ -53,6 +54,7 @@ const REQUIRED_WORKOUT_PROPERTY_TYPES = {
   [WORKOUT_PROPERTY_NAMES.exercise]: "select",
   [WORKOUT_PROPERTY_NAMES.weight]: "rich_text",
   [WORKOUT_PROPERTY_NAMES.reps]: "number",
+  [WORKOUT_PROPERTY_NAMES.setCount]: "number",
 } as const
 
 type PageProperty = PageObjectResponse["properties"][string]
@@ -230,6 +232,7 @@ function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
   const weightText = getPlainText(properties[WORKOUT_PROPERTY_NAMES.weight])
   const weightKg = weightText === null ? Number.NaN : Number(weightText)
   const reps = getNumber(properties, WORKOUT_PROPERTY_NAMES.reps)
+  const setCount = getNumber(properties, WORKOUT_PROPERTY_NAMES.setCount)
 
   if (
     !date ||
@@ -239,12 +242,15 @@ function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
     weightKg < 0 ||
     reps === null ||
     !Number.isFinite(reps) ||
-    reps <= 0
+    reps <= 0 ||
+    setCount === null ||
+    !Number.isSafeInteger(setCount) ||
+    setCount <= 0
   ) {
     return null
   }
 
-  return { date, category, exercise, weightKg, reps }
+  return { date, category, exercise, weightKg, reps, setCount }
 }
 
 function getHistoryStartDate() {
