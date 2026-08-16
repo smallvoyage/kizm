@@ -240,7 +240,7 @@ async function renderRecord(
   const footerY = cardHeight - 68
   context.fillStyle = color("--color-muted")
   context.font = `600 23px ${bodyFont}`
-  context.fillText("FITNESS ANALYTICS", CARD_PADDING, footerY)
+  context.fillText("Fitness Analytics", CARD_PADDING, footerY)
   context.textAlign = "right"
   context.fillText("#トレーニング記録", CARD_WIDTH - CARD_PADDING, footerY)
 
