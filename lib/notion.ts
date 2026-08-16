@@ -1,11 +1,6 @@
 import "server-only"
 
-import {
-  Client,
-  isFullPage,
-  isNotionClientError,
-  type PageObjectResponse,
-} from "@notionhq/client"
+import { isFullPage, type PageObjectResponse } from "@notionhq/client"
 import { unstable_cache } from "next/cache"
 
 import { FITNESS_LOGS_CACHE_TAG } from "@/lib/cache-tags"
@@ -15,6 +10,8 @@ import {
   FitnessDataError,
   type FitnessDataSource,
 } from "@/lib/fitness-data"
+import { createNotionClient } from "@/lib/notion-client"
+import { toFitnessDataError } from "@/lib/notion-errors"
 import {
   mapNotionPageToFitnessLog,
   mapNotionPageToWorkoutSet,
@@ -41,7 +38,7 @@ function getRequiredEnvironmentVariable(name: string): string {
 }
 
 async function ensureValidDataSourceSchema(
-  notion: Client,
+  notion: ReturnType<typeof createNotionClient>,
   dataSourceId: string,
   validate: (properties: Record<string, { type: string }>) => void
 ) {
@@ -84,11 +81,10 @@ function getHistoryStartDate() {
 }
 
 async function fetchFitnessLogs(): Promise<DaysResult> {
-  const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const daysDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_DAYS_DATA_SOURCE_ID"
   )
-  const notion = new Client({ auth: token, notionVersion: "2026-03-11" })
+  const notion = createNotionClient()
   const historyStartDate = getHistoryStartDate()
 
   try {
@@ -146,30 +142,15 @@ async function fetchFitnessLogs(): Promise<DaysResult> {
       hasOlderLogs: false,
     }
   } catch (error: unknown) {
-    if (error instanceof FitnessDataError) throw error
-
-    if (isNotionClientError(error)) {
-      console.error("Notion API request failed", {
-        code: error.code,
-        message: error.message,
-      })
-    } else {
-      console.error("Unexpected error while loading fitness logs", error)
-    }
-
-    throw new FitnessDataError(
-      "NotionのDaysからデータを取得できませんでした。Integrationの接続、Days Data Source ID、トークンを確認してください。",
-      { cause: error }
-    )
+    throw toFitnessDataError(error, "Days")
   }
 }
 
 async function getWorkoutSets(): Promise<WorkoutSet[]> {
-  const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const workoutsDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_WORKOUTS_DATA_SOURCE_ID"
   )
-  const notion = new Client({ auth: token, notionVersion: "2026-03-11" })
+  const notion = createNotionClient()
 
   try {
     await ensureValidDataSourceSchema(
@@ -198,21 +179,7 @@ async function getWorkoutSets(): Promise<WorkoutSet[]> {
       .filter((set): set is WorkoutSet => set !== null)
       .sort((a, b) => a.date.localeCompare(b.date))
   } catch (error: unknown) {
-    if (error instanceof FitnessDataError) throw error
-
-    if (isNotionClientError(error)) {
-      console.error("Notion Workouts API request failed", {
-        code: error.code,
-        message: error.message,
-      })
-    } else {
-      console.error("Unexpected error while loading workout sets", error)
-    }
-
-    throw new FitnessDataError(
-      "NotionのWorkoutsからデータを取得できませんでした。Integrationの接続、Workouts Data Source ID、トークンを確認してください。",
-      { cause: error }
-    )
+    throw toFitnessDataError(error, "Workouts")
   }
 }
 
