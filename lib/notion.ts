@@ -47,6 +47,8 @@ const REQUIRED_WORKOUT_PROPERTY_TYPES = {
 
 type PageProperty = PageObjectResponse["properties"][string]
 
+const schemaValidationPromises = new Map<string, Promise<void>>()
+
 export class FitnessDataError extends Error {
   constructor(
     public readonly userMessage: string,
@@ -162,6 +164,31 @@ function validateWorkoutProperties(
   }
 }
 
+async function ensureValidDataSourceSchema(
+  notion: Client,
+  dataSourceId: string,
+  validate: (properties: Record<string, { type: string }>) => void
+) {
+  const existingValidation = schemaValidationPromises.get(dataSourceId)
+  if (existingValidation) {
+    return existingValidation
+  }
+
+  const validation = notion.dataSources
+    .retrieve({ data_source_id: dataSourceId })
+    .then((dataSource) => validate(dataSource.properties))
+  schemaValidationPromises.set(dataSourceId, validation)
+
+  try {
+    await validation
+  } catch (error: unknown) {
+    if (schemaValidationPromises.get(dataSourceId) === validation) {
+      schemaValidationPromises.delete(dataSourceId)
+    }
+    throw error
+  }
+}
+
 function toFitnessLog(page: PageObjectResponse): FitnessLog | null {
   const { properties } = page
   const date = getDate(properties, PROPERTY_NAMES.date)?.slice(0, 10) ?? null
@@ -223,10 +250,11 @@ async function fetchFitnessLogs(): Promise<FitnessLog[]> {
   const notion = new Client({ auth: token, notionVersion: "2026-03-11" })
 
   try {
-    const dataSource = await notion.dataSources.retrieve({
-      data_source_id: daysDataSourceId,
-    })
-    validateProperties(dataSource.properties)
+    await ensureValidDataSourceSchema(
+      notion,
+      daysDataSourceId,
+      validateProperties
+    )
 
     const pages: PageObjectResponse[] = []
     let startCursor: string | undefined
@@ -275,10 +303,11 @@ export async function getWorkoutSets(): Promise<WorkoutSet[]> {
   const notion = new Client({ auth: token, notionVersion: "2026-03-11" })
 
   try {
-    const dataSource = await notion.dataSources.retrieve({
-      data_source_id: workoutsDataSourceId,
-    })
-    validateWorkoutProperties(dataSource.properties)
+    await ensureValidDataSourceSchema(
+      notion,
+      workoutsDataSourceId,
+      validateWorkoutProperties
+    )
 
     const pages: PageObjectResponse[] = []
     let startCursor: string | undefined
