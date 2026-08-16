@@ -70,8 +70,13 @@ MVPではDays Data Sourceのみを使用します。Data Source Queryは100件�
 `.node-version` に記載されたNode.js 24.19.0とpnpmを用意し、依存パッケージをインストールします。
 
 ```bash
+pnpm run doctor
 pnpm install
 ```
+
+`pnpm run doctor` はNode.js・pnpm・package scriptsで使うコマンド・lockfile・
+インストール済み依存関係を検査します。pnpm自身に同名の組み込みコマンドがあるため、
+`run` を省略せずに実行してください。依存導入前は不足と修復方法を表示して終了します。
 
 ### 2. Notion Integrationを作成する
 
