@@ -14,7 +14,8 @@ import {
   getLatestNutritionLog,
   type WorkoutSet,
 } from "@/lib/fitness"
-import { FitnessDataError, getFitnessLogs, getWorkoutSets } from "@/lib/notion"
+import { FitnessDataError } from "@/lib/fitness-data"
+import { fitnessDataSource } from "@/lib/fitness-data-source"
 import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
 
 function formatRecordDate(date: string | null | undefined) {
@@ -45,8 +46,8 @@ export default async function Home() {
   let workoutErrorMessage: string | null = null
 
   const [fitnessResult, workoutResult] = await Promise.allSettled([
-    getFitnessLogs(),
-    getWorkoutSets(),
+    fitnessDataSource.getDays(),
+    fitnessDataSource.getWorkouts(),
   ])
 
   if (fitnessResult.status === "fulfilled") {
