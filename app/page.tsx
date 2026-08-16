@@ -96,7 +96,7 @@ export default async function Home() {
           <div className="dashboard-header-actions">
             {latestWorkoutSets.length > 0 && (
               <TrainingRecordExport
-                key={JSON.stringify(latestWorkoutSets)}
+                key={JSON.stringify(workoutSets)}
                 workoutSets={latestWorkoutSets}
                 workoutHistory={workoutSets}
               />
