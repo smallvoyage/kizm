@@ -11,6 +11,9 @@ import { unstable_cache } from "next/cache"
 import { FITNESS_LOGS_CACHE_TAG } from "@/lib/cache-tags"
 import type { FitnessLog, WorkoutSet } from "@/lib/fitness"
 
+const FITNESS_HISTORY_DAYS = 84
+const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
+
 const PROPERTY_NAMES = {
   date: "Log Date",
   steps: "Steps",
@@ -48,6 +51,11 @@ const REQUIRED_WORKOUT_PROPERTY_TYPES = {
 } as const
 
 type PageProperty = PageObjectResponse["properties"][string]
+
+type FitnessLogsResult = {
+  logs: FitnessLog[]
+  hasOlderLogs: boolean
+}
 
 const schemaValidationPromises = new Map<string, Promise<void>>()
 
@@ -249,12 +257,31 @@ function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
   return { date, category, exercise, weightKg, reps }
 }
 
-async function fetchFitnessLogs(): Promise<FitnessLog[]> {
+function getHistoryStartDate() {
+  const referenceDate = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Tokyo",
+  }).format(new Date())
+  const referenceTime = new Date(`${referenceDate}T00:00:00Z`).getTime()
+  const cutoffTime =
+    referenceTime - (FITNESS_HISTORY_DAYS - 1) * DAY_IN_MILLISECONDS
+  const cutoffDay = new Date(cutoffTime).getUTCDay()
+  const daysSinceMonday = (cutoffDay + 6) % 7
+
+  return new Date(cutoffTime - daysSinceMonday * DAY_IN_MILLISECONDS)
+    .toISOString()
+    .slice(0, 10)
+}
+
+async function fetchFitnessLogs(): Promise<FitnessLogsResult> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const daysDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_DAYS_DATA_SOURCE_ID"
   )
   const notion = new Client({ auth: token, notionVersion: "2026-03-11" })
+  const historyStartDate = getHistoryStartDate()
 
   try {
     await ensureValidDataSourceSchema(
@@ -271,6 +298,16 @@ async function fetchFitnessLogs(): Promise<FitnessLog[]> {
         data_source_id: daysDataSourceId,
         page_size: 100,
         start_cursor: startCursor,
+        filter: {
+          property: PROPERTY_NAMES.date,
+          date: { on_or_after: historyStartDate },
+        },
+        sorts: [
+          {
+            property: PROPERTY_NAMES.date,
+            direction: "ascending",
+          },
+        ],
       })
       pages.push(...response.results.filter(isFullPage))
       startCursor = response.has_more
@@ -278,11 +315,28 @@ async function fetchFitnessLogs(): Promise<FitnessLog[]> {
         : undefined
     } while (startCursor)
 
-    if (pages.length === 0) return []
-    return pages
-      .map(toFitnessLog)
-      .filter((log): log is FitnessLog => log !== null)
-      .sort((a, b) => a.date.localeCompare(b.date))
+    if (pages.length === 0) {
+      const olderResponse = await notion.dataSources.query({
+        data_source_id: daysDataSourceId,
+        page_size: 1,
+        filter: {
+          property: PROPERTY_NAMES.date,
+          date: { before: historyStartDate },
+        },
+      })
+
+      return {
+        logs: [],
+        hasOlderLogs: olderResponse.results.length > 0,
+      }
+    }
+
+    return {
+      logs: pages
+        .map(toFitnessLog)
+        .filter((log): log is FitnessLog => log !== null),
+      hasOlderLogs: false,
+    }
   } catch (error: unknown) {
     if (error instanceof FitnessDataError) throw error
 
