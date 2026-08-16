@@ -16,6 +16,7 @@ export type WorkoutSet = {
   exercise: string
   weightKg: number
   reps: number
+  setCount: number
 }
 
 export type RepresentativeWorkoutSet = WorkoutSet & {

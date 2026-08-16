@@ -69,6 +69,15 @@ function groupWorkoutSets(workoutSets: WorkoutSetWithRecord[]) {
   return [...groups].map(([exercise, sets]) => ({ exercise, sets }))
 }
 
+function expandWorkoutSets(workoutSets: WorkoutSetWithRecord[]) {
+  return workoutSets.flatMap((set) =>
+    Array.from({ length: set.setCount }, (_, index) => ({
+      ...set,
+      isEstimatedOneRepMaxRecord: index === 0 && set.isEstimatedOneRepMaxRecord,
+    }))
+  )
+}
+
 function getGroupHeight(group: WorkoutGroup) {
   return (
     EXERCISE_HEADER_HEIGHT +
@@ -258,6 +267,7 @@ export function TrainingRecordExport({
   const [preview, setPreview] = useState<PreviewImage | null>(null)
   const date = workoutSets[0]?.date ?? ""
   const workoutSetsWithRecords = getWorkoutSetsWithRecords(workoutHistory, date)
+  const expandedWorkoutSets = expandWorkoutSets(workoutSetsWithRecords)
 
   useEffect(
     () => () => {
@@ -269,7 +279,7 @@ export function TrainingRecordExport({
   const generate = async () => {
     setState("rendering")
     try {
-      const rendered = await renderRecord(workoutSetsWithRecords)
+      const rendered = await renderRecord(expandedWorkoutSets)
       const url = URL.createObjectURL(rendered.blob)
       setPreview((current) => {
         if (current) URL.revokeObjectURL(current.url)
@@ -371,7 +381,7 @@ export function TrainingRecordExport({
             {preview && state === "ready" && (
               <Image
                 src={preview.url}
-                alt={`${formatDate(date)}のトレーニング記録。${workoutSets.length}セット。`}
+                alt={`${formatDate(date)}のトレーニング記録。${expandedWorkoutSets.length}セット。`}
                 width={CARD_WIDTH}
                 height={preview.height}
                 unoptimized
