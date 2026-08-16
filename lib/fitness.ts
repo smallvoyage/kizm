@@ -16,10 +16,15 @@ export type WorkoutSet = {
   exercise: string
   weightKg: number
   reps: number
+  setCount: number
 }
 
 export type RepresentativeWorkoutSet = WorkoutSet & {
   estimatedOneRepMax: number
+}
+
+export type WorkoutSetWithRecord = WorkoutSet & {
+  isEstimatedOneRepMaxRecord: boolean
 }
 
 export type PerformanceTrend = "growth" | "maintained" | "lower"
@@ -129,6 +134,55 @@ export function getRepresentativeWorkoutSets(
   return [...representativeByDate.values()].toSorted((a, b) =>
     a.date.localeCompare(b.date)
   )
+}
+
+export function getWorkoutSetsWithRecords(
+  workoutSets: WorkoutSet[],
+  date: string
+): WorkoutSetWithRecord[] {
+  const previousMaxByExercise = new Map<string, number>()
+  const currentBestByExercise = new Map<
+    string,
+    { index: number; estimatedOneRepMax: number }
+  >()
+
+  for (const set of workoutSets) {
+    if (set.date >= date) continue
+
+    const estimatedOneRepMax = calculateEstimatedOneRepMax(
+      set.weightKg,
+      set.reps
+    )
+    const previousMax = previousMaxByExercise.get(set.exercise)
+    if (previousMax === undefined || estimatedOneRepMax > previousMax) {
+      previousMaxByExercise.set(set.exercise, estimatedOneRepMax)
+    }
+  }
+
+  const currentSets = workoutSets.filter((set) => set.date === date)
+  currentSets.forEach((set, index) => {
+    const estimatedOneRepMax = calculateEstimatedOneRepMax(
+      set.weightKg,
+      set.reps
+    )
+    const currentBest = currentBestByExercise.get(set.exercise)
+    if (!currentBest || estimatedOneRepMax > currentBest.estimatedOneRepMax) {
+      currentBestByExercise.set(set.exercise, { index, estimatedOneRepMax })
+    }
+  })
+
+  return currentSets.map((set, index) => {
+    const currentBest = currentBestByExercise.get(set.exercise)
+    const previousMax = previousMaxByExercise.get(set.exercise)
+
+    return {
+      ...set,
+      isEstimatedOneRepMaxRecord:
+        currentBest?.index === index &&
+        previousMax !== undefined &&
+        currentBest.estimatedOneRepMax > previousMax,
+    }
+  })
 }
 
 export function compareWorkoutPerformance(
