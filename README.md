@@ -43,7 +43,7 @@ lib/fitness-data-source.ts            使用するデータソースのエント
 lib/fixture.ts                        秘密情報を必要としないfixtureデータソース
 lib/notion.ts                         Notion Client、pagination、検証
 lib/notion-mapper.ts                  Notion Pageからドメインモデルへの変換
-lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
+lib/fitness/fitness.ts                ドメイン型とNotion非依存の集計処理
 lib/nutrition-goals.ts                1日の栄養目標のサーバー側設定
 ```
 
@@ -208,4 +208,4 @@ Notion Integrationが対象Databaseへ接続されていれば、Vercelから追
 
 ## 今後の拡張
 
-ActivityはDaysの `FitnessLog` と `lib/notion.ts` の正規化結果を再利用できます。NutritionはMealsから `MealLog` へ正規化する方針です。WorkoutはWorkoutsから `WorkoutSet` へ正規化し、代表セットの選定はNotion非依存の集計処理として `lib/fitness.ts` に置いています。Server Componentだけが各Data Sourceを取得し、Client Componentには正規化済みデータだけを渡します。
+ActivityはDaysの `FitnessLog` と `lib/notion.ts` の正規化結果を再利用できます。NutritionはMealsから `MealLog` へ正規化する方針です。WorkoutはWorkoutsから `WorkoutSet` へ正規化し、代表セットの選定はNotion非依存の集計処理として `lib/fitness/fitness.ts` に置いています。Server Componentだけが各Data Sourceを取得し、Client Componentには正規化済みデータだけを渡します。
