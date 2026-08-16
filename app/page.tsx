@@ -33,10 +33,13 @@ export default async function Home() {
   }).format(new Date())
 
   let logs: FitnessLog[] = []
+  let hasOlderLogs = false
   let errorMessage: string | null = null
 
   try {
-    logs = await getFitnessLogs()
+    const result = await getFitnessLogs()
+    logs = result.logs
+    hasOlderLogs = result.hasOlderLogs
   } catch (error: unknown) {
     errorMessage =
       error instanceof FitnessDataError
@@ -69,11 +72,23 @@ export default async function Home() {
         ) : logs.length === 0 ? (
           <Alert className="dashboard-alert">
             <Database aria-hidden="true" />
-            <AlertTitle>フィットネス記録がまだありません</AlertTitle>
-            <AlertDescription>
-              Notion
-              に記録を追加すると、ここに食事と身体組成の変化が表示されます。
-            </AlertDescription>
+            {hasOlderLogs ? (
+              <>
+                <AlertTitle>最近のフィットネス記録がありません</AlertTitle>
+                <AlertDescription>
+                  表示期間より前の記録はあります。Notion
+                  に最近の記録を追加すると、ここに変化が表示されます。
+                </AlertDescription>
+              </>
+            ) : (
+              <>
+                <AlertTitle>フィットネス記録がまだありません</AlertTitle>
+                <AlertDescription>
+                  Notion
+                  に記録を追加すると、ここに食事と身体組成の変化が表示されます。
+                </AlertDescription>
+              </>
+            )}
           </Alert>
         ) : (
           <div className="dashboard-content">

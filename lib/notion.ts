@@ -36,6 +36,11 @@ const REQUIRED_PROPERTY_TYPES = {
 
 type PageProperty = PageObjectResponse["properties"][string]
 
+type FitnessLogsResult = {
+  logs: FitnessLog[]
+  hasOlderLogs: boolean
+}
+
 const schemaValidationPromises = new Map<string, Promise<void>>()
 
 export class FitnessDataError extends Error {
@@ -166,7 +171,7 @@ function getHistoryStartDate() {
     .slice(0, 10)
 }
 
-async function fetchFitnessLogs(): Promise<FitnessLog[]> {
+async function fetchFitnessLogs(): Promise<FitnessLogsResult> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const daysDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_DAYS_DATA_SOURCE_ID"
@@ -202,10 +207,28 @@ async function fetchFitnessLogs(): Promise<FitnessLog[]> {
         : undefined
     } while (startCursor)
 
-    if (pages.length === 0) return []
-    return pages
-      .map(toFitnessLog)
-      .filter((log): log is FitnessLog => log !== null)
+    if (pages.length === 0) {
+      const olderResponse = await notion.dataSources.query({
+        data_source_id: daysDataSourceId,
+        page_size: 1,
+        filter: {
+          property: PROPERTY_NAMES.date,
+          date: { before: historyStartDate },
+        },
+      })
+
+      return {
+        logs: [],
+        hasOlderLogs: olderResponse.results.length > 0,
+      }
+    }
+
+    return {
+      logs: pages
+        .map(toFitnessLog)
+        .filter((log): log is FitnessLog => log !== null),
+      hasOlderLogs: false,
+    }
   } catch (error: unknown) {
     if (error instanceof FitnessDataError) throw error
 
