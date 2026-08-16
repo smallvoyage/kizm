@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { getExerciseGroups, type WorkoutSet } from "@/lib/fitness"
+import { getExerciseGroups, type WorkoutSet } from "./fitness"
 
 function workoutSet(
   exercise: string,
