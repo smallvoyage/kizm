@@ -111,6 +111,15 @@ function getPlainText(property: PageProperty | undefined): string | null {
   return null
 }
 
+function isCalendarDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+
+  const date = new Date(`${value}T00:00:00Z`)
+  return (
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  )
+}
+
 function validateProperties(properties: Record<string, { type: string }>) {
   const missing = Object.keys(REQUIRED_PROPERTY_TYPES).filter(
     (name) => !(name in properties)
@@ -192,7 +201,7 @@ function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
 
   if (
     !date ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+    !isCalendarDate(date) ||
     !exercise ||
     !Number.isFinite(weightKg) ||
     weightKg < 0 ||

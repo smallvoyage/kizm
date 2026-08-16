@@ -91,7 +91,10 @@ export default async function Home() {
               {errorMessage} {workoutErrorMessage}
             </AlertDescription>
           </Alert>
-        ) : logs.length === 0 && workoutSets.length === 0 ? (
+        ) : !errorMessage &&
+          !workoutErrorMessage &&
+          logs.length === 0 &&
+          workoutSets.length === 0 ? (
           <Alert className="dashboard-alert">
             <Database aria-hidden="true" />
             <AlertTitle>フィットネス記録がまだありません</AlertTitle>

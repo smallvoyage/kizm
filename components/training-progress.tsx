@@ -57,9 +57,12 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
   const [selectedExercise, setSelectedExercise] = useState(
     () => exerciseNames[0] ?? ""
   )
+  const activeExercise = exerciseNames.includes(selectedExercise)
+    ? selectedExercise
+    : (exerciseNames[0] ?? "")
   const representativeSets = useMemo(
-    () => getRepresentativeWorkoutSets(workoutSets, selectedExercise),
-    [selectedExercise, workoutSets]
+    () => getRepresentativeWorkoutSets(workoutSets, activeExercise),
+    [activeExercise, workoutSets]
   )
   const latestSet = representativeSets.at(-1) ?? null
   const previousSet = representativeSets.at(-2) ?? null
@@ -88,7 +91,7 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
         <span>種目</span>
         <span className="training-select-wrap">
           <select
-            value={selectedExercise}
+            value={activeExercise}
             onChange={(event) => {
               setSelectedExercise(event.target.value)
               setSelectedDate(null)
