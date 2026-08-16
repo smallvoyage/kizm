@@ -69,6 +69,9 @@ export default async function Home() {
 
   const latestNutritionLog = getLatestNutritionLog(logs)
   const latestRecordDate = logs.at(-1)?.date ?? null
+  const hasSourceError = Boolean(errorMessage || workoutErrorMessage)
+  const hasNoRecords = logs.length === 0 && workoutSets.length === 0
+  const shouldShowEmptyState = !hasSourceError && hasNoRecords
 
   return (
     <main className="fitness-shell">
@@ -91,10 +94,7 @@ export default async function Home() {
               {errorMessage} {workoutErrorMessage}
             </AlertDescription>
           </Alert>
-        ) : !errorMessage &&
-          !workoutErrorMessage &&
-          logs.length === 0 &&
-          workoutSets.length === 0 ? (
+        ) : shouldShowEmptyState ? (
           <Alert className="dashboard-alert">
             <Database aria-hidden="true" />
             <AlertTitle>フィットネス記録がまだありません</AlertTitle>
