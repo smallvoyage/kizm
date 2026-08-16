@@ -60,7 +60,12 @@ export default async function Home() {
             <span>フィットネス</span>
           </h1>
           <div className="dashboard-header-actions">
-            {latestLog && <TrainingRecordExport log={latestLog} />}
+            {latestLog && (
+              <TrainingRecordExport
+                key={JSON.stringify(latestLog)}
+                log={latestLog}
+              />
+            )}
             <RefreshButton />
           </div>
         </header>
