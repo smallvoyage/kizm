@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 vi.mock("server-only", () => ({}))
 
 import { FitnessDataError } from "@/lib/fitness-data"
-import { toFitnessDataError } from "@/lib/notion-errors"
+import { toFitnessDataError } from "./notion-errors"
 
 describe("toFitnessDataError", () => {
   afterEach(() => {

@@ -8,7 +8,7 @@ vi.mock("server-only", () => ({}))
 vi.mock("@notionhq/client", () => ({ Client: clientConstructor }))
 
 import { FitnessDataError } from "@/lib/fitness-data"
-import { createNotionClient } from "@/lib/notion-client"
+import { createNotionClient } from "./notion-client"
 
 describe("createNotionClient", () => {
   afterEach(() => {
