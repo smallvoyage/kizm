@@ -113,11 +113,13 @@ Workoutsには1セット1レコードで、以下のプロパティを作成し�
 | プロパティ | 型 |
 | --- | --- |
 | Exercised Day | Title（`YYYY-MM-DD`） |
+| Category | Select |
 | Exercise | Select |
 | Weight kg | Rich text（数値） |
 | Reps | Number |
 
 同一日の同一種目に複数セットがある場合は、Epley式 `重量 × (1 + 回数 / 30)` で推定1RMを計算し、最大値のセットだけをその日の代表として表示します。推定1RM自体は比較にのみ使用し、画面には表示しません。
+種目セレクトでは `Category` ごとに種目を分類し、カテゴリと種目はそれぞれ最新の記録がある順に表示します。`Category` が未入力の記録は「未分類」にまとめます。
 
 ### 4. Integrationを接続する
 

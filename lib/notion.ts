@@ -36,6 +36,7 @@ const REQUIRED_PROPERTY_TYPES = {
 
 const WORKOUT_PROPERTY_NAMES = {
   date: "Exercised Day",
+  category: "Category",
   exercise: "Exercise",
   weight: "Weight kg",
   reps: "Reps",
@@ -43,6 +44,7 @@ const WORKOUT_PROPERTY_NAMES = {
 
 const REQUIRED_WORKOUT_PROPERTY_TYPES = {
   [WORKOUT_PROPERTY_NAMES.date]: "title",
+  [WORKOUT_PROPERTY_NAMES.category]: "select",
   [WORKOUT_PROPERTY_NAMES.exercise]: "select",
   [WORKOUT_PROPERTY_NAMES.weight]: "rich_text",
   [WORKOUT_PROPERTY_NAMES.reps]: "number",
@@ -225,6 +227,11 @@ function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
     0,
     10
   )
+  const categoryProperty = properties[WORKOUT_PROPERTY_NAMES.category]
+  const category =
+    categoryProperty?.type === "select"
+      ? (categoryProperty.select?.name.trim() ?? "未分類")
+      : "未分類"
   const exerciseProperty = properties[WORKOUT_PROPERTY_NAMES.exercise]
   const exercise =
     exerciseProperty?.type === "select"
@@ -247,7 +254,7 @@ function toWorkoutSet(page: PageObjectResponse): WorkoutSet | null {
     return null
   }
 
-  return { date, exercise, weightKg, reps }
+  return { date, category, exercise, weightKg, reps }
 }
 
 function getHistoryStartDate() {
