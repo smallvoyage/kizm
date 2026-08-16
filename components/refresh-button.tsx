@@ -4,6 +4,8 @@ import { RefreshCw } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useTransition } from "react"
 
+import { refreshFitnessLogs } from "@/app/actions"
+
 const AUTO_REFRESH_INTERVAL_MS = 5_000
 
 export function RefreshButton() {
@@ -11,27 +13,33 @@ export function RefreshButton() {
   const lastRefreshAt = useRef(Date.now())
   const [isPending, startTransition] = useTransition()
 
-  const refresh = useCallback(() => {
-    const now = Date.now()
-    if (isPending || now - lastRefreshAt.current < AUTO_REFRESH_INTERVAL_MS) {
-      return
-    }
+  const refresh = useCallback(
+    (invalidateCache = false) => {
+      const now = Date.now()
+      if (isPending || now - lastRefreshAt.current < AUTO_REFRESH_INTERVAL_MS) {
+        return
+      }
 
-    lastRefreshAt.current = now
-    startTransition(() => {
-      router.refresh()
-    })
-  }, [isPending, router])
+      lastRefreshAt.current = now
+      startTransition(async () => {
+        if (invalidateCache) {
+          await refreshFitnessLogs()
+        }
+        router.refresh()
+      })
+    },
+    [isPending, router]
+  )
 
   const refreshManually = () => {
     lastRefreshAt.current = 0
-    refresh()
+    refresh(true)
   }
 
   useEffect(() => {
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") {
-        refresh()
+        refresh(false)
       }
     }
 
