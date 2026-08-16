@@ -38,6 +38,7 @@ export default async function Home() {
   }).format(new Date())
 
   let logs: FitnessLog[] = []
+  let hasOlderLogs = false
   let workoutSets: WorkoutSet[] = []
   let errorMessage: string | null = null
   let workoutErrorMessage: string | null = null
@@ -48,7 +49,8 @@ export default async function Home() {
   ])
 
   if (fitnessResult.status === "fulfilled") {
-    logs = fitnessResult.value
+    logs = fitnessResult.value.logs
+    hasOlderLogs = fitnessResult.value.hasOlderLogs
   } else {
     const error = fitnessResult.reason
     errorMessage =
@@ -97,10 +99,22 @@ export default async function Home() {
         ) : shouldShowEmptyState ? (
           <Alert className="dashboard-alert">
             <Database aria-hidden="true" />
-            <AlertTitle>フィットネス記録がまだありません</AlertTitle>
-            <AlertDescription>
-              Notionに記録を追加すると、ここにトレーニング、食事、身体組成の変化が表示されます。
-            </AlertDescription>
+            {hasOlderLogs ? (
+              <>
+                <AlertTitle>最近のフィットネス記録がありません</AlertTitle>
+                <AlertDescription>
+                  表示期間より前の記録はあります。Notion
+                  に最近の記録を追加すると、ここに変化が表示されます。
+                </AlertDescription>
+              </>
+            ) : (
+              <>
+                <AlertTitle>フィットネス記録がまだありません</AlertTitle>
+                <AlertDescription>
+                  Notionに記録を追加すると、ここにトレーニング、食事、身体組成の変化が表示されます。
+                </AlertDescription>
+              </>
+            )}
           </Alert>
         ) : (
           <div className="dashboard-content">
