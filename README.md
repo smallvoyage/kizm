@@ -40,13 +40,15 @@ components/training-progress.tsx      種目選択と代表セットの推移
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/fitness-data.ts                   Days / Workoutsのデータ取得契約
 lib/fitness-data-source.ts            使用するデータソースのエントリポイント
-lib/notion.ts                         Notion Client、pagination、検証
+lib/notion-client/                    Notion Client生成とトークン設定
+lib/notion-errors/                    Notion SDKエラーの安全なドメインエラー変換
+lib/notion.ts                         pagination、検証
 lib/notion-mapper.ts                  Notion Pageからドメインモデルへの変換
 lib/fitness/fitness.ts                ドメイン型とNotion非依存の集計処理
 lib/nutrition-goals.ts                1日の栄養目標のサーバー側設定
 ```
 
-`NOTION_TOKEN` とNotion SDKは `lib/notion.ts` のサーバー側に閉じています。画面は `FitnessDataSource` の共通契約を通じてDaysとWorkoutsを取得し、Notionのレスポンスを直接受け取りません。UIへ渡すデータは次のNotion非依存のドメインモデルに変換します。
+`NOTION_TOKEN` とClient生成は `lib/notion-client/` のサーバー側に閉じ、SDKエラーは `lib/notion-errors/` で安全な `FitnessDataError` へ変換します。画面は `FitnessDataSource` の共通契約を通じてDaysとWorkoutsを取得し、Notionのレスポンスを直接受け取りません。UIへ渡すデータは次のNotion非依存のドメインモデルに変換します。
 
 ```ts
 type FitnessLog = {
