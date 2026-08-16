@@ -40,6 +40,7 @@ components/training-progress.tsx      種目選択と代表セットの推移
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/fitness-data.ts                   Days / Workoutsのデータ取得契約
 lib/fitness-data-source.ts            使用するデータソースのエントリポイント
+lib/fixture.ts                        秘密情報を必要としないfixtureデータソース
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
 lib/nutrition-goals.ts                1日の栄養目標のサーバー側設定
@@ -79,6 +80,18 @@ pnpm install
 `pnpm run doctor` はNode.js・pnpm・package scriptsで使うコマンド・lockfile・
 インストール済み依存関係を検査します。pnpm自身に同名の組み込みコマンドがあるため、
 `run` を省略せずに実行してください。依存導入前は不足と修復方法を表示して終了します。
+
+Notionへ接続せずに起動する場合は、データソースを明示的にfixtureへ切り替えます。
+現在のfixtureは空データを返し、Notion用の環境変数を必要としません。
+
+```dotenv
+FITNESS_DATA_SOURCE=fixture
+```
+
+`FITNESS_DATA_SOURCE`を未指定にした場合はNotionを使用します。productionでは誤ってfixtureを
+表示しないよう、上記に加えて`FITNESS_ALLOW_FIXTURE_IN_PRODUCTION=true`を明示した場合だけ
+fixtureを使用できます。この追加許可はE2Eなど意図的なテスト環境に限定し、通常のproduction
+deploymentには設定しないでください。
 
 ### 2. Notion Integrationを作成する
 
