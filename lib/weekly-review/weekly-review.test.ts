@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { getWeekStart, shiftDate } from "@/lib/weekly-review"
+import { getWeekStart, shiftDate } from "./weekly-review"
 
 describe("getWeekStart", () => {
   test.each([
