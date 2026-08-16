@@ -2,7 +2,6 @@ import "server-only"
 
 import {
   Client,
-  isFullPage,
   isNotionClientError,
   type PageObjectResponse,
 } from "@notionhq/client"
@@ -15,6 +14,7 @@ import {
   FitnessDataError,
   type FitnessDataSource,
 } from "@/lib/fitness-data"
+import { queryAllFullPages } from "@/lib/notion-pagination"
 
 const FITNESS_HISTORY_DAYS = 84
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
@@ -286,30 +286,20 @@ async function fetchFitnessLogs(): Promise<DaysResult> {
       validateProperties
     )
 
-    const pages: PageObjectResponse[] = []
-    let startCursor: string | undefined
-
-    do {
-      const response = await notion.dataSources.query({
-        data_source_id: daysDataSourceId,
-        page_size: 100,
-        start_cursor: startCursor,
-        filter: {
+    const pages = await queryAllFullPages(notion.dataSources.query, {
+      data_source_id: daysDataSourceId,
+      page_size: 100,
+      filter: {
+        property: PROPERTY_NAMES.date,
+        date: { on_or_after: historyStartDate },
+      },
+      sorts: [
+        {
           property: PROPERTY_NAMES.date,
-          date: { on_or_after: historyStartDate },
+          direction: "ascending",
         },
-        sorts: [
-          {
-            property: PROPERTY_NAMES.date,
-            direction: "ascending",
-          },
-        ],
-      })
-      pages.push(...response.results.filter(isFullPage))
-      startCursor = response.has_more
-        ? (response.next_cursor ?? undefined)
-        : undefined
-    } while (startCursor)
+      ],
+    })
 
     if (pages.length === 0) {
       const olderResponse = await notion.dataSources.query({
@@ -366,20 +356,10 @@ async function getWorkoutSets(): Promise<WorkoutSet[]> {
       validateWorkoutProperties
     )
 
-    const pages: PageObjectResponse[] = []
-    let startCursor: string | undefined
-
-    do {
-      const response = await notion.dataSources.query({
-        data_source_id: workoutsDataSourceId,
-        page_size: 100,
-        start_cursor: startCursor,
-      })
-      pages.push(...response.results.filter(isFullPage))
-      startCursor = response.has_more
-        ? (response.next_cursor ?? undefined)
-        : undefined
-    } while (startCursor)
+    const pages = await queryAllFullPages(notion.dataSources.query, {
+      data_source_id: workoutsDataSourceId,
+      page_size: 100,
+    })
 
     return pages
       .map(toWorkoutSet)
