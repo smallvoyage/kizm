@@ -10,6 +10,11 @@ import { unstable_cache } from "next/cache"
 
 import { FITNESS_LOGS_CACHE_TAG } from "@/lib/cache-tags"
 import type { FitnessLog, WorkoutSet } from "@/lib/fitness"
+import {
+  type DaysResult,
+  FitnessDataError,
+  type FitnessDataSource,
+} from "@/lib/fitness-data"
 
 const FITNESS_HISTORY_DAYS = 84
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
@@ -52,22 +57,7 @@ const REQUIRED_WORKOUT_PROPERTY_TYPES = {
 
 type PageProperty = PageObjectResponse["properties"][string]
 
-type FitnessLogsResult = {
-  logs: FitnessLog[]
-  hasOlderLogs: boolean
-}
-
 const schemaValidationPromises = new Map<string, Promise<void>>()
-
-export class FitnessDataError extends Error {
-  constructor(
-    public readonly userMessage: string,
-    options?: ErrorOptions
-  ) {
-    super(userMessage, options)
-    this.name = "FitnessDataError"
-  }
-}
 
 function getRequiredEnvironmentVariable(name: string): string {
   const value = process.env[name]?.trim()
@@ -275,7 +265,7 @@ function getHistoryStartDate() {
     .slice(0, 10)
 }
 
-async function fetchFitnessLogs(): Promise<FitnessLogsResult> {
+async function fetchFitnessLogs(): Promise<DaysResult> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const daysDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_DAYS_DATA_SOURCE_ID"
@@ -356,7 +346,7 @@ async function fetchFitnessLogs(): Promise<FitnessLogsResult> {
   }
 }
 
-export async function getWorkoutSets(): Promise<WorkoutSet[]> {
+async function getWorkoutSets(): Promise<WorkoutSet[]> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const workoutsDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_WORKOUTS_DATA_SOURCE_ID"
@@ -408,7 +398,7 @@ export async function getWorkoutSets(): Promise<WorkoutSet[]> {
   }
 }
 
-export const getFitnessLogs = unstable_cache(
+const getFitnessLogs = unstable_cache(
   fetchFitnessLogs,
   [FITNESS_LOGS_CACHE_TAG],
   {
@@ -416,3 +406,8 @@ export const getFitnessLogs = unstable_cache(
     tags: [FITNESS_LOGS_CACHE_TAG],
   }
 )
+
+export const notionFitnessDataSource = {
+  getDays: getFitnessLogs,
+  getWorkouts: getWorkoutSets,
+} satisfies FitnessDataSource

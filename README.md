@@ -38,12 +38,14 @@ components/nutrition-summary.tsx      最新の食事状況
 components/nutrition-heatmap.tsx      食事目標の達成状況と日別詳細
 components/training-progress.tsx      種目選択と代表セットの推移
 components/ui/                        利用するshadcn/uiコンポーネント
+lib/fitness-data.ts                   Days / Workoutsのデータ取得契約
+lib/fitness-data-source.ts            使用するデータソースのエントリポイント
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
 lib/nutrition-goals.ts                1日の栄養目標のサーバー側設定
 ```
 
-`NOTION_TOKEN` とNotion SDKは `lib/notion.ts` のサーバー側に閉じています。UIにはNotionのレスポンスを直接渡さず、次のドメインモデルに変換します。
+`NOTION_TOKEN` とNotion SDKは `lib/notion.ts` のサーバー側に閉じています。画面は `FitnessDataSource` の共通契約を通じてDaysとWorkoutsを取得し、Notionのレスポンスを直接受け取りません。UIへ渡すデータは次のNotion非依存のドメインモデルに変換します。
 
 ```ts
 type FitnessLog = {
