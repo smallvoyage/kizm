@@ -67,7 +67,7 @@ MVPではDays Data Sourceのみを使用します。Data Source Queryは100件�
 
 ### 1. インストール
 
-`.node-version` に記載されたNode.js 20.20.1とpnpmを用意し、依存パッケージをインストールします。
+`.node-version` に記載されたNode.js 24.19.0とpnpmを用意し、依存パッケージをインストールします。
 
 ```bash
 pnpm install
