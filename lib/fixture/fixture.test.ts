@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { fixtureFitnessDataSource } from "@/lib/fixture"
+import { fixtureFitnessDataSource } from "./fixture"
 
 test("Notion用環境変数なしでfixtureデータを取得できる", async () => {
   await expect(fixtureFitnessDataSource.getDays()).resolves.toEqual({

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 
-import { resolveFitnessDataSource } from "@/lib/fitness-data-source-config"
+import { resolveFitnessDataSource } from "./fitness-data-source-config"
 
 describe("resolveFitnessDataSource", () => {
   test("未指定時はNotionを選ぶ", () => {
