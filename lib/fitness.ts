@@ -12,6 +12,7 @@ export type FitnessLog = {
 
 export type WorkoutSet = {
   date: string
+  category: string
   exercise: string
   weightKg: number
   reps: number
@@ -22,6 +23,11 @@ export type RepresentativeWorkoutSet = WorkoutSet & {
 }
 
 export type PerformanceTrend = "growth" | "maintained" | "lower"
+
+export type ExerciseGroup = {
+  category: string
+  exercises: string[]
+}
 
 export type BodyCompositionMetric = "weight" | "bodyFat" | "muscleMass"
 export type NutritionMetric = "calories" | "protein" | "fat" | "carbs"
@@ -43,22 +49,56 @@ function calculateEstimatedOneRepMax(weightKg: number, reps: number): number {
   return weightKg * (1 + reps / 30)
 }
 
-export function getExerciseNames(workoutSets: WorkoutSet[]): string[] {
-  const latestDateByExercise = new Map<string, string>()
+export function getExerciseGroups(workoutSets: WorkoutSet[]): ExerciseGroup[] {
+  const latestSetByExercise = new Map<
+    string,
+    Pick<WorkoutSet, "category" | "date">
+  >()
 
   for (const set of workoutSets) {
-    const latestDate = latestDateByExercise.get(set.exercise)
-    if (!latestDate || set.date > latestDate) {
-      latestDateByExercise.set(set.exercise, set.date)
+    const latestSet = latestSetByExercise.get(set.exercise)
+    if (!latestSet || set.date > latestSet.date) {
+      latestSetByExercise.set(set.exercise, {
+        category: set.category,
+        date: set.date,
+      })
     }
   }
 
-  return [...latestDateByExercise]
+  const exercisesByCategory = new Map<
+    string,
+    { latestDate: string; exercises: Array<[string, string]> }
+  >()
+
+  for (const [exercise, { category, date }] of latestSetByExercise) {
+    const group = exercisesByCategory.get(category)
+    if (group) {
+      group.latestDate = date > group.latestDate ? date : group.latestDate
+      group.exercises.push([exercise, date])
+    } else {
+      exercisesByCategory.set(category, {
+        latestDate: date,
+        exercises: [[exercise, date]],
+      })
+    }
+  }
+
+  return [...exercisesByCategory]
     .toSorted(
-      ([exerciseA, dateA], [exerciseB, dateB]) =>
-        dateB.localeCompare(dateA) || exerciseA.localeCompare(exerciseB, "ja")
+      ([categoryA, groupA], [categoryB, groupB]) =>
+        groupB.latestDate.localeCompare(groupA.latestDate) ||
+        categoryA.localeCompare(categoryB, "ja")
     )
-    .map(([exercise]) => exercise)
+    .map(([category, group]) => ({
+      category,
+      exercises: group.exercises
+        .toSorted(
+          ([exerciseA, dateA], [exerciseB, dateB]) =>
+            dateB.localeCompare(dateA) ||
+            exerciseA.localeCompare(exerciseB, "ja")
+        )
+        .map(([exercise]) => exercise),
+    }))
 }
 
 export function getRepresentativeWorkoutSets(

@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-08-16",
+    "scope": "feature",
+    "macrostructure": "Stat-Led",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "soft, exact, health-data dense",
+    "enrichment": "none",
+    "brief": "Category-grouped workout exercise picker"
+  },
+  {
     "date": "2026-08-14",
     "scope": "feature",
     "macrostructure": "Stat-Led",
