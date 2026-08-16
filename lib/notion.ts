@@ -15,6 +15,10 @@ import {
   FitnessDataError,
   type FitnessDataSource,
 } from "@/lib/fitness-data"
+import {
+  validateDaysDataSourceSchema,
+  validateWorkoutsDataSourceSchema,
+} from "@/lib/notion-schema"
 
 const FITNESS_HISTORY_DAYS = 84
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
@@ -32,13 +36,6 @@ const PROPERTY_NAMES = {
   muscleMass: "Muscle Mass kg",
 } as const
 
-const REQUIRED_PROPERTY_TYPES = {
-  [PROPERTY_NAMES.date]: "date",
-  [PROPERTY_NAMES.weight]: "number",
-  [PROPERTY_NAMES.bodyFat]: "number",
-  [PROPERTY_NAMES.muscleMass]: "number",
-} as const
-
 const WORKOUT_PROPERTY_NAMES = {
   date: "Exercised Day",
   category: "Category",
@@ -46,15 +43,6 @@ const WORKOUT_PROPERTY_NAMES = {
   weight: "Weight kg",
   reps: "Reps",
   setCount: "Set Count",
-} as const
-
-const REQUIRED_WORKOUT_PROPERTY_TYPES = {
-  [WORKOUT_PROPERTY_NAMES.date]: "title",
-  [WORKOUT_PROPERTY_NAMES.category]: "select",
-  [WORKOUT_PROPERTY_NAMES.exercise]: "select",
-  [WORKOUT_PROPERTY_NAMES.weight]: "rich_text",
-  [WORKOUT_PROPERTY_NAMES.reps]: "number",
-  [WORKOUT_PROPERTY_NAMES.setCount]: "number",
 } as const
 
 type PageProperty = PageObjectResponse["properties"][string]
@@ -122,48 +110,6 @@ function isCalendarDate(value: string): boolean {
   return (
     !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
   )
-}
-
-function validateProperties(properties: Record<string, { type: string }>) {
-  const missing = Object.keys(REQUIRED_PROPERTY_TYPES).filter(
-    (name) => !(name in properties)
-  )
-  if (missing.length > 0) {
-    throw new FitnessDataError(
-      `Notionに必要なプロパティがありません: ${missing.join(", ")}`
-    )
-  }
-
-  const invalid = Object.entries(REQUIRED_PROPERTY_TYPES)
-    .filter(([name, expectedType]) => properties[name]?.type !== expectedType)
-    .map(([name, expectedType]) => `${name} (${expectedType})`)
-  if (invalid.length > 0) {
-    throw new FitnessDataError(
-      `Notionプロパティの型を確認してください: ${invalid.join(", ")}`
-    )
-  }
-}
-
-function validateWorkoutProperties(
-  properties: Record<string, { type: string }>
-) {
-  const missing = Object.keys(REQUIRED_WORKOUT_PROPERTY_TYPES).filter(
-    (name) => !(name in properties)
-  )
-  if (missing.length > 0) {
-    throw new FitnessDataError(
-      `NotionのWorkoutsに必要なプロパティがありません: ${missing.join(", ")}`
-    )
-  }
-
-  const invalid = Object.entries(REQUIRED_WORKOUT_PROPERTY_TYPES)
-    .filter(([name, expectedType]) => properties[name]?.type !== expectedType)
-    .map(([name, expectedType]) => `${name} (${expectedType})`)
-  if (invalid.length > 0) {
-    throw new FitnessDataError(
-      `NotionのWorkoutsプロパティの型を確認してください: ${invalid.join(", ")}`
-    )
-  }
 }
 
 async function ensureValidDataSourceSchema(
@@ -283,7 +229,7 @@ async function fetchFitnessLogs(): Promise<DaysResult> {
     await ensureValidDataSourceSchema(
       notion,
       daysDataSourceId,
-      validateProperties
+      validateDaysDataSourceSchema
     )
 
     const pages: PageObjectResponse[] = []
@@ -363,7 +309,7 @@ async function getWorkoutSets(): Promise<WorkoutSet[]> {
     await ensureValidDataSourceSchema(
       notion,
       workoutsDataSourceId,
-      validateWorkoutProperties
+      validateWorkoutsDataSourceSchema
     )
 
     const pages: PageObjectResponse[] = []
