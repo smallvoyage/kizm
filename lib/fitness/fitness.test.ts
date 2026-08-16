@@ -95,6 +95,36 @@ describe("getNutritionAchievement", () => {
       )
     }
   )
+
+  test("log自体がない場合はnoneを返す", () => {
+    expect(getNutritionAchievement(null, goals)).toBe("none")
+  })
+
+  test("栄養値がすべてnullの場合はnoneを返す", () => {
+    expect(
+      getNutritionAchievement(
+        createNutritionLog({
+          calories: null,
+          protein: null,
+          fat: null,
+          carbs: null,
+        }),
+        goals
+      )
+    ).toBe("none")
+  })
+
+  test.each<NutritionMetric>(["calories", "protein", "fat", "carbs"])(
+    "%sだけがnullの場合はmissedを返す",
+    (missingMetric) => {
+      expect(
+        getNutritionAchievement(
+          createNutritionLog({ [missingMetric]: null }),
+          goals
+        )
+      ).toBe("missed")
+    }
+  )
 })
 
 function workoutSet(
