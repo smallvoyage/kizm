@@ -7,7 +7,7 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart"
 import {
   compareWorkoutPerformance,
-  getExerciseNames,
+  getExerciseGroups,
   getRepresentativeWorkoutSets,
   type PerformanceTrend,
   type RepresentativeWorkoutSet,
@@ -50,9 +50,13 @@ type TrainingProgressProps = {
 }
 
 export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
-  const exerciseNames = useMemo(
-    () => getExerciseNames(workoutSets),
+  const exerciseGroups = useMemo(
+    () => getExerciseGroups(workoutSets),
     [workoutSets]
+  )
+  const exerciseNames = useMemo(
+    () => exerciseGroups.flatMap((group) => group.exercises),
+    [exerciseGroups]
   )
   const [selectedExercise, setSelectedExercise] = useState(
     () => exerciseNames[0] ?? ""
@@ -98,10 +102,14 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
               setSelectedDate(null)
             }}
           >
-            {exerciseNames.map((exercise) => (
-              <option key={exercise} value={exercise}>
-                {exercise}
-              </option>
+            {exerciseGroups.map((group) => (
+              <optgroup key={group.category} label={group.category}>
+                {group.exercises.map((exercise) => (
+                  <option key={exercise} value={exercise}>
+                    {exercise}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <ChevronDown aria-hidden="true" />
