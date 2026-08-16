@@ -6,7 +6,9 @@ import {
   isNotionClientError,
   type PageObjectResponse,
 } from "@notionhq/client"
+import { unstable_cache } from "next/cache"
 
+import { FITNESS_LOGS_CACHE_TAG } from "@/lib/cache-tags"
 import type { FitnessLog } from "@/lib/fitness"
 
 const FITNESS_HISTORY_DAYS = 84
@@ -33,6 +35,8 @@ const REQUIRED_PROPERTY_TYPES = {
 } as const
 
 type PageProperty = PageObjectResponse["properties"][string]
+
+const schemaValidationPromises = new Map<string, Promise<void>>()
 
 export class FitnessDataError extends Error {
   constructor(
@@ -98,6 +102,30 @@ function validateProperties(properties: Record<string, { type: string }>) {
   }
 }
 
+async function ensureValidDataSourceSchema(
+  notion: Client,
+  dataSourceId: string
+) {
+  const existingValidation = schemaValidationPromises.get(dataSourceId)
+  if (existingValidation) {
+    return existingValidation
+  }
+
+  const validation = notion.dataSources
+    .retrieve({ data_source_id: dataSourceId })
+    .then((dataSource) => validateProperties(dataSource.properties))
+  schemaValidationPromises.set(dataSourceId, validation)
+
+  try {
+    await validation
+  } catch (error: unknown) {
+    if (schemaValidationPromises.get(dataSourceId) === validation) {
+      schemaValidationPromises.delete(dataSourceId)
+    }
+    throw error
+  }
+}
+
 function toFitnessLog(page: PageObjectResponse): FitnessLog | null {
   const { properties } = page
   const date = getDate(properties, PROPERTY_NAMES.date)?.slice(0, 10) ?? null
@@ -136,7 +164,7 @@ function getHistoryStartDate() {
     .slice(0, 10)
 }
 
-export async function getFitnessLogs(): Promise<FitnessLog[]> {
+async function fetchFitnessLogs(): Promise<FitnessLog[]> {
   const token = getRequiredEnvironmentVariable("NOTION_TOKEN")
   const daysDataSourceId = getRequiredEnvironmentVariable(
     "NOTION_DAYS_DATA_SOURCE_ID"
@@ -145,10 +173,7 @@ export async function getFitnessLogs(): Promise<FitnessLog[]> {
   const historyStartDate = getHistoryStartDate()
 
   try {
-    const dataSource = await notion.dataSources.retrieve({
-      data_source_id: daysDataSourceId,
-    })
-    validateProperties(dataSource.properties)
+    await ensureValidDataSourceSchema(notion, daysDataSourceId)
 
     const pages: PageObjectResponse[] = []
     let startCursor: string | undefined
@@ -197,3 +222,12 @@ export async function getFitnessLogs(): Promise<FitnessLog[]> {
     )
   }
 }
+
+export const getFitnessLogs = unstable_cache(
+  fetchFitnessLogs,
+  [FITNESS_LOGS_CACHE_TAG],
+  {
+    revalidate: 300,
+    tags: [FITNESS_LOGS_CACHE_TAG],
+  }
+)
