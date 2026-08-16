@@ -4,7 +4,7 @@ import { FitnessDataError } from "@/lib/fitness-data"
 import {
   validateDaysDataSourceSchema,
   validateWorkoutsDataSourceSchema,
-} from "@/lib/notion-schema"
+} from "./notion-schema"
 
 const validDaysProperties = {
   "Log Date": { type: "date" },
