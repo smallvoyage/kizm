@@ -27,6 +27,7 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 - 最新の摂取カロリー・たんぱく質・脂質・炭水化物
 - 1日の目標に対するカロリー・三大栄養素の残量と達成状況
 - 直近12週間の食事目標達成状況と日別PFCを確認できるヒートマップ
+- 種目ごとの最新代表セット、前回比、重量・回数の推移
 
 ## アーキテクチャ
 
@@ -35,6 +36,7 @@ app/page.tsx                         Server Component / データ取得とペー
 components/body-composition-chart.tsx Client Component / フィルターとチャート操作
 components/nutrition-summary.tsx      最新の食事状況
 components/nutrition-heatmap.tsx      食事目標の達成状況と日別詳細
+components/training-progress.tsx      種目選択と代表セットの推移
 components/ui/                        利用するshadcn/uiコンポーネント
 lib/notion.ts                         Notion Client、pagination、検証、正規化
 lib/fitness.ts                        ドメイン型とNotion非依存の集計処理
@@ -90,7 +92,7 @@ pnpm install
 | Meals | `NOTION_MEALS_DATA_SOURCE_ID` | 将来のNutrition Analytics |
 | Workouts | `NOTION_WORKOUTS_DATA_SOURCE_ID` | 将来のWorkout Analytics |
 
-今回のMVPで必要なのはDaysのみです。Daysには1日1レコードで、以下の名前と型を完全一致で作成してください。
+Daysには1日1レコードで、以下の名前と型を完全一致で作成してください。
 
 | プロパティ | 型 |
 | --- | --- |
@@ -105,6 +107,17 @@ pnpm install
 | Muscle Mass kg | Number |
 
 NotionのData Sourceには通常Titleプロパティも存在しますが、このアプリでは参照しません。アプリの動作に必須のプロパティは `Log Date`、`Weight kg`、`Body Fat %`、`Muscle Mass kg` です。Stepsは未作成・未入力でも `null` として扱い、現在の画面には表示しません。食事状況のサマリとチャートを利用するには、`Total Calories`、`Total Protein g`、`Total Fat g`、`Total Carbs g` の4つも作成してください。これらの栄養集計はMealsとのRelationを使った数値Rollupとして読み取り、未作成・未入力の場合は食事状況にデータが表示されません。
+
+Workoutsには1セット1レコードで、以下のプロパティを作成してください。`Weight kg` はNotion上で文字列として保存されますが、数値として解釈できない行はチャート対象外になります。
+
+| プロパティ | 型 |
+| --- | --- |
+| Exercised Day | Title（`YYYY-MM-DD`） |
+| Exercise | Select |
+| Weight kg | Rich text（数値） |
+| Reps | Number |
+
+同一日の同一種目に複数セットがある場合は、Epley式 `重量 × (1 + 回数 / 30)` で推定1RMを計算し、最大値のセットだけをその日の代表として表示します。推定1RM自体は比較にのみ使用し、画面には表示しません。
 
 ### 4. Integrationを接続する
 
@@ -137,7 +150,7 @@ NOTION_WORKOUTS_DATA_SOURCE_ID=
 
 `.env.local` は `.gitignore` 対象です。クライアントに公開される `NEXT_PUBLIC_` 接頭辞は使用しません。
 
-MVPで必須なのは `NOTION_TOKEN` と `NOTION_DAYS_DATA_SOURCE_ID` の2つだけです。MealsとWorkoutsの環境変数は将来機能を実装するまで空のままで構いません。1日の摂取目標は `lib/nutrition-goals.ts` で設定します。
+MVPで必須なのは `NOTION_TOKEN`、`NOTION_DAYS_DATA_SOURCE_ID`、`NOTION_WORKOUTS_DATA_SOURCE_ID` です。Mealsの環境変数は将来機能を実装するまで空のままで構いません。1日の摂取目標は `lib/nutrition-goals.ts` で設定します。
 
 ## ローカル開発
 
@@ -164,11 +177,11 @@ pnpm build
    - `NOTION_TOKEN`
    - `NOTION_DAYS_DATA_SOURCE_ID`
    - `NOTION_MEALS_DATA_SOURCE_ID`（将来のNutrition Analytics用・MVPでは任意）
-   - `NOTION_WORKOUTS_DATA_SOURCE_ID`（将来のWorkout Analytics用・MVPでは任意）
+   - `NOTION_WORKOUTS_DATA_SOURCE_ID`
 4. Productionへデプロイします。Preview環境でも実データを確認する場合は、同じ環境変数をPreviewにも設定します。
 
 Notion Integrationが対象Databaseへ接続されていれば、Vercelから追加のDBやバックエンドサービスなしで読み取れます。
 
 ## 今後の拡張
 
-ActivityはDaysの `FitnessLog` と `lib/notion.ts` の正規化結果を再利用できます。NutritionはMealsから `MealLog`、WorkoutはWorkoutsから種目・セット単位の `WorkoutLog` へ正規化し、それぞれ独立した取得関数と集計・Chart Componentを追加する方針です。Server Componentだけが各Data Sourceを取得し、Client Componentには正規化済みデータだけを渡します。
+ActivityはDaysの `FitnessLog` と `lib/notion.ts` の正規化結果を再利用できます。NutritionはMealsから `MealLog` へ正規化する方針です。WorkoutはWorkoutsから `WorkoutSet` へ正規化し、代表セットの選定はNotion非依存の集計処理として `lib/fitness.ts` に置いています。Server Componentだけが各Data Sourceを取得し、Client Componentには正規化済みデータだけを渡します。

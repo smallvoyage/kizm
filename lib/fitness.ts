@@ -10,6 +10,19 @@ export type FitnessLog = {
   muscleMass: number | null
 }
 
+export type WorkoutSet = {
+  date: string
+  exercise: string
+  weightKg: number
+  reps: number
+}
+
+export type RepresentativeWorkoutSet = WorkoutSet & {
+  estimatedOneRepMax: number
+}
+
+export type PerformanceTrend = "growth" | "maintained" | "lower"
+
 export type BodyCompositionMetric = "weight" | "bodyFat" | "muscleMass"
 export type NutritionMetric = "calories" | "protein" | "fat" | "carbs"
 export type NutritionAchievement =
@@ -25,6 +38,67 @@ const NUTRITION_METRICS: NutritionMetric[] = [
   "fat",
   "carbs",
 ]
+
+function calculateEstimatedOneRepMax(weightKg: number, reps: number): number {
+  return weightKg * (1 + reps / 30)
+}
+
+export function getExerciseNames(workoutSets: WorkoutSet[]): string[] {
+  const latestDateByExercise = new Map<string, string>()
+
+  for (const set of workoutSets) {
+    const latestDate = latestDateByExercise.get(set.exercise)
+    if (!latestDate || set.date > latestDate) {
+      latestDateByExercise.set(set.exercise, set.date)
+    }
+  }
+
+  return [...latestDateByExercise]
+    .toSorted(
+      ([exerciseA, dateA], [exerciseB, dateB]) =>
+        dateB.localeCompare(dateA) || exerciseA.localeCompare(exerciseB, "ja")
+    )
+    .map(([exercise]) => exercise)
+}
+
+export function getRepresentativeWorkoutSets(
+  workoutSets: WorkoutSet[],
+  exercise: string
+): RepresentativeWorkoutSet[] {
+  const representativeByDate = new Map<string, RepresentativeWorkoutSet>()
+
+  for (const set of workoutSets) {
+    if (set.exercise !== exercise) continue
+
+    const candidate = {
+      ...set,
+      estimatedOneRepMax: calculateEstimatedOneRepMax(set.weightKg, set.reps),
+    }
+    const current = representativeByDate.get(set.date)
+
+    if (
+      !current ||
+      candidate.estimatedOneRepMax > current.estimatedOneRepMax ||
+      (candidate.estimatedOneRepMax === current.estimatedOneRepMax &&
+        candidate.weightKg > current.weightKg)
+    ) {
+      representativeByDate.set(set.date, candidate)
+    }
+  }
+
+  return [...representativeByDate.values()].toSorted((a, b) =>
+    a.date.localeCompare(b.date)
+  )
+}
+
+export function compareWorkoutPerformance(
+  current: RepresentativeWorkoutSet,
+  previous: RepresentativeWorkoutSet
+): PerformanceTrend {
+  if (current.estimatedOneRepMax > previous.estimatedOneRepMax) return "growth"
+  if (current.estimatedOneRepMax < previous.estimatedOneRepMax) return "lower"
+  return "maintained"
+}
 
 export function getLatestNutritionLog(logs: FitnessLog[]): FitnessLog | null {
   return (
