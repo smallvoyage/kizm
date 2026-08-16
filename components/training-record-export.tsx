@@ -4,14 +4,18 @@ import { CircleAlert, ImageIcon, LoaderCircle, Share2, X } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
-import type { WorkoutSet } from "@/lib/fitness"
+import {
+  getWorkoutSetsWithRecords,
+  type WorkoutSet,
+  type WorkoutSetWithRecord,
+} from "@/lib/fitness"
 import { formatNumber } from "@/lib/format-number"
 
 type ExportState = "idle" | "rendering" | "ready" | "error"
 
 type WorkoutGroup = {
   exercise: string
-  sets: WorkoutSet[]
+  sets: WorkoutSetWithRecord[]
 }
 
 type RenderedRecord = {
@@ -53,8 +57,8 @@ function formatShortDate(date: string) {
   }).format(new Date(`${date}T00:00:00Z`))
 }
 
-function groupWorkoutSets(workoutSets: WorkoutSet[]) {
-  const groups = new Map<string, WorkoutSet[]>()
+function groupWorkoutSets(workoutSets: WorkoutSetWithRecord[]) {
+  const groups = new Map<string, WorkoutSetWithRecord[]>()
 
   for (const set of workoutSets) {
     const exerciseSets = groups.get(set.exercise) ?? []
@@ -98,12 +102,26 @@ function setFittedFont(
   }
 }
 
+function setFittedSetFont(
+  context: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  fontFamily: string
+) {
+  let fontSize = 23
+  context.font = `600 ${fontSize}px ${fontFamily}`
+  while (fontSize > 17 && context.measureText(text).width > maxWidth) {
+    fontSize -= 1
+    context.font = `600 ${fontSize}px ${fontFamily}`
+  }
+}
+
 function getToken(styles: CSSStyleDeclaration, name: string) {
   return styles.getPropertyValue(name).trim()
 }
 
 async function renderRecord(
-  workoutSets: WorkoutSet[]
+  workoutSets: WorkoutSetWithRecord[]
 ): Promise<RenderedRecord> {
   await document.fonts.ready
 
@@ -184,13 +202,27 @@ async function renderRecord(
       roundedRect(context, x, y, 256, 40, 12)
       context.fill()
 
+      const setText = `${formatNumber(set.weightKg, { fractionDigits: 1 })} kg × ${formatNumber(set.reps)} 回`
       context.fillStyle = color("--color-ink-2")
-      context.font = `600 23px ${bodyFont}`
-      context.fillText(
-        `${formatNumber(set.weightKg, { fractionDigits: 1 })} kg × ${formatNumber(set.reps)} 回`,
-        x + 14,
-        y + 28
+      setFittedSetFont(
+        context,
+        setText,
+        set.isEstimatedOneRepMaxRecord ? 148 : 228,
+        bodyFont
       )
+      context.fillText(setText, x + 14, y + 28)
+
+      if (set.isEstimatedOneRepMaxRecord) {
+        context.fillStyle = color("--color-success")
+        roundedRect(context, x + 166, y + 6, 78, 28, 8)
+        context.fill()
+
+        context.fillStyle = color("--color-accent-ink")
+        context.font = `700 17px ${bodyFont}`
+        context.textAlign = "center"
+        context.fillText("MAX RM", x + 205, y + 26)
+        context.textAlign = "start"
+      }
     })
 
     groupTop += getGroupHeight(group)
@@ -216,13 +248,16 @@ async function renderRecord(
 
 export function TrainingRecordExport({
   workoutSets,
+  workoutHistory,
 }: {
   workoutSets: WorkoutSet[]
+  workoutHistory: WorkoutSet[]
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [state, setState] = useState<ExportState>("idle")
   const [preview, setPreview] = useState<PreviewImage | null>(null)
   const date = workoutSets[0]?.date ?? ""
+  const workoutSetsWithRecords = getWorkoutSetsWithRecords(workoutHistory, date)
 
   useEffect(
     () => () => {
@@ -234,7 +269,7 @@ export function TrainingRecordExport({
   const generate = async () => {
     setState("rendering")
     try {
-      const rendered = await renderRecord(workoutSets)
+      const rendered = await renderRecord(workoutSetsWithRecords)
       const url = URL.createObjectURL(rendered.blob)
       setPreview((current) => {
         if (current) URL.revokeObjectURL(current.url)

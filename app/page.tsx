@@ -98,6 +98,7 @@ export default async function Home() {
               <TrainingRecordExport
                 key={JSON.stringify(latestWorkoutSets)}
                 workoutSets={latestWorkoutSets}
+                workoutHistory={workoutSets}
               />
             )}
             <RefreshButton />
