@@ -57,6 +57,7 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
   const [selectedExercise, setSelectedExercise] = useState(
     () => exerciseNames[0] ?? ""
   )
+  // router.refresh() 後も選択状態は残るため、選択中の種目が消えた場合は先頭へ戻す。
   const activeExercise = exerciseNames.includes(selectedExercise)
     ? selectedExercise
     : (exerciseNames[0] ?? "")
