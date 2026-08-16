@@ -156,10 +156,12 @@ function getHistoryStartDate() {
     timeZone: "Asia/Tokyo",
   }).format(new Date())
   const referenceTime = new Date(`${referenceDate}T00:00:00Z`).getTime()
-
-  return new Date(
+  const cutoffTime =
     referenceTime - (FITNESS_HISTORY_DAYS - 1) * DAY_IN_MILLISECONDS
-  )
+  const cutoffDay = new Date(cutoffTime).getUTCDay()
+  const daysSinceMonday = (cutoffDay + 6) % 7
+
+  return new Date(cutoffTime - daysSinceMonday * DAY_IN_MILLISECONDS)
     .toISOString()
     .slice(0, 10)
 }
