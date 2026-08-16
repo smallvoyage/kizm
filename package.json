@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "doctor": "node scripts/doctor.mjs",
+    "test:doctor": "node --test scripts/doctor.test.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
