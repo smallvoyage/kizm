@@ -1,1 +1,1 @@
-export * from "@/lib/fitness/fitness"
+export * from "./fitness"
