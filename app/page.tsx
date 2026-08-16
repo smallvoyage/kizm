@@ -5,10 +5,15 @@ import { BodyCompositionChart } from "@/components/body-composition-chart"
 import { NutritionHeatmap } from "@/components/nutrition-heatmap"
 import { NutritionSummary } from "@/components/nutrition-summary"
 import { RefreshButton } from "@/components/refresh-button"
+import { TrainingProgress } from "@/components/training-progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { WeeklyReview } from "@/components/weekly-review"
-import { type FitnessLog, getLatestNutritionLog } from "@/lib/fitness"
-import { FitnessDataError, getFitnessLogs } from "@/lib/notion"
+import {
+  type FitnessLog,
+  getLatestNutritionLog,
+  type WorkoutSet,
+} from "@/lib/fitness"
+import { FitnessDataError, getFitnessLogs, getWorkoutSets } from "@/lib/notion"
 import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
 
 function formatRecordDate(date: string | null | undefined) {
@@ -34,21 +39,41 @@ export default async function Home() {
 
   let logs: FitnessLog[] = []
   let hasOlderLogs = false
+  let workoutSets: WorkoutSet[] = []
   let errorMessage: string | null = null
+  let workoutErrorMessage: string | null = null
 
-  try {
-    const result = await getFitnessLogs()
-    logs = result.logs
-    hasOlderLogs = result.hasOlderLogs
-  } catch (error: unknown) {
+  const [fitnessResult, workoutResult] = await Promise.allSettled([
+    getFitnessLogs(),
+    getWorkoutSets(),
+  ])
+
+  if (fitnessResult.status === "fulfilled") {
+    logs = fitnessResult.value.logs
+    hasOlderLogs = fitnessResult.value.hasOlderLogs
+  } else {
+    const error = fitnessResult.reason
     errorMessage =
       error instanceof FitnessDataError
         ? error.userMessage
         : "フィットネスデータを読み込めませんでした。"
   }
 
+  if (workoutResult.status === "fulfilled") {
+    workoutSets = workoutResult.value
+  } else {
+    const error = workoutResult.reason
+    workoutErrorMessage =
+      error instanceof FitnessDataError
+        ? error.userMessage
+        : "トレーニングデータを読み込めませんでした。"
+  }
+
   const latestNutritionLog = getLatestNutritionLog(logs)
   const latestRecordDate = logs.at(-1)?.date ?? null
+  const hasSourceError = Boolean(errorMessage || workoutErrorMessage)
+  const hasNoRecords = logs.length === 0 && workoutSets.length === 0
+  const shouldShowEmptyState = !hasSourceError && hasNoRecords
 
   return (
     <main className="fitness-shell">
@@ -63,13 +88,15 @@ export default async function Home() {
           <RefreshButton />
         </header>
 
-        {errorMessage ? (
+        {errorMessage && workoutErrorMessage ? (
           <Alert variant="destructive" className="dashboard-alert">
             <TriangleAlert aria-hidden="true" />
             <AlertTitle>データを読み込めませんでした</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
+            <AlertDescription>
+              {errorMessage} {workoutErrorMessage}
+            </AlertDescription>
           </Alert>
-        ) : logs.length === 0 ? (
+        ) : shouldShowEmptyState ? (
           <Alert className="dashboard-alert">
             <Database aria-hidden="true" />
             {hasOlderLogs ? (
@@ -84,54 +111,86 @@ export default async function Home() {
               <>
                 <AlertTitle>フィットネス記録がまだありません</AlertTitle>
                 <AlertDescription>
-                  Notion
-                  に記録を追加すると、ここに食事と身体組成の変化が表示されます。
+                  Notionに記録を追加すると、ここにトレーニング、食事、身体組成の変化が表示されます。
                 </AlertDescription>
               </>
             )}
           </Alert>
         ) : (
           <div className="dashboard-content">
-            <WeeklyReview logs={logs} />
+            {errorMessage && (
+              <Alert variant="destructive" className="dashboard-alert">
+                <TriangleAlert aria-hidden="true" />
+                <AlertTitle>日次データを読み込めませんでした</AlertTitle>
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+
+            {logs.length > 0 && <WeeklyReview logs={logs} />}
+
+            {logs.length > 0 && (
+              <section
+                aria-labelledby="nutrition-heading"
+                className="dashboard-section dashboard-section--nutrition"
+              >
+                <header className="dashboard-section-heading">
+                  <div>
+                    <h2 id="nutrition-heading">食事状況</h2>
+                    <p>1日の目標に対する最新記録</p>
+                  </div>
+                  <time
+                    className="dashboard-section-date"
+                    dateTime={latestNutritionLog?.date}
+                  >
+                    {formatRecordDate(latestNutritionLog?.date)}
+                  </time>
+                </header>
+                <NutritionSummary
+                  log={latestNutritionLog}
+                  goals={NUTRITION_GOALS}
+                />
+                <NutritionHeatmap
+                  logs={logs}
+                  goals={NUTRITION_GOALS}
+                  referenceDate={referenceDate}
+                />
+              </section>
+            )}
+
+            {logs.length > 0 && (
+              <section
+                aria-labelledby="body-composition-heading"
+                className="dashboard-section dashboard-section--chart"
+              >
+                <header className="dashboard-section-heading">
+                  <div>
+                    <h2 id="body-composition-heading">身体組成</h2>
+                    <p>指標を選んで、記録ごとの変化を確認</p>
+                  </div>
+                </header>
+                <BodyCompositionChart logs={logs} />
+              </section>
+            )}
 
             <section
-              aria-labelledby="nutrition-heading"
-              className="dashboard-section dashboard-section--nutrition"
+              aria-labelledby="training-heading"
+              className="dashboard-section dashboard-section--training"
             >
               <header className="dashboard-section-heading">
                 <div>
-                  <h2 id="nutrition-heading">食事状況</h2>
-                  <p>1日の目標に対する最新記録</p>
-                </div>
-                <time
-                  className="dashboard-section-date"
-                  dateTime={latestNutritionLog?.date}
-                >
-                  {formatRecordDate(latestNutritionLog?.date)}
-                </time>
-              </header>
-              <NutritionSummary
-                log={latestNutritionLog}
-                goals={NUTRITION_GOALS}
-              />
-              <NutritionHeatmap
-                logs={logs}
-                goals={NUTRITION_GOALS}
-                referenceDate={referenceDate}
-              />
-            </section>
-
-            <section
-              aria-labelledby="body-composition-heading"
-              className="dashboard-section dashboard-section--chart"
-            >
-              <header className="dashboard-section-heading">
-                <div>
-                  <h2 id="body-composition-heading">身体組成</h2>
-                  <p>指標を選んで、記録ごとの変化を確認</p>
+                  <h2 id="training-heading">トレーニング</h2>
+                  <p>種目ごとの重量と回数の伸び</p>
                 </div>
               </header>
-              <BodyCompositionChart logs={logs} />
+              {workoutErrorMessage ? (
+                <Alert variant="destructive" className="training-alert">
+                  <TriangleAlert aria-hidden="true" />
+                  <AlertTitle>トレーニングを読み込めませんでした</AlertTitle>
+                  <AlertDescription>{workoutErrorMessage}</AlertDescription>
+                </Alert>
+              ) : (
+                <TrainingProgress workoutSets={workoutSets} />
+              )}
             </section>
           </div>
         )}

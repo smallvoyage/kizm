@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-08-14",
+    "scope": "feature",
+    "macrostructure": "Stat-Led",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / cool",
+    "vibe": "soft, exact, health-data dense",
+    "enrichment": "none",
+    "brief": "Exercise weight and repetition progress"
+  },
+  {
     "date": "2026-08-12",
     "scope": "app",
     "macrostructure": "Stat-Led",
