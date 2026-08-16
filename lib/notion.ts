@@ -14,28 +14,15 @@ import {
   mapNotionPageToFitnessLog,
   mapNotionPageToWorkoutSet,
   NOTION_DAY_PROPERTY_NAMES,
-  NOTION_WORKOUT_PROPERTY_NAMES,
 } from "@/lib/notion-mapper"
 import { queryAllFullPages } from "@/lib/notion-pagination/notion-pagination"
+import {
+  validateDaysDataSourceSchema,
+  validateWorkoutsDataSourceSchema,
+} from "@/lib/notion-schema"
 
 const FITNESS_HISTORY_DAYS = 84
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
-
-const REQUIRED_PROPERTY_TYPES = {
-  [NOTION_DAY_PROPERTY_NAMES.date]: "date",
-  [NOTION_DAY_PROPERTY_NAMES.weight]: "number",
-  [NOTION_DAY_PROPERTY_NAMES.bodyFat]: "number",
-  [NOTION_DAY_PROPERTY_NAMES.muscleMass]: "number",
-} as const
-
-const REQUIRED_WORKOUT_PROPERTY_TYPES = {
-  [NOTION_WORKOUT_PROPERTY_NAMES.date]: "title",
-  [NOTION_WORKOUT_PROPERTY_NAMES.category]: "select",
-  [NOTION_WORKOUT_PROPERTY_NAMES.exercise]: "select",
-  [NOTION_WORKOUT_PROPERTY_NAMES.weight]: "rich_text",
-  [NOTION_WORKOUT_PROPERTY_NAMES.reps]: "number",
-  [NOTION_WORKOUT_PROPERTY_NAMES.setCount]: "number",
-} as const
 
 const schemaValidationPromises = new Map<string, Promise<void>>()
 
@@ -47,48 +34,6 @@ function getRequiredEnvironmentVariable(name: string): string {
     )
   }
   return value
-}
-
-function validateProperties(properties: Record<string, { type: string }>) {
-  const missing = Object.keys(REQUIRED_PROPERTY_TYPES).filter(
-    (name) => !(name in properties)
-  )
-  if (missing.length > 0) {
-    throw new FitnessDataError(
-      `Notionに必要なプロパティがありません: ${missing.join(", ")}`
-    )
-  }
-
-  const invalid = Object.entries(REQUIRED_PROPERTY_TYPES)
-    .filter(([name, expectedType]) => properties[name]?.type !== expectedType)
-    .map(([name, expectedType]) => `${name} (${expectedType})`)
-  if (invalid.length > 0) {
-    throw new FitnessDataError(
-      `Notionプロパティの型を確認してください: ${invalid.join(", ")}`
-    )
-  }
-}
-
-function validateWorkoutProperties(
-  properties: Record<string, { type: string }>
-) {
-  const missing = Object.keys(REQUIRED_WORKOUT_PROPERTY_TYPES).filter(
-    (name) => !(name in properties)
-  )
-  if (missing.length > 0) {
-    throw new FitnessDataError(
-      `NotionのWorkoutsに必要なプロパティがありません: ${missing.join(", ")}`
-    )
-  }
-
-  const invalid = Object.entries(REQUIRED_WORKOUT_PROPERTY_TYPES)
-    .filter(([name, expectedType]) => properties[name]?.type !== expectedType)
-    .map(([name, expectedType]) => `${name} (${expectedType})`)
-  if (invalid.length > 0) {
-    throw new FitnessDataError(
-      `NotionのWorkoutsプロパティの型を確認してください: ${invalid.join(", ")}`
-    )
-  }
 }
 
 async function ensureValidDataSourceSchema(
@@ -146,7 +91,7 @@ async function fetchFitnessLogs(): Promise<DaysResult> {
     await ensureValidDataSourceSchema(
       notion,
       daysDataSourceId,
-      validateProperties
+      validateDaysDataSourceSchema
     )
 
     const pages = await queryAllFullPages(notion.dataSources.query, {
@@ -216,7 +161,7 @@ async function getWorkoutSets(): Promise<WorkoutSet[]> {
     await ensureValidDataSourceSchema(
       notion,
       workoutsDataSourceId,
-      validateWorkoutProperties
+      validateWorkoutsDataSourceSchema
     )
 
     const pages = await queryAllFullPages(notion.dataSources.query, {
