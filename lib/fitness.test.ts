@@ -4,7 +4,7 @@ import {
   getNutritionAchievement,
   type NutritionAchievement,
   type NutritionMetric,
-} from "@/lib/fitness"
+} from "./fitness"
 
 const goals: Record<NutritionMetric, number> = {
   calories: 100,
