@@ -25,6 +25,13 @@ describe("getWeekStart", () => {
   ])("%s を含む週の月曜日は %s", (date, expected) => {
     expect(getWeekStart(date)).toBe(expected)
   })
+
+  test.each(["2026-02-29", "2026-02-31", "2026-13-01"])(
+    "%s のような不正な日付は拒否する",
+    (date) => {
+      expect(getWeekStart(date)).toBeNull()
+    }
+  )
 })
 
 describe("shiftDate", () => {
@@ -35,6 +42,15 @@ describe("shiftDate", () => {
     ["2026-01-01", -1, "2025-12-31"],
   ])("%s を %i 日ずらすと %s", (date, days, expected) => {
     expect(shiftDate(date, days)).toBe(expected)
+  })
+
+  test("不正なカレンダー日付は補正せず拒否する", () => {
+    expect(shiftDate("2026-02-31", 1)).toBeNull()
+  })
+
+  test("サポート範囲外への移動は拒否する", () => {
+    expect(shiftDate("0001-01-01", -1)).toBeNull()
+    expect(shiftDate("9999-12-31", 1)).toBeNull()
   })
 })
 
