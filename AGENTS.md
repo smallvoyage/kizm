@@ -26,3 +26,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - レビューコメント、指摘内容、要約は日本語で記述する。
 - コード、識別子、エラーメッセージ、技術用語は必要に応じて原文の英語を維持する。
+
+## アーキテクチャ境界
+
+- `app/` は Next.js のルーティング、Server Component のページ構成、Server Action とキャッシュ無効化を担当する。データ取得は `FitnessDataSource` の契約を介して行い、Notion SDKやraw responseを直接扱わない。
+- `components/` は表示とユーザー操作を担当する。`"use client"` のコンポーネントでは `server-only` のモジュール、`process.env`、Notion SDKを参照せず、シリアライズ可能なドメインモデルをpropsで受け取る。集計や変換などのドメインロジックをUIへ持ち込まない。
+- `lib/fitness/` はNotionに依存しないドメイン型と集計処理を置く。外部サービスの型やSDKをimportしない。
+- `lib/fitness-data.ts` の `FitnessDataSource` はアプリケーションとデータソースの境界（port）とする。データソース固有の実装詳細をこの契約から漏らさない。
+- `lib/fitness-data-source.ts` は `server-only` のcomposition rootとし、環境変数に応じたデータソースの選択をここに閉じ込める。`lib/fixture/` と `lib/notion.ts` は同じ `FitnessDataSource` 契約を実装するadapterとする。
+- `lib/notion-client/`、`lib/notion-pagination/`、`lib/notion-schema/`、`lib/notion-errors/`、`lib/notion-mapper.ts`、`lib/notion.ts` はNotion infrastructure層であり、サーバー側からのみ参照する。Notionの秘密情報とSDKレスポンスはこの層の外へ出さず、mapperでドメインモデルへ、error translatorで `FitnessDataError` へ変換する。
+- adapterは `FitnessDataSource` 契約とドメインモデルに依存して実装し、契約側からadapterを参照しない。`lib/fitness-data-source.ts` のcomposition rootだけが契約と各adapterの両方を参照して具体実装を選択・配線する。`app/`・`components/`・ドメイン層からNotion adapterを直接参照しない。
