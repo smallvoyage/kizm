@@ -1,6 +1,12 @@
 "use client"
 
-import { CircleAlert, ImageIcon, LoaderCircle, Share2, X } from "lucide-react"
+import {
+  CircleAlert,
+  ClipboardList,
+  LoaderCircle,
+  Share2,
+  X,
+} from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
@@ -187,11 +193,11 @@ export function DailySummaryExport({ log }: { log: FitnessLog }) {
       <button
         type="button"
         className="record-export-trigger"
-        aria-label="日次を画像化"
+        aria-label="体組成・カロリー・PFCを画像化"
         onClick={open}
       >
-        <ImageIcon aria-hidden="true" />
-        <span>日次を画像化</span>
+        <ClipboardList aria-hidden="true" />
+        <span>体組成・カロリー・PFCを画像化</span>
       </button>
       <dialog
         ref={dialogRef}

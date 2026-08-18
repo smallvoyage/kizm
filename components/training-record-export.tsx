@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleAlert, ImageIcon, LoaderCircle, Share2, X } from "lucide-react"
+import { CircleAlert, Dumbbell, LoaderCircle, Share2, X } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
@@ -326,9 +326,14 @@ export function TrainingRecordExport({
 
   return (
     <>
-      <button type="button" className="record-export-trigger" onClick={open}>
-        <ImageIcon aria-hidden="true" />
-        <span>記録を画像化</span>
+      <button
+        type="button"
+        className="record-export-trigger"
+        aria-label="トレーニング記録を画像化"
+        onClick={open}
+      >
+        <Dumbbell aria-hidden="true" />
+        <span>トレーニング記録を画像化</span>
       </button>
       <dialog
         ref={dialogRef}
