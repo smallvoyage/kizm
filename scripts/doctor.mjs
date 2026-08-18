@@ -51,7 +51,10 @@ function getEnvironmentFileEntries(rootDir) {
   return entries
 }
 
-export function getEnvironmentKeys({ rootDir = process.cwd(), environment = process.env } = {}) {
+export function getEnvironmentKeys({
+  rootDir = process.cwd(),
+  environment = process.env,
+} = {}) {
   const exampleKeys = new Map(
     readEnvironmentEntries(resolve(rootDir, ".env.example"))
   )

@@ -132,7 +132,10 @@ test("Notionモードの不足キーだけを表示する", (t) => {
     })
   )
 
-  assert.match(output, /不足: NOTION_DAYS_DATA_SOURCE_ID, NOTION_WORKOUTS_DATA_SOURCE_ID/)
+  assert.match(
+    output,
+    /不足: NOTION_DAYS_DATA_SOURCE_ID, NOTION_WORKOUTS_DATA_SOURCE_ID/
+  )
   assert.doesNotMatch(output, /secret-value/)
 })
 
