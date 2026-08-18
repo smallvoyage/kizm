@@ -92,7 +92,7 @@ export default async function Home() {
             <span className="dashboard-mark" aria-hidden="true">
               <Activity />
             </span>
-            <span>フィットネス</span>
+            <span>KIZM</span>
           </h1>
           <div className="dashboard-header-actions">
             {latestWorkoutSets.length > 0 && (

@@ -20,13 +20,13 @@ const japaneseFont = LINE_Seed_JP({
 })
 
 export const metadata: Metadata = {
-  applicationName: "フィットネス分析",
-  title: "フィットネス分析",
+  applicationName: "KIZM",
+  title: "KIZM",
   description: "身体組成と栄養を確認する個人用フィットネスダッシュボードです。",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "フィットネス分析",
+    title: "KIZM",
   },
   formatDetection: {
     telephone: false,
