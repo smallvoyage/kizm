@@ -3,6 +3,7 @@ import {
   type FitnessLog,
   getExerciseGroups,
   getNutritionAchievement,
+  getRepresentativeWorkoutSets,
   type NutritionAchievement,
   type NutritionMetric,
   type WorkoutSet,
@@ -179,5 +180,55 @@ describe("getExerciseGroups", () => {
     ])
 
     expect(groups[0]?.exercises).toEqual(["スクワット", "ベンチプレス"])
+  })
+})
+
+describe("getRepresentativeWorkoutSets", () => {
+  test("対象種目だけを日ごとに推定1RMが最大のセットへまとめ、同値なら重量の大きいセットを選ぶ", () => {
+    const result = getRepresentativeWorkoutSets(
+      [
+        {
+          ...workoutSet("ベンチプレス", "2026-08-14"),
+          weightKg: 50,
+          reps: 18,
+        },
+        {
+          ...workoutSet("スクワット", "2026-08-14"),
+          weightKg: 200,
+          reps: 5,
+        },
+        {
+          ...workoutSet("ベンチプレス", "2026-08-14"),
+          weightKg: 60,
+          reps: 10,
+        },
+        {
+          ...workoutSet("ベンチプレス", "2026-08-10"),
+          weightKg: 70,
+          reps: 8,
+        },
+        {
+          ...workoutSet("ベンチプレス", "2026-08-10"),
+          weightKg: 60,
+          reps: 12,
+        },
+      ],
+      "ベンチプレス"
+    )
+
+    expect(result).toEqual([
+      {
+        ...workoutSet("ベンチプレス", "2026-08-10"),
+        weightKg: 70,
+        reps: 8,
+        estimatedOneRepMax: 70 * (1 + 8 / 30),
+      },
+      {
+        ...workoutSet("ベンチプレス", "2026-08-14"),
+        weightKg: 60,
+        reps: 10,
+        estimatedOneRepMax: 60 * (1 + 10 / 30),
+      },
+    ])
   })
 })
