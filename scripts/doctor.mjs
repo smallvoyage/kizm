@@ -25,6 +25,55 @@ function readText(path) {
   return readFileSync(path, "utf8").trim()
 }
 
+function readEnvironmentEntries(path) {
+  try {
+    return readFileSync(path, "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.replace(/^\s*export\s+/, "").trim())
+      .filter((line) => line && !line.startsWith("#"))
+      .map((line) => /^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line))
+      .filter(Boolean)
+      .map(([, key, value]) => [key, value.replace(/^(['"])(.*)\1$/, "$2")])
+  } catch {
+    return []
+  }
+}
+
+function getEnvironmentFileEntries(rootDir) {
+  const entries = new Map()
+
+  for (const file of [".env", ".env.local"]) {
+    for (const [key, value] of readEnvironmentEntries(resolve(rootDir, file))) {
+      entries.set(key, value)
+    }
+  }
+
+  return entries
+}
+
+export function getEnvironmentKeys({ rootDir = process.cwd(), environment = process.env } = {}) {
+  const exampleKeys = new Map(
+    readEnvironmentEntries(resolve(rootDir, ".env.example"))
+  )
+  const environmentFileEntries = getEnvironmentFileEntries(rootDir)
+  const configuredKeys = new Set([
+    ...environmentFileEntries.keys(),
+    ...Object.keys(environment),
+  ])
+  const dataSource =
+    environment.FITNESS_DATA_SOURCE ??
+    environmentFileEntries.get("FITNESS_DATA_SOURCE")
+  const fixtureMode = dataSource?.trim() === "fixture"
+
+  return {
+    missing: [...exampleKeys.keys()]
+      .filter((key) => key !== "FITNESS_ALLOW_FIXTURE_IN_PRODUCTION")
+      .filter((key) => !fixtureMode || !key.startsWith("NOTION_"))
+      .filter((key) => !configuredKeys.has(key)),
+    fixtureMode,
+  }
+}
+
 function getPnpmVersion(packageManager) {
   const match = /^pnpm@(.+)$/.exec(packageManager ?? "")
   return match?.[1] ?? null
@@ -57,6 +106,7 @@ export function runDoctor({
   rootDir = process.cwd(),
   nodeVersion = process.versions.node,
   runCommand = spawnSync,
+  environment = process.env,
 } = {}) {
   const results = []
   let packageJson
@@ -138,6 +188,20 @@ export function runDoctor({
         ? `${binaries.join(", ")} を利用できます`
         : `不足: ${missingBinaries.join(", ")}`,
       "pnpm install --frozen-lockfile を実行してください"
+    )
+  )
+
+  const environmentKeys = getEnvironmentKeys({ rootDir, environment })
+  results.push(
+    result(
+      "環境変数",
+      environmentKeys.missing.length === 0,
+      environmentKeys.missing.length === 0
+        ? environmentKeys.fixtureMode
+          ? ".env.exampleのfixture用キーが設定されています"
+          : ".env.exampleのキーが設定されています"
+        : `不足: ${environmentKeys.missing.join(", ")}`,
+      "`.env.example`を確認し、不足しているキーを環境変数または.env.localに設定してください"
     )
   )
 
