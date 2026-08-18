@@ -1,5 +1,6 @@
 import type { PageObjectResponse } from "@notionhq/client"
 
+import { isCalendarDate } from "@/lib/calendar-date"
 import type { FitnessLog, WorkoutSet } from "@/lib/fitness"
 
 export const NOTION_DAY_PROPERTY_NAMES = {
@@ -70,22 +71,13 @@ function getPlainText(property: PageProperty | undefined): string | null {
   return null
 }
 
-function isCalendarDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-
-  const date = new Date(`${value}T00:00:00Z`)
-  return (
-    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-  )
-}
-
 export function mapNotionPageToFitnessLog(
   page: PageObjectResponse
 ): FitnessLog | null {
   const { properties } = page
   const date =
     getDate(properties, NOTION_DAY_PROPERTY_NAMES.date)?.slice(0, 10) ?? null
-  if (!date) return null
+  if (!date || !isCalendarDate(date)) return null
 
   return {
     date,
