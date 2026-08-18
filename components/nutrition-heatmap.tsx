@@ -75,7 +75,7 @@ function formatAmount(value: number | null, unit: "kcal" | "g"): string {
 function goalStatus(
   value: number | null,
   goal: number,
-  kind: "calories" | "macro"
+  kind: "calories" | "minimum" | "maximum"
 ): string {
   if (value === null) return "記録なし"
   const ratio = value / goal
@@ -86,6 +86,7 @@ function goalStatus(
     return "目標超過"
   }
 
+  if (kind === "maximum") return ratio <= 1 ? "達成" : "目標超過"
   return ratio >= 1 ? "達成" : "目標未満"
 }
 
@@ -166,21 +167,25 @@ export function NutritionHeatmap({
       label: "たんぱく質",
       goalLabel: "たんぱく質目標",
       value: formatAmount(selectedLog?.protein ?? null, "g"),
-      status: goalStatus(selectedLog?.protein ?? null, goals.protein, "macro"),
+      status: goalStatus(
+        selectedLog?.protein ?? null,
+        goals.protein,
+        "minimum"
+      ),
     },
     {
       metric: "fat",
       label: "脂質",
       goalLabel: "脂質目標",
       value: formatAmount(selectedLog?.fat ?? null, "g"),
-      status: goalStatus(selectedLog?.fat ?? null, goals.fat, "macro"),
+      status: goalStatus(selectedLog?.fat ?? null, goals.fat, "maximum"),
     },
     {
       metric: "carbs",
       label: "炭水化物",
       goalLabel: "炭水化物目標",
       value: formatAmount(selectedLog?.carbs ?? null, "g"),
-      status: goalStatus(selectedLog?.carbs ?? null, goals.carbs, "macro"),
+      status: goalStatus(selectedLog?.carbs ?? null, goals.carbs, "minimum"),
     },
   ]
 
