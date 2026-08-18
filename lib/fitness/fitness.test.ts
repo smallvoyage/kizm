@@ -79,20 +79,34 @@ describe("getNutritionAchievement", () => {
     }
   )
 
-  describe.each(["protein", "fat", "carbs"] as const)(
-    "%s の達成率",
-    (metric) => {
-      test.each(macroBoundaryCases)(
-        "目標の %i%% の場合は %s",
-        (percentage, expected) => {
-          expect(
-            getNutritionAchievement(
-              createNutritionLog({ [metric]: percentage }),
-              goals
-            )
-          ).toBe(expected)
-        }
-      )
+  describe.each(["protein", "carbs"] as const)("%s の達成率", (metric) => {
+    test.each(macroBoundaryCases)(
+      "目標の %i%% の場合は %s",
+      (percentage, expected) => {
+        expect(
+          getNutritionAchievement(
+            createNutritionLog({ [metric]: percentage }),
+            goals
+          )
+        ).toBe(expected)
+      }
+    )
+  })
+
+  test.each([
+    [99, "achieved"],
+    [100, "achieved"],
+    [101, "near"],
+    [120, "near"],
+    [121, "partial"],
+    [140, "partial"],
+    [141, "missed"],
+  ] as Array<[number, NutritionAchievement]>)(
+    "脂質が目標の %i%% の場合は %s",
+    (value, expected) => {
+      expect(
+        getNutritionAchievement(createNutritionLog({ fat: value }), goals)
+      ).toBe(expected)
     }
   )
 
