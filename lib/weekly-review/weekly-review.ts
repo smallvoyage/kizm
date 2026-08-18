@@ -3,6 +3,7 @@ import type {
   FitnessLog,
   NutritionMetric,
 } from "@/lib/fitness"
+import { parseCalendarDate } from "@/lib/calendar-date/calendar-date"
 
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
 
@@ -33,22 +34,12 @@ export type WeeklyReview = {
   }
 }
 
-function parseDate(date: string): Date | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
-  if (!match) return null
-
-  const parsed = new Date(
-    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
-  )
-  return Number.isNaN(parsed.getTime()) ? null : parsed
-}
-
 function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
 export function getWeekStart(date: string): string | null {
-  const parsed = parseDate(date)
+  const parsed = parseCalendarDate(date)
   if (!parsed) return null
 
   const daysSinceMonday = (parsed.getUTCDay() + 6) % 7
@@ -57,7 +48,7 @@ export function getWeekStart(date: string): string | null {
 }
 
 export function shiftDate(date: string, days: number): string | null {
-  const parsed = parseDate(date)
+  const parsed = parseCalendarDate(date)
   if (!parsed) return null
 
   return formatDate(new Date(parsed.getTime() + days * DAY_IN_MILLISECONDS))
