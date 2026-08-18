@@ -107,7 +107,7 @@ async function renderSummary(
   drawRule(context, 1290)
   context.fillStyle = "#aaa69e"
   context.font = `600 24px ${fontFamily}`
-  context.fillText("Fitness Analytics", CARD_PADDING, 1360)
+  context.fillText("KIZM", CARD_PADDING, 1360)
   context.textAlign = "right"
   context.fillText("#fitness #食事記録", CARD_WIDTH - CARD_PADDING, 1360)
   context.textAlign = "left"

@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "KIZM",
     short_name: "KIZM",
-    description: "Notionと連携した個人用フィットネス分析ダッシュボードです。",
+    description: "Notionと連携した個人用フィットネスダッシュボードです。",
     start_url: "/",
     scope: "/",
     display: "standalone",
