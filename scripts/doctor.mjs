@@ -21,6 +21,12 @@ const IGNORED_SCRIPT_COMMANDS = new Set([
   "yarn",
 ])
 
+const OPTIONAL_ENVIRONMENT_KEYS = new Set([
+  "FITNESS_DATA_SOURCE",
+  "NOTION_MEALS_DATA_SOURCE_ID",
+])
+const FIXTURE_PRODUCTION_ALLOW_KEY = "FITNESS_ALLOW_FIXTURE_IN_PRODUCTION"
+
 function readText(path) {
   return readFileSync(path, "utf8").trim()
 }
@@ -59,18 +65,26 @@ export function getEnvironmentKeys({
     readEnvironmentEntries(resolve(rootDir, ".env.example"))
   )
   const environmentFileEntries = getEnvironmentFileEntries(rootDir)
+  const environmentEntries = new Map([
+    ...environmentFileEntries,
+    ...Object.entries(environment),
+  ])
   const configuredKeys = new Set([
     ...environmentFileEntries.keys(),
     ...Object.keys(environment),
   ])
-  const dataSource =
-    environment.FITNESS_DATA_SOURCE ??
-    environmentFileEntries.get("FITNESS_DATA_SOURCE")
+  const dataSource = environmentEntries.get("FITNESS_DATA_SOURCE")
+  const productionFixture =
+    dataSource?.trim() === "fixture" &&
+    environmentEntries.get("NODE_ENV") === "production"
   const fixtureMode = dataSource?.trim() === "fixture"
 
   return {
     missing: [...exampleKeys.keys()]
-      .filter((key) => key !== "FITNESS_ALLOW_FIXTURE_IN_PRODUCTION")
+      .filter((key) => !OPTIONAL_ENVIRONMENT_KEYS.has(key))
+      .filter(
+        (key) => key !== FIXTURE_PRODUCTION_ALLOW_KEY || productionFixture
+      )
       .filter((key) => !fixtureMode || !key.startsWith("NOTION_"))
       .filter((key) => !configuredKeys.has(key)),
     fixtureMode,
