@@ -34,8 +34,9 @@ export type WeeklyReview = {
   }
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10)
+function formatDate(date: Date): string | null {
+  const value = date.toISOString().slice(0, 10)
+  return parseCalendarDate(value) ? value : null
 }
 
 export function getWeekStart(date: string): string | null {

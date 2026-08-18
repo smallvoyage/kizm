@@ -7,6 +7,8 @@ export function parseCalendarDate(value: string): Date | null {
   const year = Number(match[1])
   const month = Number(match[2])
   const day = Number(match[3])
+  if (year < 1) return null
+
   const parsed = new Date(0)
   parsed.setUTCFullYear(year, month - 1, day)
   parsed.setUTCHours(0, 0, 0, 0)

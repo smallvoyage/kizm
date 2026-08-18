@@ -47,6 +47,11 @@ describe("shiftDate", () => {
   test("不正なカレンダー日付は補正せず拒否する", () => {
     expect(shiftDate("2026-02-31", 1)).toBeNull()
   })
+
+  test("サポート範囲外への移動は拒否する", () => {
+    expect(shiftDate("0001-01-01", -1)).toBeNull()
+    expect(shiftDate("9999-12-31", 1)).toBeNull()
+  })
 })
 
 describe("タイムゾーンに依存しない日付計算", () => {
