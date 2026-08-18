@@ -1,4 +1,4 @@
-# Design — Fitness Analytics
+# Design — KIZM
 
 A locked design system for this personal mobile dashboard. Every page and
 component should preserve the same visual language. Extend this file when the
