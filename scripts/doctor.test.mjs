@@ -10,7 +10,12 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import test from "node:test"
 
-import { formatResults, getScriptBinaries, runDoctor } from "./doctor.mjs"
+import {
+  formatResults,
+  getEnvironmentKeys,
+  getScriptBinaries,
+  runDoctor,
+} from "./doctor.mjs"
 
 function createFixture({ installDependencies = true } = {}) {
   const rootDir = mkdtempSync(join(tmpdir(), "fitness-doctor-"))
@@ -25,6 +30,10 @@ function createFixture({ installDependencies = true } = {}) {
   const lockfile = "lockfileVersion: '9.0'\n"
 
   writeFileSync(join(rootDir, ".node-version"), "24.19.0\n")
+  writeFileSync(
+    join(rootDir, ".env.example"),
+    "FITNESS_DATA_SOURCE=notion\nFITNESS_ALLOW_FIXTURE_IN_PRODUCTION=false\nNOTION_TOKEN=\nNOTION_DAYS_DATA_SOURCE_ID=\nNOTION_MEALS_DATA_SOURCE_ID=\nNOTION_WORKOUTS_DATA_SOURCE_ID=\n"
+  )
   writeFileSync(join(rootDir, "package.json"), JSON.stringify(packageJson))
   writeFileSync(join(rootDir, "pnpm-lock.yaml"), lockfile)
 
@@ -67,11 +76,97 @@ test("すべての検査に成功する", (t) => {
   const results = runDoctor({
     rootDir,
     nodeVersion: "24.19.0",
+    environment: {
+      NOTION_TOKEN: "configured",
+      NOTION_DAYS_DATA_SOURCE_ID: "configured",
+      NOTION_WORKOUTS_DATA_SOURCE_ID: "configured",
+    },
     runCommand: successfulPnpm,
   })
 
-  assert.equal(results.length, 5)
+  assert.equal(results.length, 6)
   assert.ok(results.every(({ ok }) => ok))
+})
+
+test("fixtureモードではNotion用キーを要求しない", (t) => {
+  const rootDir = createFixture()
+  t.after(() => rmSync(rootDir, { recursive: true, force: true }))
+
+  const { missing, fixtureMode } = getEnvironmentKeys({
+    rootDir,
+    environment: { FITNESS_DATA_SOURCE: "fixture" },
+  })
+
+  assert.equal(fixtureMode, true)
+  assert.deepEqual(missing, [])
+})
+
+test("envファイルがなくてもfixtureモードのdoctorを実行できる", (t) => {
+  const rootDir = createFixture()
+  t.after(() => rmSync(rootDir, { recursive: true, force: true }))
+
+  const results = runDoctor({
+    rootDir,
+    nodeVersion: "24.19.0",
+    environment: { FITNESS_DATA_SOURCE: "fixture" },
+    runCommand: successfulPnpm,
+  })
+
+  assert.ok(results.every(({ ok }) => ok))
+})
+
+test("productionのfixtureモードでは追加許可キーを要求する", (t) => {
+  const rootDir = createFixture()
+  t.after(() => rmSync(rootDir, { recursive: true, force: true }))
+
+  const missing = getEnvironmentKeys({
+    rootDir,
+    environment: {
+      FITNESS_DATA_SOURCE: "fixture",
+      NODE_ENV: "production",
+    },
+  }).missing
+
+  assert.deepEqual(missing, ["FITNESS_ALLOW_FIXTURE_IN_PRODUCTION"])
+})
+
+test("productionのfixtureモードでは追加許可キーがあれば成功する", (t) => {
+  const rootDir = createFixture()
+  t.after(() => rmSync(rootDir, { recursive: true, force: true }))
+
+  const { missing } = getEnvironmentKeys({
+    rootDir,
+    environment: {
+      FITNESS_DATA_SOURCE: "fixture",
+      FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true",
+      NODE_ENV: "production",
+    },
+  })
+
+  assert.deepEqual(missing, [])
+})
+
+test("Notionモードの不足キーだけを表示する", (t) => {
+  const rootDir = createFixture()
+  t.after(() => rmSync(rootDir, { recursive: true, force: true }))
+
+  const output = formatResults(
+    runDoctor({
+      rootDir,
+      nodeVersion: "24.19.0",
+      environment: {
+        FITNESS_DATA_SOURCE: "notion",
+        NOTION_TOKEN: "secret-value",
+      },
+      runCommand: successfulPnpm,
+    })
+  )
+
+  assert.match(
+    output,
+    /不足: NOTION_DAYS_DATA_SOURCE_ID, NOTION_WORKOUTS_DATA_SOURCE_ID/
+  )
+  assert.doesNotMatch(output, /secret-value/)
 })
 
 test("fresh worktreeではクラッシュせず修復方法を表示する", (t) => {
