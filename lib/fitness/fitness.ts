@@ -219,21 +219,20 @@ export function getNutritionAchievement(
   }
 
   const calorieRatio = calories / goals.calories
-  const macroRatios = [
-    protein / goals.protein,
-    fat / goals.fat,
-    carbs / goals.carbs,
-  ]
+  const macroRatios = [protein / goals.protein, carbs / goals.carbs]
   const caloriesAchieved = calorieRatio >= 0.9 && calorieRatio <= 1.1
   const macrosAchieved = macroRatios.every((ratio) => ratio >= 1)
+  const fatAchieved = fat <= goals.fat
 
-  if (caloriesAchieved && macrosAchieved) return "achieved"
+  if (caloriesAchieved && macrosAchieved && fatAchieved) return "achieved"
 
   const caloriesNear = calorieRatio >= 0.8 && calorieRatio <= 1.2
   const macrosNear = macroRatios.every((ratio) => ratio >= 0.8)
-  if (caloriesNear && macrosNear) return "near"
+  const fatNear = fat <= goals.fat * 1.2
+  if (caloriesNear && macrosNear && fatNear) return "near"
 
   const caloriesPartial = calorieRatio >= 0.6 && calorieRatio <= 1.4
   const macrosPartial = macroRatios.every((ratio) => ratio >= 0.6)
-  return caloriesPartial && macrosPartial ? "partial" : "missed"
+  const fatPartial = fat <= goals.fat * 1.4
+  return caloriesPartial && macrosPartial && fatPartial ? "partial" : "missed"
 }
