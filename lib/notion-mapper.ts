@@ -1,6 +1,6 @@
 import type { PageObjectResponse } from "@notionhq/client"
 
-import { isCalendarDate } from "@/lib/calendar-date/calendar-date"
+import { isCalendarDate } from "@/lib/calendar-date"
 import type { FitnessLog, WorkoutSet } from "@/lib/fitness"
 
 export const NOTION_DAY_PROPERTY_NAMES = {
