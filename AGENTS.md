@@ -35,4 +35,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `lib/fitness-data.ts` の `FitnessDataSource` はアプリケーションとデータソースの境界（port）とする。データソース固有の実装詳細をこの契約から漏らさない。
 - `lib/fitness-data-source.ts` は `server-only` のcomposition rootとし、環境変数に応じたデータソースの選択をここに閉じ込める。`lib/fixture/` と `lib/notion.ts` は同じ `FitnessDataSource` 契約を実装するadapterとする。
 - `lib/notion-client/`、`lib/notion-pagination/`、`lib/notion-schema/`、`lib/notion-errors/`、`lib/notion-mapper.ts`、`lib/notion.ts` はNotion infrastructure層であり、サーバー側からのみ参照する。Notionの秘密情報とSDKレスポンスはこの層の外へ出さず、mapperでドメインモデルへ、error translatorで `FitnessDataError` へ変換する。
-- 依存方向は `app/`・`components/` → アプリケーション/ドメイン契約 → adapter の一方向とする。ドメイン層やUI層からNotion adapterを逆向きに参照しない。
+- adapterは `FitnessDataSource` 契約とドメインモデルに依存して実装し、契約側からadapterを参照しない。`lib/fitness-data-source.ts` のcomposition rootだけが契約と各adapterの両方を参照して具体実装を選択・配線する。`app/`・`components/`・ドメイン層からNotion adapterを直接参照しない。
