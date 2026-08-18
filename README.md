@@ -1,4 +1,4 @@
-# Fitness Analytics
+# KIZM
 
 A personal fitness analytics dashboard for visualizing body composition, nutrition, activity, and workout progress from Notion data.
 

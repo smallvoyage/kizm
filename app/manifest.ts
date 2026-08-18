@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "フィットネス分析",
-    short_name: "フィットネス",
+    name: "KIZM",
+    short_name: "KIZM",
     description: "Notionと連携した個人用フィットネス分析ダッシュボードです。",
     start_url: "/",
     scope: "/",
