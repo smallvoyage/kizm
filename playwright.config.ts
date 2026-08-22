@@ -5,6 +5,7 @@ import { defineConfig } from "@playwright/test"
 
 const worktreePath = process.cwd()
 const reuseBuild = process.env.PLAYWRIGHT_REUSE_BUILD === "true"
+const visualRegression = process.env.PLAYWRIGHT_VISUAL_REGRESSION === "true"
 const fixtureScenario = process.env.FITNESS_FIXTURE_SCENARIO ?? "normal"
 const configuredPort = process.env.PLAYWRIGHT_PORT ?? process.env.PORT
 const defaultPort =
@@ -15,6 +16,12 @@ const defaultPort =
   ) %
     2000)
 const port = configuredPort ? Number(configuredPort) : defaultPort
+
+if (visualRegression && process.platform !== "linux") {
+  throw new Error(
+    "Visual regression must run on Linux. Use the pinned Playwright container documented in docs/testing.md."
+  )
+}
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error(
