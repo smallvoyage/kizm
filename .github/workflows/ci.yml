@@ -58,4 +58,16 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Chromium E2E tests
+        id: e2e_tests
         run: pnpm test:e2e:functional
+
+      - name: Upload Playwright failure artifacts
+        if: ${{ failure() && steps.e2e_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14
