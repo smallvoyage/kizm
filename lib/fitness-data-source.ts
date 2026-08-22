@@ -1,5 +1,6 @@
 import "server-only"
 
+import type { FitnessDataSource } from "@/lib/fitness-data"
 import {
   resolveFitnessDataSource,
   resolveFitnessFixtureScenario,
@@ -23,7 +24,7 @@ const fixtureFitnessDataSources = {
 
 const dataSourceName = resolveFitnessDataSource(process.env)
 
-export const fitnessDataSource =
+export const fitnessDataSource: FitnessDataSource =
   dataSourceName === "fixture"
     ? fixtureFitnessDataSources[resolveFitnessFixtureScenario(process.env)]
     : notionFitnessDataSource
