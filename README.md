@@ -101,6 +101,7 @@ Notionへ接続せずに起動する場合は、データソースを明示的�
 `missing-nutrition`シナリオは、栄養値がすべて未入力の日とPFCの一部だけが未入力の日を再現します。
 このシナリオの`null`は摂取量0ではなく、値が未入力であることを表します。
 `workouts-error`シナリオは食事・身体組成ログを返し、Workoutsの取得だけが失敗する状態を再現します。
+`all-error`シナリオはDaysとWorkoutsの両方が取得に失敗する状態を再現します。
 Notion用の環境変数は必要ありません。
 
 ```dotenv
@@ -108,7 +109,8 @@ FITNESS_DATA_SOURCE=fixture
 FITNESS_FIXTURE_SCENARIO=normal
 ```
 
-`FITNESS_FIXTURE_SCENARIO`は`normal`（既定値）、`empty`、`missing-nutrition`、または`workouts-error`を指定できます。
+`FITNESS_FIXTURE_SCENARIO`は`normal`（既定値）、`empty`、`missing-nutrition`、
+`workouts-error`、または`all-error`を指定できます。
 
 `FITNESS_DATA_SOURCE`を未指定にした場合はNotionを使用します。productionでは誤ってfixtureを
 表示しないよう、上記に加えて`FITNESS_ALLOW_FIXTURE_IN_PRODUCTION=true`を明示した場合だけ

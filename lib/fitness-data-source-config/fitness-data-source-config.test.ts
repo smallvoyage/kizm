@@ -56,6 +56,14 @@ describe("resolveFitnessFixtureScenario", () => {
     ).toBe("empty")
   })
 
+  test("明示された全データ取得エラーを選ぶ", () => {
+    expect(
+      resolveFitnessFixtureScenario({
+        FITNESS_FIXTURE_SCENARIO: "all-error",
+      })
+    ).toBe("all-error")
+  })
+
   test("明示された栄養データ欠損を選ぶ", () => {
     expect(
       resolveFitnessFixtureScenario({

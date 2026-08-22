@@ -5,6 +5,7 @@ import {
   resolveFitnessFixtureScenario,
 } from "@/lib/fitness-data-source-config"
 import {
+  allErrorFixtureFitnessDataSource,
   emptyFixtureFitnessDataSource,
   fixtureFitnessDataSource,
   missingNutritionFixtureFitnessDataSource,
@@ -13,6 +14,7 @@ import {
 import { notionFitnessDataSource } from "@/lib/notion"
 
 const fixtureFitnessDataSources = {
+  "all-error": allErrorFixtureFitnessDataSource,
   empty: emptyFixtureFitnessDataSource,
   "missing-nutrition": missingNutritionFixtureFitnessDataSource,
   normal: fixtureFitnessDataSource,
