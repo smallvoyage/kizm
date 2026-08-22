@@ -29,29 +29,25 @@ describe("validateDaysDataSourceSchema", () => {
     ).not.toThrow()
   })
 
-  test("不足している必須プロパティをユーザー向けメッセージで通知する", () => {
-    expect(() =>
-      validateDaysDataSourceSchema({
-        "Log Date": { type: "date" },
-        "Weight kg": { type: "number" },
-      })
-    ).toThrowError(
+  test("不足している必須プロパティの一覧をユーザー向けメッセージで通知する", () => {
+    expect(() => validateDaysDataSourceSchema({})).toThrowError(
       new FitnessDataError(
-        "Notionに必要なプロパティがありません: Body Fat %, Muscle Mass kg"
+        "Notionに必要なプロパティがありません: Log Date, Weight kg, Body Fat %, Muscle Mass kg"
       )
     )
   })
 
-  test("不正な型をユーザー向けメッセージで通知する", () => {
+  test("型が不一致の必須プロパティと期待型をユーザー向けメッセージで通知する", () => {
     expect(() =>
       validateDaysDataSourceSchema({
-        ...validDaysProperties,
         "Log Date": { type: "title" },
         "Weight kg": { type: "rich_text" },
+        "Body Fat %": { type: "formula" },
+        "Muscle Mass kg": { type: "rollup" },
       })
     ).toThrowError(
       new FitnessDataError(
-        "Notionプロパティの型を確認してください: Log Date (date), Weight kg (number)"
+        "Notionプロパティの型を確認してください: Log Date (date), Weight kg (number), Body Fat % (number), Muscle Mass kg (number)"
       )
     )
   })
@@ -64,29 +60,27 @@ describe("validateWorkoutsDataSourceSchema", () => {
     ).not.toThrow()
   })
 
-  test("不足している必須プロパティをユーザー向けメッセージで通知する", () => {
-    expect(() =>
-      validateWorkoutsDataSourceSchema({
-        "Exercised Day": { type: "title" },
-        Category: { type: "select" },
-      })
-    ).toThrowError(
+  test("不足している必須プロパティの一覧をユーザー向けメッセージで通知する", () => {
+    expect(() => validateWorkoutsDataSourceSchema({})).toThrowError(
       new FitnessDataError(
-        "NotionのWorkoutsに必要なプロパティがありません: Exercise, Weight kg, Reps, Set Count"
+        "NotionのWorkoutsに必要なプロパティがありません: Exercised Day, Category, Exercise, Weight kg, Reps, Set Count"
       )
     )
   })
 
-  test("不正な型をユーザー向けメッセージで通知する", () => {
+  test("型が不一致の必須プロパティと期待型をユーザー向けメッセージで通知する", () => {
     expect(() =>
       validateWorkoutsDataSourceSchema({
-        ...validWorkoutsProperties,
+        "Exercised Day": { type: "date" },
+        Category: { type: "multi_select" },
         Exercise: { type: "rich_text" },
+        "Weight kg": { type: "number" },
+        Reps: { type: "formula" },
         "Set Count": { type: "formula" },
       })
     ).toThrowError(
       new FitnessDataError(
-        "NotionのWorkoutsプロパティの型を確認してください: Exercise (select), Set Count (number)"
+        "NotionのWorkoutsプロパティの型を確認してください: Exercised Day (title), Category (select), Exercise (select), Weight kg (rich_text), Reps (number), Set Count (number)"
       )
     )
   })
