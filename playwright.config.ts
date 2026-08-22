@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { resolve } from "node:path"
 
-import { defineConfig, devices } from "@playwright/test"
+import { defineConfig } from "@playwright/test"
 
 const worktreePath = process.cwd()
 const reuseBuild = process.env.PLAYWRIGHT_REUSE_BUILD === "true"
@@ -34,6 +34,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   use: {
     baseURL: `http://127.0.0.1:${port}`,
+    screenshot: "only-on-failure",
     trace: "retain-on-failure",
   },
   webServer: {
@@ -52,8 +53,25 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: "chromium-320",
+      use: {
+        browserName: "chromium",
+        viewport: { width: 320, height: 568 },
+      },
+    },
+    {
+      name: "chromium-390",
+      use: {
+        browserName: "chromium",
+        viewport: { width: 390, height: 844 },
+      },
+    },
+    {
+      name: "chromium-desktop",
+      use: {
+        browserName: "chromium",
+        viewport: { width: 1280, height: 900 },
+      },
     },
   ],
 })
