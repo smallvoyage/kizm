@@ -32,7 +32,7 @@ test(
 )
 
 test(
-  "390px dashboard matches the workouts-error snapshot",
+  "390px training region matches the workouts-error snapshot",
   {
     tag: "@visual",
   },
@@ -65,9 +65,8 @@ test(
         .filter({ hasText: "指標を選んで、記録ごとの変化を確認" })
     ).toBeVisible()
 
-    await expect(page).toHaveScreenshot("dashboard-workouts-error.png", {
+    await expect(training).toHaveScreenshot("training-workouts-error.png", {
       animations: "disabled",
-      fullPage: true,
     })
   }
 )

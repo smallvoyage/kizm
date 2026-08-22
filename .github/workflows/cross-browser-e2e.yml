@@ -1,40 +1,29 @@
-name: CI
+name: Cross-browser E2E
 
 on:
   push:
     branches:
       - main
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  quality:
-    name: Verify
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Verify
-        run: pnpm verify
-
   e2e:
-    name: Chromium E2E
+    name: ${{ matrix.name }} E2E
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Firefox
+            browser: firefox
+            project: firefox-desktop
+          - name: WebKit
+            browser: webkit
+            project: webkit-desktop
     env:
       FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true"
       FITNESS_DATA_SOURCE: fixture
@@ -54,18 +43,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install ${{ matrix.name }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Run Chromium E2E tests
+      - name: Run ${{ matrix.name }} E2E tests
         id: e2e_tests
-        run: pnpm test:e2e:functional
+        run: pnpm exec playwright test --grep-invert @visual --project=${{ matrix.project }}
 
-      - name: Upload Playwright failure artifacts
+      - name: Upload ${{ matrix.name }} failure artifacts
         if: ${{ failure() && steps.e2e_tests.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ matrix.browser }}-failure-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             playwright-report/
             test-results/
