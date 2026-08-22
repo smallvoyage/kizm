@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   quality:
-    name: Quality checks
+    name: Verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

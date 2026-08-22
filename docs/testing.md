@@ -9,6 +9,44 @@ GitHub Actions では `.github/workflows/ci.yml` と
 `.github/workflows/visual-regression.yml` を分けているため、操作 E2E と visual
 regression の成否は PR 上で独立して確認できる。
 
+## main の required checks
+
+`main` へ検証前の変更が入らないよう、次の GitHub Actions job を required status
+check に設定する。required status check で指定する名前は workflow 名や job ID ではなく、
+各 job の `name` と一致させる。
+
+- `Verify`: `.github/workflows/ci.yml` の `pnpm verify`
+- `Chromium E2E`: `.github/workflows/ci.yml` の fixture ベースの操作 E2E
+
+job 名を変更すると required status check との対応が切れるため、変更する場合は ruleset
+も同じ PR の merge 前に更新する。同じ job 名を別 workflow で再利用しない。
+
+### Ruleset の設定手順
+
+private repository で ruleset または branch protection を使用するには GitHub Pro、Team、
+Enterprise Cloud のいずれかが必要。GitHub Free のまま使用する場合は repository を public
+にする必要がある。利用可能な状態にした後、repository の管理者が次の手順で設定する。
+
+1. この workflow を含む PR で `Verify` と `Chromium E2E` を一度実行し、両方が成功することを確認する。
+2. GitHub の **Settings > Rules > Rulesets** から branch ruleset を作成する。
+3. ruleset 名を `Protect main`、Enforcement status を `Active` にする。
+4. Target branches で `Include default branch` を選択する。
+5. `Require status checks to pass` を有効にし、`Verify` と `Chromium E2E` を追加する。
+6. `Require branches to be up to date before merging` は有効にしない。必要になった場合は、CI の再実行回数が増える影響を確認して別途有効にする。
+7. bypass 対象を追加せずに ruleset を保存する。
+
+設定後は **Settings > Rules > Rulesets > Protect main** で Enforcement status、対象 branch、
+2件の required status check を確認する。CLI では次のコマンドで ruleset 一覧を取得し、
+返された ID の詳細を確認できる。
+
+```sh
+gh api repos/watagit/kizm/rulesets
+gh api repos/watagit/kizm/rulesets/<ruleset-id>
+```
+
+最後に検証用 PR を作成し、どちらかの job が未完了または失敗している間は merge が拒否され、
+両方の成功後だけ merge できることを確認する。
+
 ## Visual baseline の基準環境
 
 baseline の正本は Linux 用だけとし、macOS 用 baseline は管理しない。
