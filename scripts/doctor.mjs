@@ -26,6 +26,12 @@ const OPTIONAL_ENVIRONMENT_KEYS = new Set([
   "NOTION_MEALS_DATA_SOURCE_ID",
 ])
 const FIXTURE_PRODUCTION_ALLOW_KEY = "FITNESS_ALLOW_FIXTURE_IN_PRODUCTION"
+const PLAYWRIGHT_CHROMIUM_CHECK = `
+  import { chromium } from "@playwright/test"
+
+  const browser = await chromium.launch({ headless: true })
+  await browser.close()
+`
 
 function readText(path) {
   return readFileSync(path, "utf8").trim()
@@ -119,6 +125,15 @@ function result(label, ok, details, repair) {
   return { label, ok, details, repair }
 }
 
+function isExecutable(path) {
+  try {
+    accessSync(path, constants.X_OK)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function runDoctor({
   rootDir = process.cwd(),
   nodeVersion = process.versions.node,
@@ -185,17 +200,9 @@ export function runDoctor({
   )
 
   const binaries = getScriptBinaries(packageJson.scripts)
-  const missingBinaries = binaries.filter((binary) => {
-    try {
-      accessSync(
-        resolve(rootDir, "node_modules", ".bin", binary),
-        constants.X_OK
-      )
-      return false
-    } catch {
-      return true
-    }
-  })
+  const missingBinaries = binaries.filter(
+    (binary) => !isExecutable(resolve(rootDir, "node_modules", ".bin", binary))
+  )
 
   results.push(
     result(
@@ -205,6 +212,47 @@ export function runDoctor({
         ? `${binaries.join(", ")} を利用できます`
         : `不足: ${missingBinaries.join(", ")}`,
       "pnpm install --frozen-lockfile を実行してください"
+    )
+  )
+
+  const playwrightAvailable = isExecutable(
+    resolve(rootDir, "node_modules", ".bin", "playwright")
+  )
+  results.push(
+    result(
+      "Playwright",
+      playwrightAvailable,
+      playwrightAvailable
+        ? "Playwrightを実行できます"
+        : "Playwrightがインストールされていません",
+      "pnpm install --frozen-lockfile を実行してください"
+    )
+  )
+
+  const chromium = playwrightAvailable
+    ? runCommand(
+        process.execPath,
+        ["--input-type=module", "--eval", PLAYWRIGHT_CHROMIUM_CHECK],
+        {
+          cwd: rootDir,
+          encoding: "utf8",
+          stdio: "pipe",
+          timeout: 30_000,
+        }
+      )
+    : null
+  results.push(
+    result(
+      "Playwright Chromium",
+      chromium?.status === 0,
+      chromium?.status === 0
+        ? "Chromiumを起動できます"
+        : playwrightAvailable
+          ? "Chromiumを起動できません"
+          : "Playwright未導入のためChromiumを検査できません",
+      playwrightAvailable
+        ? "pnpm exec playwright install chromium を実行してください"
+        : "pnpm install --frozen-lockfile を実行してください"
     )
   )
 
