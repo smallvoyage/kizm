@@ -7,6 +7,8 @@
     "doctor": "node scripts/doctor.mjs",
     "test:doctor": "node --test scripts/doctor.test.mjs",
     "test:unit": "vitest run",
+    "verify": "node scripts/verify.mjs",
+    "verify:all": "node scripts/verify.mjs --all",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
