@@ -14,6 +14,7 @@
     "build": "next build",
     "start": "next start",
     "test:e2e": "playwright test",
+    "test:e2e:all-error": "FITNESS_FIXTURE_SCENARIO=all-error playwright test e2e/all-error.spec.ts",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "format:check": "biome format .",
