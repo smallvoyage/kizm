@@ -2362,7 +2362,7 @@ body {
   padding: 0;
   border-radius: var(--space-3xs);
   outline: var(--rule-strong) solid transparent;
-  outline-offset: var(--space-3xs);
+  outline-offset: calc(-1 * var(--rule-strong));
   cursor: pointer;
   touch-action: manipulation;
   transition:
