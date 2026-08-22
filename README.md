@@ -19,10 +19,8 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 ## MVPの機能
 
 - 体重・体脂肪率・筋肉量の最新有効値と、直前の有効値からの差分
-- kg用の左Y軸と%用の右Y軸を持つBody Compositionチャート
-- 指標ごとの表示切り替え（最低1系列は常に表示）
-- 7日・30日・90日・全期間のフィルター（初期値は30日）
-- 欠損値、空データ、対象期間の空データ、設定不備、Notion APIエラーの表示
+- 体重・体脂肪率・筋肉量から1指標を選んで表示するBody Compositionチャート
+- 欠損値、空データ、設定不備、Notion APIエラーの表示
 - PC・スマートフォンに対応したレスポンシブUI
 - 最新の摂取カロリー・たんぱく質・脂質・炭水化物
 - 1日の目標に対するカロリー・三大栄養素の残量と達成状況
@@ -33,7 +31,7 @@ Notionをデータ入力・保存先として使い、日々のフィットネ�
 
 ```text
 app/page.tsx                         Server Component / データ取得とページ構成
-components/body-composition-chart.tsx Client Component / フィルターとチャート操作
+components/body-composition-chart.tsx Client Component / 指標選択とチャート表示
 components/nutrition-summary.tsx      最新の食事状況
 components/nutrition-heatmap.tsx      食事目標の達成状況と日別詳細
 components/training-progress.tsx      種目選択と代表セットの推移
