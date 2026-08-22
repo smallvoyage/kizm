@@ -14,6 +14,8 @@
     "build": "next build",
     "start": "next start",
     "test:e2e": "playwright test",
+    "test:e2e:functional": "playwright test --grep-invert @visual",
+    "test:e2e:visual": "playwright test --grep @visual",
     "test:e2e:all-error": "FITNESS_FIXTURE_SCENARIO=all-error playwright test e2e/all-error.spec.ts",
     "lint": "biome lint .",
     "format": "biome format --write .",
