@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
   mapNotionPageToFitnessLog,
   mapNotionPageToWorkoutSet,
-} from "@/lib/notion-mapper"
+} from "./notion-mapper"
 import { notionMapperPageFixtures } from "./notion-mapper-fixture"
 
 describe("mapNotionPageToFitnessLog", () => {
