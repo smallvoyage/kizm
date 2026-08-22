@@ -4,6 +4,7 @@ import { resolve } from "node:path"
 import { defineConfig, devices } from "@playwright/test"
 
 const worktreePath = process.cwd()
+const reuseBuild = process.env.PLAYWRIGHT_REUSE_BUILD === "true"
 const configuredPort = process.env.PLAYWRIGHT_PORT ?? process.env.PORT
 const defaultPort =
   3100 +
@@ -36,7 +37,9 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "pnpm build && pnpm start --hostname 127.0.0.1 --port $PORT",
+    command: reuseBuild
+      ? "pnpm start --hostname 127.0.0.1 --port $PORT"
+      : "pnpm build && pnpm start --hostname 127.0.0.1 --port $PORT",
     cwd: worktreePath,
     env: {
       FITNESS_DATA_SOURCE: "fixture",

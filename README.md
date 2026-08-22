@@ -190,11 +190,13 @@ pnpm dev
 品質チェック:
 
 ```bash
-pnpm lint
-pnpm format:check
-pnpm typecheck
-pnpm build
+pnpm verify
 ```
+
+Biome、unit test、Next.jsの型生成、TypeScript、未使用コード、production buildを
+順番に検証します。E2Eを含めて完了条件をすべて検証する場合は `pnpm verify:all` を
+実行してください。検証用のbuildとE2Eはfixtureデータソースを使用するため、Notionの
+secretは不要です。
 
 ## Vercelへのデプロイ
 
