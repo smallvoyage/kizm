@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "bootstrap": "node scripts/bootstrap.mjs",
     "doctor": "node scripts/doctor.mjs",
     "test:doctor": "node --test scripts/doctor.test.mjs",
     "test:unit": "vitest run",
