@@ -96,12 +96,15 @@ pnpm install
 `run` を省略せずに実行してください。依存導入前は不足と修復方法を表示して終了します。
 
 Notionへ接続せずに起動する場合は、データソースを明示的にfixtureへ切り替えます。
-fixtureは固定日付の35日分の食事・身体組成ログと、3種目・5回分のWorkoutを返します。
-Notion用の環境変数は必要ありません。
+`normal`シナリオは固定日付の35日分の食事・身体組成ログと、3種目・5回分のWorkoutを返します。
+`empty`シナリオはDaysとWorkoutsが0件の空状態を再現します。Notion用の環境変数は必要ありません。
 
 ```dotenv
 FITNESS_DATA_SOURCE=fixture
+FITNESS_FIXTURE_SCENARIO=normal
 ```
+
+`FITNESS_FIXTURE_SCENARIO`は`normal`（既定値）または`empty`を指定できます。
 
 `FITNESS_DATA_SOURCE`を未指定にした場合はNotionを使用します。productionでは誤ってfixtureを
 表示しないよう、上記に加えて`FITNESS_ALLOW_FIXTURE_IN_PRODUCTION=true`を明示した場合だけ

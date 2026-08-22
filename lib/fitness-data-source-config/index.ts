@@ -1,1 +1,4 @@
-export { resolveFitnessDataSource } from "./fitness-data-source-config"
+export {
+  resolveFitnessDataSource,
+  resolveFitnessFixtureScenario,
+} from "./fitness-data-source-config"

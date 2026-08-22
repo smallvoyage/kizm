@@ -1,8 +1,10 @@
 export type FitnessDataSourceName = "fixture" | "notion"
+export type FitnessFixtureScenario = "empty" | "normal"
 
 type FitnessDataSourceEnvironment = {
   FITNESS_ALLOW_FIXTURE_IN_PRODUCTION?: string
   FITNESS_DATA_SOURCE?: string
+  FITNESS_FIXTURE_SCENARIO?: string
   NODE_ENV?: string
 }
 
@@ -28,4 +30,18 @@ export function resolveFitnessDataSource(
   }
 
   return dataSource
+}
+
+export function resolveFitnessFixtureScenario(
+  environment: FitnessDataSourceEnvironment
+): FitnessFixtureScenario {
+  const scenario = environment.FITNESS_FIXTURE_SCENARIO?.trim() || "normal"
+
+  if (scenario !== "empty" && scenario !== "normal") {
+    throw new Error(
+      `FITNESS_FIXTURE_SCENARIO must be "normal" or "empty" (received: ${JSON.stringify(scenario)})`
+    )
+  }
+
+  return scenario
 }

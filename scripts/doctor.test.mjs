@@ -36,7 +36,7 @@ function createFixture({
   writeFileSync(join(rootDir, ".node-version"), "24.19.0\n")
   writeFileSync(
     join(rootDir, ".env.example"),
-    "FITNESS_DATA_SOURCE=notion\nFITNESS_ALLOW_FIXTURE_IN_PRODUCTION=false\nNOTION_TOKEN=\nNOTION_DAYS_DATA_SOURCE_ID=\nNOTION_MEALS_DATA_SOURCE_ID=\nNOTION_WORKOUTS_DATA_SOURCE_ID=\n"
+    "FITNESS_DATA_SOURCE=notion\nFITNESS_FIXTURE_SCENARIO=normal\nFITNESS_ALLOW_FIXTURE_IN_PRODUCTION=false\nNOTION_TOKEN=\nNOTION_DAYS_DATA_SOURCE_ID=\nNOTION_MEALS_DATA_SOURCE_ID=\nNOTION_WORKOUTS_DATA_SOURCE_ID=\n"
   )
   writeFileSync(join(rootDir, "package.json"), JSON.stringify(packageJson))
   writeFileSync(join(rootDir, "pnpm-lock.yaml"), lockfile)
