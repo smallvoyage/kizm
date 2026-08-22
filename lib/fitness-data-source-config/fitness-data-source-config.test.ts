@@ -64,6 +64,22 @@ describe("resolveFitnessFixtureScenario", () => {
     ).toBe("all-error")
   })
 
+  test("明示された栄養データ欠損を選ぶ", () => {
+    expect(
+      resolveFitnessFixtureScenario({
+        FITNESS_FIXTURE_SCENARIO: "missing-nutrition",
+      })
+    ).toBe("missing-nutrition")
+  })
+
+  test("明示されたWorkouts取得失敗を選ぶ", () => {
+    expect(
+      resolveFitnessFixtureScenario({
+        FITNESS_FIXTURE_SCENARIO: "workouts-error",
+      })
+    ).toBe("workouts-error")
+  })
+
   test("未知のfixtureシナリオ名を拒否する", () => {
     expect(() =>
       resolveFitnessFixtureScenario({ FITNESS_FIXTURE_SCENARIO: "blank" })
