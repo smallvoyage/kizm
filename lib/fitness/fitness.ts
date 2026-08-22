@@ -35,7 +35,6 @@ export type ExerciseGroup = {
 }
 
 export type BodyCompositionMetric = "weight" | "bodyFat" | "muscleMass"
-export type ChartPeriod = "7D" | "30D" | "90D" | "ALL"
 export type NutritionMetric = "calories" | "protein" | "fat" | "carbs"
 export type NutritionAchievement =
   | "none"
@@ -50,42 +49,6 @@ const NUTRITION_METRICS: NutritionMetric[] = [
   "fat",
   "carbs",
 ]
-
-const PERIOD_DAYS: Record<Exclude<ChartPeriod, "ALL">, number> = {
-  "7D": 7,
-  "30D": 30,
-  "90D": 90,
-}
-
-function toUtcDay(date: string): number | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
-  if (!match) return null
-
-  const [, year, month, day] = match
-  const utcDay = Date.UTC(Number(year), Number(month) - 1, Number(day))
-  const normalized = new Date(utcDay).toISOString().slice(0, 10)
-
-  return normalized === date ? utcDay : null
-}
-
-export function filterLogsByPeriod(
-  logs: FitnessLog[],
-  period: ChartPeriod,
-  referenceDate: string
-): FitnessLog[] {
-  if (period === "ALL") return logs
-
-  const referenceDay = toUtcDay(referenceDate)
-  if (referenceDay === null) return []
-
-  const millisecondsPerDay = 24 * 60 * 60 * 1000
-  const firstDay = referenceDay - (PERIOD_DAYS[period] - 1) * millisecondsPerDay
-
-  return logs.filter((log) => {
-    const logDay = toUtcDay(log.date)
-    return logDay !== null && logDay >= firstDay && logDay <= referenceDay
-  })
-}
 
 function calculateEstimatedOneRepMax(weightKg: number, reps: number): number {
   return weightKg * (1 + reps / 30)
