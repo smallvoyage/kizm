@@ -172,7 +172,7 @@ const getFitnessLogs = unstable_cache(
   }
 )
 
-export const notionFitnessDataSource = {
+export const notionFitnessDataSource: FitnessDataSource = {
   getDays: getFitnessLogs,
   getWorkouts: getWorkoutSets,
-} satisfies FitnessDataSource
+}
