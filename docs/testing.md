@@ -4,6 +4,9 @@
 
 - `pnpm test:e2e:functional`: 操作 E2E。`@visual` を除外し、通常の `Chromium E2E` job で実行する。
 - `pnpm test:e2e:visual`: visual regression。`@visual` だけを Linux で実行する。
+- `pnpm test:e2e:visual:empty`: 空状態の visual regression を Linux で実行する。
+- `pnpm test:e2e:visual:all-error`: 全体エラーの visual regression を Linux で実行する。
+- `pnpm test:e2e:visual:workouts-error`: Workouts 部分エラーの visual regression を Linux で実行する。
 
 GitHub Actions では `.github/workflows/ci.yml` と
 `.github/workflows/visual-regression.yml` を分けているため、操作 E2E と visual
@@ -73,12 +76,15 @@ docker run --rm --ipc=host \
 
 ## Baseline の更新と目視確認
 
-1. 上記コマンド末尾の `pnpm test:e2e:visual` を
-   `pnpm test:e2e:visual:update` に置き換えて Linux baseline を生成する。
-2. `e2e/visual-regression.spec.ts-snapshots/` の変更画像をすべて開き、320px、
-   390px、身体組成の各指標で、意図した表示だけが変化していることを確認する。
-3. 更新後に通常の `pnpm test:e2e:visual` を同じコンテナで再実行し、baseline
-   と一致することを確認する。
+1. 上記コンテナ内で `pnpm test:e2e:visual:update` を実行する。シナリオ固有の
+   baseline は `pnpm test:e2e:visual:empty --update-snapshots`、
+   `pnpm test:e2e:visual:all-error --update-snapshots`、
+   `pnpm test:e2e:visual:workouts-error --update-snapshots` も順に実行して生成する。
+2. 各 visual spec の `*-snapshots/` にある変更画像をすべて開き、320px、390px、
+   身体組成の各指標、空状態、全体エラー、部分エラーで、意図した表示だけが
+   変化していることを確認する。
+3. 更新後に各コマンドを `--update-snapshots` なしで同じコンテナから再実行し、
+   baseline と一致することを確認する。
 4. spec の変更と baseline を同じ PR に含め、レビュー時にも画像を目視確認する。
 
 意図しない差分がある場合は baseline を更新せず、実装または fixture の原因を修正する。

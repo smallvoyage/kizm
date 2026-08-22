@@ -41,6 +41,8 @@ jobs:
         run: |
           pnpm test:e2e:visual
           pnpm test:e2e:visual:empty
+          pnpm test:e2e:visual:all-error
+          pnpm test:e2e:visual:workouts-error
 
       - name: Upload visual regression failure artifacts
         if: ${{ failure() && steps.visual_tests.outcome == 'failure' }}
