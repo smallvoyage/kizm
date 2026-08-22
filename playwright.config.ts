@@ -5,6 +5,7 @@ import { defineConfig } from "@playwright/test"
 
 const worktreePath = process.cwd()
 const reuseBuild = process.env.PLAYWRIGHT_REUSE_BUILD === "true"
+const fixtureScenario = process.env.FITNESS_FIXTURE_SCENARIO ?? "normal"
 const configuredPort = process.env.PLAYWRIGHT_PORT ?? process.env.PORT
 const defaultPort =
   3100 +
@@ -44,6 +45,7 @@ export default defineConfig({
     cwd: worktreePath,
     env: {
       FITNESS_DATA_SOURCE: "fixture",
+      FITNESS_FIXTURE_SCENARIO: fixtureScenario,
       FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true",
       PORT: String(port),
     },
