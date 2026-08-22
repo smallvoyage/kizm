@@ -3,7 +3,7 @@ import {
   mapNotionPageToFitnessLog,
   mapNotionPageToWorkoutSet,
 } from "@/lib/notion-mapper"
-import { notionMapperPageFixtures } from "@/lib/notion-mapper-fixture"
+import { notionMapperPageFixtures } from "./notion-mapper-fixture"
 
 describe("mapNotionPageToFitnessLog", () => {
   test("numberとrollup numberをFitnessLogへ正規化する", () => {
