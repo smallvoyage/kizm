@@ -17,7 +17,10 @@ import {
   runDoctor,
 } from "./doctor.mjs"
 
-function createFixture({ installDependencies = true } = {}) {
+function createFixture({
+  installDependencies = true,
+  installPlaywright = installDependencies,
+} = {}) {
   const rootDir = mkdtempSync(join(tmpdir(), "fitness-doctor-"))
   const packageJson = {
     packageManager: "pnpm@10.33.0",
@@ -25,6 +28,7 @@ function createFixture({ installDependencies = true } = {}) {
       dev: "next dev",
       check: "biome check . && tsc --noEmit",
       doctor: "node scripts/doctor.mjs",
+      "test:e2e": "playwright test",
     },
   }
   const lockfile = "lockfileVersion: '9.0'\n"
@@ -47,6 +51,12 @@ function createFixture({ installDependencies = true } = {}) {
       writeFileSync(binaryPath, "#!/bin/sh\n")
       chmodSync(binaryPath, 0o755)
     }
+
+    if (installPlaywright) {
+      const playwrightPath = join(rootDir, "node_modules", ".bin", "playwright")
+      writeFileSync(playwrightPath, "#!/bin/sh\n")
+      chmodSync(playwrightPath, 0o755)
+    }
   }
 
   return rootDir
@@ -64,8 +74,9 @@ test("package scriptsから主要バイナリを抽出する", () => {
       dev: "next dev",
       check: "NODE_ENV=test biome check . && tsc --noEmit",
       doctor: "node scripts/doctor.mjs",
+      "test:e2e": "playwright test",
     }),
-    ["biome", "next", "tsc"]
+    ["biome", "next", "playwright", "tsc"]
   )
 })
 
@@ -84,7 +95,7 @@ test("すべての検査に成功する", (t) => {
     runCommand: successfulPnpm,
   })
 
-  assert.equal(results.length, 6)
+  assert.equal(results.length, 8)
   assert.ok(results.every(({ ok }) => ok))
 })
 
@@ -183,6 +194,46 @@ test("fresh worktreeではクラッシュせず修復方法を表示する", (t)
 
   assert.match(output, /依存関係がまだインストールされていません/)
   assert.match(output, /pnpm install --frozen-lockfile/)
+})
+
+test("Playwright未導入時はChromium検査をスキップして導入方法を表示する", (t) => {
+  const rootDir = createFixture({ installPlaywright: false })
+  t.after(() => rmSync(rootDir, { recursive: true, force: true }))
+
+  const output = formatResults(
+    runDoctor({
+      rootDir,
+      nodeVersion: "24.19.0",
+      environment: { FITNESS_DATA_SOURCE: "fixture" },
+      runCommand: successfulPnpm,
+    })
+  )
+
+  assert.match(output, /Playwrightがインストールされていません/)
+  assert.match(output, /Playwright未導入のためChromiumを検査できません/)
+  assert.match(output, /pnpm install --frozen-lockfile/)
+})
+
+test("Chromiumを起動できない場合はインストールコマンドを表示する", (t) => {
+  const rootDir = createFixture()
+  t.after(() => rmSync(rootDir, { recursive: true, force: true }))
+  const runCommand = (command, args) =>
+    command === process.execPath
+      ? { status: 1, stderr: "browser path includes secret-value" }
+      : successfulPnpm(command, args)
+
+  const output = formatResults(
+    runDoctor({
+      rootDir,
+      nodeVersion: "24.19.0",
+      environment: { FITNESS_DATA_SOURCE: "fixture" },
+      runCommand,
+    })
+  )
+
+  assert.match(output, /Chromiumを起動できません/)
+  assert.match(output, /pnpm exec playwright install chromium/)
+  assert.doesNotMatch(output, /secret-value/)
 })
 
 test("バージョン・lockfile・依存コマンドの不整合をまとめて報告する", (t) => {

@@ -80,8 +80,9 @@ pnpm run doctor
 pnpm install
 ```
 
-`pnpm run doctor` はNode.js・pnpm・package scriptsで使うコマンド・lockfile・
-インストール済み依存関係・`.env.example`を基準にした環境変数のキーを検査します。値は表示しません。pnpm自身に同名の組み込みコマンドがあるため、
+`pnpm run doctor` はNode.js・pnpm・package scriptsで使うコマンド・PlaywrightとChromiumの
+実行可否・lockfile・インストール済み依存関係・`.env.example`を基準にした環境変数のキーを
+検査します。値は表示しません。pnpm自身に同名の組み込みコマンドがあるため、
 `run` を省略せずに実行してください。依存導入前は不足と修復方法を表示して終了します。
 
 Notionへ接続せずに起動する場合は、データソースを明示的にfixtureへ切り替えます。
