@@ -82,5 +82,19 @@ export default defineConfig({
         viewport: { width: 1280, height: 900 },
       },
     },
+    {
+      name: "firefox-desktop",
+      use: {
+        browserName: "firefox",
+        viewport: { width: 1280, height: 900 },
+      },
+    },
+    {
+      name: "webkit-desktop",
+      use: {
+        browserName: "webkit",
+        viewport: { width: 1280, height: 900 },
+      },
+    },
   ],
 })
