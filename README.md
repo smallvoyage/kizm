@@ -71,6 +71,16 @@ MVPではDays Data Sourceのみを使用します。Data Source Queryは100件�
 
 ## セットアップ
 
+Git worktreeを新しく作成した場合は、依存関係とPlaywright Chromiumを導入し、fixture
+モードで環境を検査するbootstrapを実行できます。`.env.local`やNotionのsecretは不要です。
+
+```bash
+pnpm bootstrap
+```
+
+複数worktreeを同時に使う場合の生成物とポートの分離方法は
+[Worktree bootstrap](docs/worktree-bootstrap.md)を参照してください。
+
 ### 1. インストール
 
 `.node-version` に記載されたNode.js 24.19.0とpnpmを用意し、依存パッケージをインストールします。
