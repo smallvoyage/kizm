@@ -1,13 +1,23 @@
 import "server-only"
 
-import { resolveFitnessDataSource } from "@/lib/fitness-data-source-config"
-import { fixtureFitnessDataSource } from "@/lib/fixture"
+import {
+  resolveFitnessDataSource,
+  resolveFitnessFixtureScenario,
+} from "@/lib/fitness-data-source-config"
+import {
+  emptyFixtureFitnessDataSource,
+  fixtureFitnessDataSource,
+} from "@/lib/fixture"
 import { notionFitnessDataSource } from "@/lib/notion"
 
-const fitnessDataSources = {
-  fixture: fixtureFitnessDataSource,
-  notion: notionFitnessDataSource,
+const fixtureFitnessDataSources = {
+  empty: emptyFixtureFitnessDataSource,
+  normal: fixtureFitnessDataSource,
 }
 
+const dataSourceName = resolveFitnessDataSource(process.env)
+
 export const fitnessDataSource =
-  fitnessDataSources[resolveFitnessDataSource(process.env)]
+  dataSourceName === "fixture"
+    ? fixtureFitnessDataSources[resolveFitnessFixtureScenario(process.env)]
+    : notionFitnessDataSource

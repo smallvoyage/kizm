@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
 
-import { resolveFitnessDataSource } from "./fitness-data-source-config"
+import {
+  resolveFitnessDataSource,
+  resolveFitnessFixtureScenario,
+} from "./fitness-data-source-config"
 
 describe("resolveFitnessDataSource", () => {
   test("未指定時はNotionを選ぶ", () => {
@@ -39,5 +42,23 @@ describe("resolveFitnessDataSource", () => {
     expect(() =>
       resolveFitnessDataSource({ FITNESS_DATA_SOURCE: "fixtures" })
     ).toThrow(/FITNESS_DATA_SOURCE/)
+  })
+})
+
+describe("resolveFitnessFixtureScenario", () => {
+  test("未指定時は通常データを選ぶ", () => {
+    expect(resolveFitnessFixtureScenario({})).toBe("normal")
+  })
+
+  test("明示された空データを選ぶ", () => {
+    expect(
+      resolveFitnessFixtureScenario({ FITNESS_FIXTURE_SCENARIO: "empty" })
+    ).toBe("empty")
+  })
+
+  test("未知のfixtureシナリオ名を拒否する", () => {
+    expect(() =>
+      resolveFitnessFixtureScenario({ FITNESS_FIXTURE_SCENARIO: "blank" })
+    ).toThrow(/FITNESS_FIXTURE_SCENARIO/)
   })
 })
