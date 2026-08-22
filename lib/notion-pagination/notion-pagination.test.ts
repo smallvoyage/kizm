@@ -4,8 +4,11 @@ import type {
   QueryDataSourceResponse,
 } from "@notionhq/client"
 import { describe, expect, test, vi } from "vitest"
-
 import { queryAllFullPages } from "@/lib/notion-pagination/notion-pagination"
+import {
+  notionPaginationResponseFixture,
+  PAGINATION_FIXTURE_CURSOR,
+} from "@/lib/notion-pagination/notion-pagination-fixture"
 
 function createFullPage(id: string): PageObjectResponse {
   return {
@@ -35,13 +38,9 @@ function createResponse(
 
 describe("queryAllFullPages", () => {
   test("cursorを最後まで辿って100件を超えるpageを返す", async () => {
-    const firstPage = Array.from({ length: 100 }, (_, index) =>
-      createFullPage(`page-${index + 1}`)
-    )
+    const [firstResponse, finalResponse] = notionPaginationResponseFixture
     const query = vi.fn(async ({ start_cursor: startCursor }) =>
-      startCursor === "next-page"
-        ? createResponse([createFullPage("page-101")], null)
-        : createResponse(firstPage, "next-page")
+      startCursor === PAGINATION_FIXTURE_CURSOR ? finalResponse : firstResponse
     )
 
     const pages = await queryAllFullPages(query, {
@@ -50,7 +49,7 @@ describe("queryAllFullPages", () => {
     })
 
     expect(pages).toHaveLength(101)
-    expect(pages.at(-1)?.id).toBe("page-101")
+    expect(pages.at(-1)?.id).toBe("pagination-fixture-page-101")
     expect(query).toHaveBeenNthCalledWith(1, {
       data_source_id: "data-source-id",
       page_size: 100,
@@ -59,7 +58,7 @@ describe("queryAllFullPages", () => {
     expect(query).toHaveBeenNthCalledWith(2, {
       data_source_id: "data-source-id",
       page_size: 100,
-      start_cursor: "next-page",
+      start_cursor: PAGINATION_FIXTURE_CURSOR,
     })
   })
 
