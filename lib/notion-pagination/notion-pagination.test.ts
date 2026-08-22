@@ -48,8 +48,13 @@ describe("queryAllFullPages", () => {
       page_size: 100,
     })
 
-    expect(pages).toHaveLength(101)
-    expect(pages.at(-1)?.id).toBe("pagination-fixture-page-101")
+    expect(pages.map(({ id }) => id)).toEqual(
+      Array.from(
+        { length: 101 },
+        (_, index) => `pagination-fixture-page-${index + 1}`
+      )
+    )
+    expect(query).toHaveBeenCalledTimes(2)
     expect(query).toHaveBeenNthCalledWith(1, {
       data_source_id: "data-source-id",
       page_size: 100,
