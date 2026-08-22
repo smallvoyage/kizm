@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
   type FitnessLog,
+  filterLogsByPeriod,
   getExerciseGroups,
   getNutritionAchievement,
   getRepresentativeWorkoutSets,
@@ -8,6 +9,51 @@ import {
   type NutritionMetric,
   type WorkoutSet,
 } from "./fitness"
+
+function createDatedLog(date: string): FitnessLog {
+  return createNutritionLog({ date })
+}
+
+describe("filterLogsByPeriod", () => {
+  const logs = [
+    createDatedLog("2026-05-01"),
+    createDatedLog("2026-05-24"),
+    createDatedLog("2026-06-16"),
+    createDatedLog("2026-07-30"),
+    createDatedLog("2026-08-15"),
+    createDatedLog("2026-08-16"),
+    createDatedLog("2026-08-17"),
+    createDatedLog("invalid"),
+  ]
+
+  test.each([
+    ["7D", ["2026-08-15", "2026-08-16", "2026-08-17"]],
+    ["30D", ["2026-07-30", "2026-08-15", "2026-08-16", "2026-08-17"]],
+    [
+      "90D",
+      [
+        "2026-05-24",
+        "2026-06-16",
+        "2026-07-30",
+        "2026-08-15",
+        "2026-08-16",
+        "2026-08-17",
+      ],
+    ],
+  ] as const)("%sは基準日を含む期間内の記録を返す", (period, dates) => {
+    expect(filterLogsByPeriod(logs, period, "2026-08-17")).toEqual(
+      dates.map((date) => createDatedLog(date))
+    )
+  })
+
+  test("ALLは日付の妥当性にかかわらず全記録を返す", () => {
+    expect(filterLogsByPeriod(logs, "ALL", "invalid")).toBe(logs)
+  })
+
+  test("基準日が不正な場合は空配列を返す", () => {
+    expect(filterLogsByPeriod(logs, "30D", "2026-02-31")).toEqual([])
+  })
+})
 
 const goals: Record<NutritionMetric, number> = {
   calories: 100,

@@ -9,7 +9,12 @@ import {
   ChartContainer,
   ChartTooltip,
 } from "@/components/ui/chart"
-import type { BodyCompositionMetric, FitnessLog } from "@/lib/fitness"
+import {
+  type BodyCompositionMetric,
+  type ChartPeriod,
+  type FitnessLog,
+  filterLogsByPeriod,
+} from "@/lib/fitness"
 import { formatNumber } from "@/lib/format-number"
 import { cn } from "@/lib/utils"
 
@@ -55,6 +60,13 @@ const metricOptions: Array<{
   },
 ]
 
+const periodOptions: Array<{ value: ChartPeriod; label: string }> = [
+  { value: "7D", label: "7日" },
+  { value: "30D", label: "30日" },
+  { value: "90D", label: "90日" },
+  { value: "ALL", label: "全期間" },
+]
+
 function formatAxisDate(date: string) {
   const [, month, day] = date.split("-")
   return `${Number(month)}/${Number(day)}`
@@ -71,10 +83,7 @@ function formatDate(date: string) {
 
 function formatDifference(value: number): string {
   if (value === 0) return "±0.0"
-  return `${value > 0 ? "+" : ""}${formatNumber(value, {
-    fractionDigits: 1,
-    fixed: true,
-  })}`
+  return `${value > 0 ? "+" : ""}${formatNumber(value, { fractionDigits: 1, fixed: true })}`
 }
 
 function latestBodyCompositionLog(logs: FitnessLog[]) {
@@ -83,26 +92,29 @@ function latestBodyCompositionLog(logs: FitnessLog[]) {
   )
 }
 
-type BodyCompositionChartProps = {
-  logs: FitnessLog[]
-}
+type BodyCompositionChartProps = { logs: FitnessLog[]; referenceDate: string }
 
-export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
-  const initialLog = latestBodyCompositionLog(logs)
-  const [selectedMetric, setSelectedMetric] =
+export function BodyCompositionChart({
+  logs,
+  referenceDate,
+}: BodyCompositionChartProps) {
+  const [period, setPeriod] = useState<ChartPeriod>("30D")
+  const [visibleMetrics, setVisibleMetrics] = useState<BodyCompositionMetric[]>(
+    ["weight", "bodyFat", "muscleMass"]
+  )
+  const [activeMetric, setActiveMetric] =
     useState<BodyCompositionMetric>("weight")
-  const [selectedDate, setSelectedDate] = useState<string | null>(
-    initialLog?.date ?? null
-  )
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
-  const latestAxisDate = useMemo(
-    () => logs.findLast((log) => log[selectedMetric] !== null)?.date ?? null,
-    [logs, selectedMetric]
+  const filteredLogs = useMemo(
+    () => filterLogsByPeriod(logs, period, referenceDate),
+    [logs, period, referenceDate]
   )
+  const latestLog = latestBodyCompositionLog(filteredLogs) ?? null
   const selectedLog =
-    logs.find((log) => log.date === selectedDate) ?? initialLog ?? null
-  const selectedOption =
-    metricOptions.find((option) => option.value === selectedMetric) ??
+    filteredLogs.find((log) => log.date === selectedDate) ?? latestLog
+  const activeOption =
+    metricOptions.find((option) => option.value === activeMetric) ??
     metricOptions[0]
 
   const summaries = Object.fromEntries(
@@ -114,7 +126,6 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
         .slice(0, selectedIndex)
         .findLast((log) => log[metric.value] !== null)?.[metric.value]
       const value = selectedLog?.[metric.value] ?? null
-
       return [
         metric.value,
         {
@@ -131,19 +142,50 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
     { value: number | null; difference: number | null }
   >
 
-  const selectedValue = summaries[selectedMetric].value
-  const selectedMetricStyle = {
-    "--selected-metric-color": selectedOption.color,
-    "--selected-metric-soft": selectedOption.soft,
+  const handleMetricClick = (metric: BodyCompositionMetric) => {
+    if (visibleMetrics.includes(metric)) {
+      if (visibleMetrics.length === 1) return
+      const nextMetrics = visibleMetrics.filter((value) => value !== metric)
+      setVisibleMetrics(nextMetrics)
+      if (activeMetric === metric) setActiveMetric(nextMetrics[0])
+      return
+    }
+    setVisibleMetrics([...visibleMetrics, metric])
+    setActiveMetric(metric)
+  }
+
+  const activeValue = summaries[activeMetric].value
+  const activeMetricStyle = {
+    "--selected-metric-color": activeOption.color,
+    "--selected-metric-soft": activeOption.soft,
   } as CSSProperties
 
   return (
-    <div className="composition-workbench" style={selectedMetricStyle}>
+    <div className="composition-workbench" style={activeMetricStyle}>
+      <fieldset className="composition-period-selector">
+        <legend>表示期間</legend>
+        <div>
+          {periodOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={period === option.value}
+              onClick={() => {
+                setPeriod(option.value)
+                setSelectedDate(null)
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
       <fieldset className="composition-selector">
         <legend className="sr-only">表示する身体組成の指標</legend>
         {metricOptions.map((metric) => {
           const summary = summaries[metric.value]
-          const isSelected = selectedMetric === metric.value
+          const isVisible = visibleMetrics.includes(metric.value)
           const DifferenceIcon =
             summary.difference === null || summary.difference === 0
               ? Minus
@@ -155,9 +197,10 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
             <button
               key={metric.value}
               type="button"
-              aria-pressed={isSelected}
-              onClick={() => setSelectedMetric(metric.value)}
-              className={cn("composition-option", isSelected && "is-selected")}
+              aria-pressed={isVisible}
+              disabled={isVisible && visibleMetrics.length === 1}
+              onClick={() => handleMetricClick(metric.value)}
+              className={cn("composition-option", isVisible && "is-selected")}
               style={
                 {
                   "--metric-color": metric.color,
@@ -206,23 +249,20 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
               {selectedLog ? formatDate(selectedLog.date) : "記録なし"}
             </strong>
           </div>
-          {selectedValue !== null && (
+          {activeValue !== null && (
             <div className="composition-selected-value" aria-live="polite">
-              <p>{selectedOption.label}</p>
+              <p>{activeOption.label}</p>
               <strong>
-                {formatNumber(selectedValue, {
-                  fractionDigits: 1,
-                  fixed: true,
-                })}
+                {formatNumber(activeValue, { fractionDigits: 1, fixed: true })}
               </strong>
-              <span>{selectedOption.unit}</span>
+              <span>{activeOption.unit}</span>
             </div>
           )}
         </div>
 
-        {latestAxisDate === null ? (
+        {latestLog === null ? (
           <div className="composition-empty">
-            <p>この指標のデータはまだありません。</p>
+            <p>この期間のデータはありません。</p>
           </div>
         ) : (
           <ChartContainer
@@ -232,12 +272,11 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
           >
             <LineChart
               accessibilityLayer
-              data={logs}
-              margin={{ top: 16, right: 12, bottom: 8, left: 4 }}
+              data={filteredLogs}
+              margin={{ top: 16, right: 4, bottom: 8, left: 4 }}
               onClick={({ activeLabel }) => {
-                if (typeof activeLabel === "string") {
+                if (typeof activeLabel === "string")
                   setSelectedDate(activeLabel)
-                }
               }}
             >
               <CartesianGrid vertical={false} stroke="var(--color-rule)" />
@@ -250,10 +289,26 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 tickFormatter={formatAxisDate}
               />
               <YAxis
+                yAxisId="kg"
                 axisLine={false}
                 tickLine={false}
                 tickMargin={8}
-                width={42}
+                width={38}
+                domain={[
+                  (dataMin: number) => dataMin - Y_AXIS_PADDING,
+                  (dataMax: number) => dataMax + Y_AXIS_PADDING,
+                ]}
+                tickFormatter={(value: number) =>
+                  formatNumber(value, { fractionDigits: 1, fixed: true })
+                }
+              />
+              <YAxis
+                yAxisId="percent"
+                orientation="right"
+                axisLine={false}
+                tickLine={false}
+                tickMargin={8}
+                width={34}
                 domain={[
                   (dataMin: number) => dataMin - Y_AXIS_PADDING,
                   (dataMax: number) => dataMax + Y_AXIS_PADDING,
@@ -267,27 +322,33 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
                 cursor={false}
                 content={() => null}
               />
-              <Line
-                dataKey={selectedMetric}
-                name={selectedOption.label}
-                type="monotone"
-                isAnimationActive={false}
-                stroke={selectedOption.color}
-                strokeWidth={2.5}
-                dot={{
-                  r: 3.5,
-                  fill: selectedOption.color,
-                  stroke: "var(--background)",
-                  strokeWidth: 2,
-                }}
-                activeDot={{
-                  r: 5.5,
-                  fill: selectedOption.color,
-                  stroke: "var(--background)",
-                  strokeWidth: 3,
-                }}
-                connectNulls={true}
-              />
+              {metricOptions.map((metric) =>
+                visibleMetrics.includes(metric.value) ? (
+                  <Line
+                    key={metric.value}
+                    yAxisId={metric.value === "bodyFat" ? "percent" : "kg"}
+                    dataKey={metric.value}
+                    name={metric.label}
+                    type="monotone"
+                    isAnimationActive={false}
+                    stroke={metric.color}
+                    strokeWidth={2.5}
+                    dot={{
+                      r: 3,
+                      fill: metric.color,
+                      stroke: "var(--background)",
+                      strokeWidth: 2,
+                    }}
+                    activeDot={{
+                      r: 5,
+                      fill: metric.color,
+                      stroke: "var(--background)",
+                      strokeWidth: 3,
+                    }}
+                    connectNulls={true}
+                  />
+                ) : null
+              )}
             </LineChart>
           </ChartContainer>
         )}
