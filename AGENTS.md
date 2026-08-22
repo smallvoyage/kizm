@@ -22,6 +22,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `index.ts` は外部公開する要素の再エクスポートに限定する。
 - E2Eテストや複数モジュールを横断するintegration testは、この方針の対象外とする。
 
+## 変更の完了条件
+
+- すべての変更で、基本の完了条件として `pnpm verify` を成功させる。
+- 集計・変換・判定などのドメインロジックを追加または変更するときは、同じ変更にunit testを含める。
+- UIを追加・変更するときは、320pxと390pxの両方を対象にE2Eまたはvisual regressionで表示と主要操作を確認する。
+- Next.jsに関わるコードを変更するときは、実装前に `node_modules/next/dist/docs/` の関連ガイドを読み、現在のバージョンのAPIと非推奨事項に従う。
+- 完了報告には、実行して成功した検証と、未実施の検証およびその理由を記載する。
+
+## branch・worktreeの並列作業ルール
+
+- herdrの有無にかかわらず、原則として1タスクを1 branch・1 Git worktreeで扱う。
+- 各worktreeはタスク開始時点の最新の統合先branchから作成し、他タスクの未統合commitを暗黙に含めない。
+- `package.json`、lockfile、共通fixture、画像baseline、CI設定など、複数タスクへ影響する共有ファイルは同時変更を避ける。やむを得ない場合は、担当間で変更範囲と統合順を先に決める。
+- E2Eのポートと生成物はworktreeごとに分離し、別worktreeのserverやreportを再利用・上書きしない。
+- 統合前に対象branchを最新の統合先へ追従させ、共有ファイルの競合と検証結果を再確認する。
+
 ## Code Review Rules
 
 - レビューコメント、指摘内容、要約は日本語で記述する。
