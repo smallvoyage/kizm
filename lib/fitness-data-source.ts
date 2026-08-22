@@ -7,11 +7,13 @@ import {
 import {
   emptyFixtureFitnessDataSource,
   fixtureFitnessDataSource,
+  missingNutritionFixtureFitnessDataSource,
 } from "@/lib/fixture"
 import { notionFitnessDataSource } from "@/lib/notion"
 
 const fixtureFitnessDataSources = {
   empty: emptyFixtureFitnessDataSource,
+  "missing-nutrition": missingNutritionFixtureFitnessDataSource,
   normal: fixtureFitnessDataSource,
 }
 

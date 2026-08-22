@@ -56,6 +56,14 @@ describe("resolveFitnessFixtureScenario", () => {
     ).toBe("empty")
   })
 
+  test("明示された栄養データ欠損を選ぶ", () => {
+    expect(
+      resolveFitnessFixtureScenario({
+        FITNESS_FIXTURE_SCENARIO: "missing-nutrition",
+      })
+    ).toBe("missing-nutrition")
+  })
+
   test("未知のfixtureシナリオ名を拒否する", () => {
     expect(() =>
       resolveFitnessFixtureScenario({ FITNESS_FIXTURE_SCENARIO: "blank" })
