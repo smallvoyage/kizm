@@ -31,3 +31,31 @@ jobs:
 
       - name: Verify
         run: pnpm verify
+
+  e2e:
+    name: Chromium E2E
+    runs-on: ubuntu-latest
+    env:
+      FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true"
+      FITNESS_DATA_SOURCE: fixture
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Chromium E2E tests
+        run: pnpm test:e2e
