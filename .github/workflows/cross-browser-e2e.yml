@@ -1,0 +1,62 @@
+name: Cross-browser E2E
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: ${{ matrix.name }} E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Firefox
+            browser: firefox
+            project: firefox-desktop
+          - name: WebKit
+            browser: webkit
+            project: webkit-desktop
+    env:
+      FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true"
+      FITNESS_DATA_SOURCE: fixture
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install ${{ matrix.name }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Run ${{ matrix.name }} E2E tests
+        id: e2e_tests
+        run: pnpm exec playwright test --grep-invert @visual --project=${{ matrix.project }}
+
+      - name: Upload ${{ matrix.name }} failure artifacts
+        if: ${{ failure() && steps.e2e_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.browser }}-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14
