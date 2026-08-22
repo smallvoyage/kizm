@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "test:e2e:functional": "playwright test --grep-invert @visual",
     "test:e2e:visual": "PLAYWRIGHT_VISUAL_REGRESSION=true playwright test --grep @visual",
+    "test:e2e:visual:empty": "FITNESS_FIXTURE_SCENARIO=empty PLAYWRIGHT_VISUAL_REGRESSION=true playwright test e2e/empty-state.visual.spec.ts --project chromium-390",
     "test:e2e:visual:update": "PLAYWRIGHT_VISUAL_REGRESSION=true playwright test --grep @visual --update-snapshots",
     "test:e2e:all-error": "FITNESS_FIXTURE_SCENARIO=all-error playwright test e2e/all-error.spec.ts",
     "lint": "biome lint .",

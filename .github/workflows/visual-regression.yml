@@ -38,7 +38,9 @@ jobs:
 
       - name: Run Linux visual regression tests
         id: visual_tests
-        run: pnpm test:e2e:visual
+        run: |
+          pnpm test:e2e:visual
+          pnpm test:e2e:visual:empty
 
       - name: Upload visual regression failure artifacts
         if: ${{ failure() && steps.visual_tests.outcome == 'failure' }}
