@@ -1,5 +1,9 @@
 export type FitnessDataSourceName = "fixture" | "notion"
-export type FitnessFixtureScenario = "empty" | "normal" | "workouts-error"
+export type FitnessFixtureScenario =
+  | "empty"
+  | "missing-nutrition"
+  | "normal"
+  | "workouts-error"
 
 type FitnessDataSourceEnvironment = {
   FITNESS_ALLOW_FIXTURE_IN_PRODUCTION?: string
@@ -39,11 +43,12 @@ export function resolveFitnessFixtureScenario(
 
   if (
     scenario !== "empty" &&
+    scenario !== "missing-nutrition" &&
     scenario !== "normal" &&
     scenario !== "workouts-error"
   ) {
     throw new Error(
-      `FITNESS_FIXTURE_SCENARIO must be "normal", "empty", or "workouts-error" (received: ${JSON.stringify(scenario)})`
+      `FITNESS_FIXTURE_SCENARIO must be "normal", "empty", "missing-nutrition", or "workouts-error" (received: ${JSON.stringify(scenario)})`
     )
   }
 
