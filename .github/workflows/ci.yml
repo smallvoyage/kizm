@@ -29,23 +29,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Run Biome checks
-        run: pnpm check
-
-      - name: Check formatting
-        run: pnpm format:check
-
-      - name: Check for unused code
-        run: pnpm knip
-
-      - name: Generate Next.js types
-        run: pnpm exec next typegen
-
-      - name: Type check
-        run: pnpm typecheck
-
-      - name: Build
-        run: pnpm build
+      - name: Verify
+        run: pnpm verify
