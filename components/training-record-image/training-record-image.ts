@@ -13,7 +13,7 @@ type TextPlacement = TextRun & { x: number; y: number }
 const CONTENT_WIDTH = style.width - style.padding * 2
 const VALUE_WIDTH = CONTENT_WIDTH - 180
 const HEADING_LINE_HEIGHT = 42
-const SET_LINE_HEIGHT = 90
+const SET_LINE_HEIGHT = 58
 
 function width(context: CanvasRenderingContext2D, run: TextRun) {
   context.font = run.font
@@ -114,13 +114,13 @@ function measureRecord(
       if (set.isEstimatedOneRepMaxRecord) {
         const badge = run("MAX RM", "recordBadge")
         badges.push({
-          x: style.padding,
-          y: rowY + 8,
+          x: style.padding + 105,
+          y: rowY - 25,
           width: width(context, badge) + 20,
           height: 32,
         })
-        place(badge, style.padding + 10, rowY + 32)
-        contentBottom = Math.max(contentBottom, rowY + 40)
+        place(badge, style.padding + 115, rowY)
+        contentBottom = Math.max(contentBottom, rowY + 8)
       }
       const weight = [
         run(formatNumber(set.weightKg, { fractionDigits: 1 }), "value"),
@@ -155,7 +155,7 @@ function measureRecord(
       }
       rowY += lines.length * SET_LINE_HEIGHT
     }
-    headingY = Math.max(contentBottom, rowY - SET_LINE_HEIGHT + 32) + 70
+    headingY = Math.max(contentBottom, rowY) + 24
   }
   const footerY = Math.max(1290, contentBottom + 90)
   return { text, rules, badges, footerY, height: Math.ceil(footerY + 230) }
