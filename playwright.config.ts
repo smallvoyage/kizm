@@ -7,6 +7,9 @@ const worktreePath = process.cwd()
 const reuseBuild = process.env.PLAYWRIGHT_REUSE_BUILD === "true"
 const visualRegression = process.env.PLAYWRIGHT_VISUAL_REGRESSION === "true"
 const fixtureScenario = process.env.FITNESS_FIXTURE_SCENARIO ?? "normal"
+const referenceDate = process.env.PLAYWRIGHT_REFERENCE_DATE ?? "2026-09-08"
+const startCommand =
+  "node --import ./e2e/support/fixed-clock.mjs node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port $PORT"
 const configuredPort = process.env.PLAYWRIGHT_PORT ?? process.env.PORT
 const defaultPort =
   3100 +
@@ -55,14 +58,13 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: reuseBuild
-      ? "pnpm start --hostname 127.0.0.1 --port $PORT"
-      : "pnpm build && pnpm start --hostname 127.0.0.1 --port $PORT",
+    command: reuseBuild ? startCommand : `pnpm build && ${startCommand}`,
     cwd: worktreePath,
     env: {
       FITNESS_DATA_SOURCE: "fixture",
       FITNESS_FIXTURE_SCENARIO: fixtureScenario,
       FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true",
+      PLAYWRIGHT_REFERENCE_DATE: referenceDate,
       PORT: String(port),
     },
     url: `http://127.0.0.1:${port}`,

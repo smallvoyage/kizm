@@ -9,15 +9,11 @@ import {
 } from "lucide-react"
 import { useMemo, useState } from "react"
 
+import { getWeekStart, shiftDate } from "@/lib/calendar-date"
 import type { FitnessLog, NutritionMetric } from "@/lib/fitness"
+import type { WeeklyNutritionAverage } from "@/lib/fitness/weekly-nutrition/weekly-nutrition"
 import { formatNumber } from "@/lib/format-number"
-import {
-  getWeeklyReview,
-  getWeekStart,
-  shiftDate,
-  type WeeklyAverage,
-  type WeeklyMetricChange,
-} from "@/lib/weekly-review"
+import { getWeeklyReview, type WeeklyMetricChange } from "@/lib/weekly-review"
 
 const nutritionMetrics: Array<{
   key: NutritionMetric
@@ -29,6 +25,19 @@ const nutritionMetrics: Array<{
   { key: "fat", label: "脂質", unit: "g" },
   { key: "carbs", label: "炭水化物", unit: "g" },
 ]
+
+const comparisonReasons: Record<
+  WeeklyNutritionAverage["comparisonStatus"],
+  string
+> = {
+  comparable: "",
+  "no-eligible-days": "この週は集計対象日なし",
+  "no-current-data": "この週の記録なし",
+  "in-progress": "週の途中のため比較なし",
+  "incomplete-current": "記録日が不足しています",
+  "insufficient-previous": "前週のデータ不足",
+  "invalid-records": "記録を確認してください",
+}
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("ja-JP", {
@@ -88,14 +97,19 @@ function Comparison({
 function AverageMetric({
   metric,
   average,
+  eligibleDays,
+  previousEligibleDays,
   featured = false,
 }: {
   metric: (typeof nutritionMetrics)[number]
-  average: WeeklyAverage
+  average: WeeklyNutritionAverage
+  eligibleDays: number
+  previousEligibleDays: number
   featured?: boolean
 }) {
   return (
     <article
+      aria-label={metric.label}
       className="weekly-average"
       data-nutrition-metric={metric.key}
       data-featured={featured ? "true" : undefined}
@@ -110,16 +124,37 @@ function AverageMetric({
         {average.value !== null && <span>{metric.unit}</span>}
       </p>
       <div className="weekly-average-meta">
-        <Comparison
-          value={average.previousDifference}
-          unit={metric.unit}
-          compact={!featured}
-        />
-        <span>
-          {average.recordedDays === 0
-            ? "記録なし"
-            : `${average.recordedDays}日平均`}
-        </span>
+        {average.comparisonStatus === "comparable" ? (
+          <Comparison
+            value={average.previousDifference}
+            unit={metric.unit}
+            compact={!featured}
+          />
+        ) : (
+          <span className="weekly-comparison-reason">
+            記録 {average.recordedDays}/{eligibleDays}日・前週{" "}
+            {average.previous.recordedDays}/{previousEligibleDays}日
+            <span aria-hidden="true">（</span>
+            {comparisonReasons[average.comparisonStatus]}
+            <span aria-hidden="true">）</span>
+          </span>
+        )}
+        {[
+          { label: "当週", records: average.excludedRecords },
+          { label: "前週", records: average.previous.excludedRecords },
+        ].map(({ label, records }) =>
+          records.length > 0 ? (
+            <span key={label}>
+              {label}の集計から除外：
+              {records
+                .map(
+                  ({ date, reason }) =>
+                    `${formatDate(date)}（${reason === "duplicate" ? "重複" : "不正な値"}）`
+                )
+                .join("、")}
+            </span>
+          ) : null
+        )}
       </div>
     </article>
   )
@@ -155,13 +190,20 @@ function OptionalChange({
   )
 }
 
-export function WeeklyReview({ logs }: { logs: FitnessLog[] }) {
+export function WeeklyReview({
+  logs,
+  referenceDate,
+}: {
+  logs: FitnessLog[]
+  referenceDate: string
+}) {
   const firstWeek = getWeekStart(logs[0]?.date ?? "")
   const latestWeek = getWeekStart(logs.at(-1)?.date ?? "")
   const [selectedWeek, setSelectedWeek] = useState(latestWeek)
   const review = useMemo(
-    () => (selectedWeek ? getWeeklyReview(logs, selectedWeek) : null),
-    [logs, selectedWeek]
+    () =>
+      selectedWeek ? getWeeklyReview(logs, selectedWeek, referenceDate) : null,
+    [logs, selectedWeek, referenceDate]
   )
 
   if (!review || !selectedWeek || !firstWeek || !latestWeek) return null
@@ -178,7 +220,7 @@ export function WeeklyReview({ logs }: { logs: FitnessLog[] }) {
       <header className="dashboard-section-heading weekly-review-heading">
         <div>
           <h2 id="weekly-review-heading">週間レビュー</h2>
-          <p>1週間の平均と目標達成を前週と比較</p>
+          <p>1週間の食事と身体組成を振り返る</p>
         </div>
       </header>
 
@@ -214,8 +256,18 @@ export function WeeklyReview({ logs }: { logs: FitnessLog[] }) {
         >
           <header className="weekly-review-group-heading">
             <h3 id="weekly-nutrition-heading">食事</h3>
-            <p>記録日の1日平均</p>
+            <p>
+              {review.nutrition.isComplete
+                ? "記録日の1日平均"
+                : "昨日までの記録日の1日平均"}
+            </p>
           </header>
+
+          <p className="weekly-nutrition-period">
+            {review.nutrition.eligibleEndDate
+              ? `集計対象 ${formatDate(review.nutrition.startDate)}–${formatDate(review.nutrition.eligibleEndDate)}`
+              : "この週は集計対象日なし"}
+          </p>
 
           <div className="weekly-averages">
             {nutritionMetrics.map((metric, index) => (
@@ -223,6 +275,8 @@ export function WeeklyReview({ logs }: { logs: FitnessLog[] }) {
                 key={metric.key}
                 metric={metric}
                 average={review.nutrition.averages[metric.key]}
+                eligibleDays={review.nutrition.eligibleDays}
+                previousEligibleDays={review.nutrition.previousEligibleDays}
                 featured={index === 0}
               />
             ))}

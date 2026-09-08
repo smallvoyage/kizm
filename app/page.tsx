@@ -143,7 +143,9 @@ export default async function Home() {
               </Alert>
             )}
 
-            {logs.length > 0 && <WeeklyReview logs={logs} />}
+            {logs.length > 0 && (
+              <WeeklyReview logs={logs} referenceDate={referenceDate} />
+            )}
 
             {logs.length > 0 && (
               <section
