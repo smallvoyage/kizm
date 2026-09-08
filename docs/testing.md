@@ -58,6 +58,10 @@ fixtureを変更すると既存のunit、E2E、baselineへ広く影響する。�
 
 ## 日付とタイムゾーン
 
+通常fixtureは `DaysResult.referenceDate` に `2026-08-23` を返し、ヒートマップの表示期間も固定する。
+`missing-nutrition` と `workouts-error` は通常fixtureから同じ基準日を引き継ぐ。
+基準日を省略するNotionデータソースでは、現在の日本時間を使用する。
+
 - fixtureの日付は実行日から計算せず、`YYYY-MM-DD`の固定値を使う。`Date.now()`や引数なしの
   `new Date()`でfixtureの内容を変化させない。
 - `YYYY-MM-DD`は時刻を持たないカレンダー日として扱う。日付の加減算が必要な場合は
