@@ -2,30 +2,19 @@
 
 import { CircleAlert, Dumbbell, LoaderCircle, Share2, X } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useRef, useState } from "react"
+import { useRef } from "react"
 
+import { useImageExport } from "@/components/image-export/use-image-export"
+
+import type { WorkoutSet } from "@/lib/fitness"
 import {
-  getWorkoutSetsWithRecords,
-  type WorkoutSet,
-  type WorkoutSetWithRecord,
-} from "@/lib/fitness"
+  getExportDates,
+  getTrainingExportGroups,
+  type WorkoutGroup,
+} from "@/lib/fitness/image-export/image-export"
 import { formatNumber } from "@/lib/format-number"
 
-type ExportState = "idle" | "rendering" | "ready" | "error"
-
-type WorkoutGroup = {
-  exercise: string
-  sets: WorkoutSetWithRecord[]
-}
-
-type RenderedRecord = {
-  blob: Blob
-  height: number
-}
-
-type PreviewImage = RenderedRecord & {
-  url: string
-}
+type RenderedRecord = { blob: Blob; height: number }
 
 const CARD_WIDTH = 1080
 const MIN_CARD_HEIGHT = 1350
@@ -55,27 +44,6 @@ function formatShortDate(date: string) {
     weekday: "short",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`))
-}
-
-function groupWorkoutSets(workoutSets: WorkoutSetWithRecord[]) {
-  const groups = new Map<string, WorkoutSetWithRecord[]>()
-
-  for (const set of workoutSets) {
-    const exerciseSets = groups.get(set.exercise) ?? []
-    exerciseSets.push(set)
-    groups.set(set.exercise, exerciseSets)
-  }
-
-  return [...groups].map(([exercise, sets]) => ({ exercise, sets }))
-}
-
-function expandWorkoutSets(workoutSets: WorkoutSetWithRecord[]) {
-  return workoutSets.flatMap((set) =>
-    Array.from({ length: set.setCount }, (_, index) => ({
-      ...set,
-      isEstimatedOneRepMaxRecord: index === 0 && set.isEstimatedOneRepMaxRecord,
-    }))
-  )
 }
 
 function getGroupHeight(group: WorkoutGroup) {
@@ -130,11 +98,11 @@ function getToken(styles: CSSStyleDeclaration, name: string) {
 }
 
 async function renderRecord(
-  workoutSets: WorkoutSetWithRecord[]
+  groups: WorkoutGroup[],
+  date: string
 ): Promise<RenderedRecord> {
   await document.fonts.ready
 
-  const groups = groupWorkoutSets(workoutSets)
   const contentHeight = groups.reduce(
     (height, group) => height + getGroupHeight(group),
     0
@@ -152,7 +120,6 @@ async function renderRecord(
   const styles = getComputedStyle(document.documentElement)
   const color = (name: string) => getToken(styles, name)
   const bodyFont = getComputedStyle(document.body).fontFamily
-  const date = workoutSets[0]?.date ?? ""
 
   context.fillStyle = color("--color-paper")
   context.fillRect(0, 0, CARD_WIDTH, cardHeight)
@@ -256,40 +223,21 @@ async function renderRecord(
 }
 
 export function TrainingRecordExport({
-  workoutSets,
   workoutHistory,
 }: {
-  workoutSets: WorkoutSet[]
   workoutHistory: WorkoutSet[]
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [state, setState] = useState<ExportState>("idle")
-  const [preview, setPreview] = useState<PreviewImage | null>(null)
-  const date = workoutSets[0]?.date ?? ""
-  const workoutSetsWithRecords = getWorkoutSetsWithRecords(workoutHistory, date)
-  const expandedWorkoutSets = expandWorkoutSets(workoutSetsWithRecords)
-
-  useEffect(
-    () => () => {
-      if (preview) URL.revokeObjectURL(preview.url)
-    },
-    [preview]
-  )
-
-  const generate = async () => {
-    setState("rendering")
-    try {
-      const rendered = await renderRecord(expandedWorkoutSets)
-      const url = URL.createObjectURL(rendered.blob)
-      setPreview((current) => {
-        if (current) URL.revokeObjectURL(current.url)
-        return { ...rendered, url }
-      })
-      setState("ready")
-    } catch {
-      setState("error")
+  const dates = getExportDates(workoutHistory)
+  const { date, state, preview, generate } = useImageExport(
+    dates[0] ?? "",
+    "training-record",
+    async (selectedDate) => {
+      const groups = getTrainingExportGroups(workoutHistory, selectedDate)
+      if (!groups.length) throw new Error("Record not found")
+      return renderRecord(groups, selectedDate)
     }
-  }
+  )
 
   const open = () => {
     dialogRef.current?.showModal()
@@ -297,19 +245,19 @@ export function TrainingRecordExport({
     if (state !== "ready" && state !== "rendering") void generate()
   }
 
-  const filename = `training-record-${date}.png`
-
   const download = () => {
     if (!preview) return
     const anchor = document.createElement("a")
     anchor.href = preview.url
-    anchor.download = filename
+    anchor.download = preview.filename
     anchor.click()
   }
 
   const share = async () => {
     if (!preview) return
-    const file = new File([preview.blob], filename, { type: "image/png" })
+    const file = new File([preview.blob], preview.filename, {
+      type: "image/png",
+    })
     if (!navigator.canShare?.({ files: [file] })) {
       download()
       return
@@ -363,6 +311,25 @@ export function TrainingRecordExport({
             </button>
           </header>
 
+          <div className="record-export-date">
+            <label htmlFor="training-record-export-date">記録日</label>
+            <select
+              id="training-record-export-date"
+              value={date}
+              aria-describedby="training-record-export-date-note"
+              onChange={(event) => void generate(event.target.value)}
+            >
+              {dates.map((value) => (
+                <option key={value} value={value}>
+                  {formatDate(value)}
+                </option>
+              ))}
+            </select>
+            <p id="training-record-export-date-note">
+              読み込み済みの記録日から選べます
+            </p>
+          </div>
+
           <div
             className="record-export-preview"
             aria-live="polite"
@@ -386,7 +353,7 @@ export function TrainingRecordExport({
             {preview && state === "ready" && (
               <Image
                 src={preview.url}
-                alt={`${formatDate(date)}のトレーニング記録。${expandedWorkoutSets.length}セット。`}
+                alt={`${formatDate(preview.date)}のトレーニング記録。`}
                 width={CARD_WIDTH}
                 height={preview.height}
                 unoptimized

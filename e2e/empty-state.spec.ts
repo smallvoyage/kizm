@@ -9,6 +9,8 @@ test.describe("DaysとWorkoutsが0件の空状態", () => {
   test("空状態だけを表示してデータ表示やエラー表示を隠す", async ({ page }) => {
     await page.goto("/")
 
+    await expect(page.getByRole("button", { name: /を画像化$/ })).toHaveCount(0)
+
     const emptyState = page
       .getByRole("alert")
       .filter({ hasText: "フィットネス記録がまだありません" })
