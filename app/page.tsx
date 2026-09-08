@@ -33,7 +33,7 @@ function formatRecordDate(date: string | null | undefined) {
 export default async function Home() {
   await connection()
 
-  const referenceDate = new Intl.DateTimeFormat("en-CA", {
+  let referenceDate = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -52,6 +52,7 @@ export default async function Home() {
   ])
 
   if (fitnessResult.status === "fulfilled") {
+    referenceDate = fitnessResult.value.referenceDate ?? referenceDate
     logs = fitnessResult.value.logs
     hasOlderLogs = fitnessResult.value.hasOlderLogs
   } else {

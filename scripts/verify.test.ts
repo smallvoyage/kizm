@@ -54,31 +54,73 @@ describe("runVerification", () => {
     )
   })
 
-  test("verify:allはfixture buildを再利用して最後にE2Eを実行する", () => {
+  test("verify:allは1回のfixture buildを再利用し、4シナリオの機能E2Eを実行する", () => {
     const { calls, runCommand } = createRunner()
 
     const exitCode = runVerification({
       includeE2E: true,
-      environment: { NOTION_TOKEN: "" },
+      environment: {
+        NOTION_TOKEN: "",
+        FITNESS_DATA_SOURCE: "notion",
+        FITNESS_FIXTURE_SCENARIO: "empty",
+        PLAYWRIGHT_VISUAL_REGRESSION: "true",
+        PLAYWRIGHT_PORT: "4193",
+      },
       output: { log: vi.fn(), error: vi.fn() },
       runCommand,
     })
 
-    const build = calls.at(-2)
-    const e2e = calls.at(-1)
+    const build = calls[VERIFY_STEPS.length - 1]
+    const e2eCalls = calls.slice(VERIFY_STEPS.length)
 
     expect(exitCode).toBe(0)
     expect(build?.args).toEqual(["build"])
     expect(build?.options.env).toMatchObject({
       FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true",
       FITNESS_DATA_SOURCE: "fixture",
+      FITNESS_FIXTURE_SCENARIO: "normal",
     })
-    expect(e2e?.args).toEqual(["test:e2e"])
-    expect(e2e?.options.env).toMatchObject({
-      FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true",
-      FITNESS_DATA_SOURCE: "fixture",
-      PLAYWRIGHT_REUSE_BUILD: "true",
-    })
+    expect(e2eCalls.map(({ args }) => args)).toEqual([
+      ["test:e2e", "--grep-invert", "@visual"],
+      ["test:e2e:empty"],
+      ["test:e2e:all-error"],
+      ["test:e2e:workouts-error"],
+    ])
+    for (const e2e of e2eCalls) {
+      expect(e2e.options.env).toMatchObject({
+        FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true",
+        FITNESS_DATA_SOURCE: "fixture",
+        FITNESS_FIXTURE_SCENARIO: "normal",
+        PLAYWRIGHT_REUSE_BUILD: "true",
+        PLAYWRIGHT_VISUAL_REGRESSION: "false",
+        PLAYWRIGHT_PORT: "4193",
+      })
+    }
     expect(calls.filter(({ args }) => args[0] === "build")).toHaveLength(1)
   })
+
+  test.each(["normal", "empty", "all-error", "workouts-error"])(
+    "%sのE2E失敗時にシナリオ名と終了コードを返し、後続を実行しない",
+    (scenario) => {
+      const index = ["normal", "empty", "all-error", "workouts-error"].indexOf(
+        scenario
+      )
+      const statuses = Array<number>(VERIFY_STEPS.length + index).fill(0)
+      const { calls, runCommand } = createRunner([...statuses, 7])
+      const error = vi.fn()
+
+      expect(
+        runVerification({
+          includeE2E: true,
+          environment: {},
+          output: { log: vi.fn(), error },
+          runCommand,
+        })
+      ).toBe(7)
+      expect(calls).toHaveLength(statuses.length + 1)
+      expect(error).toHaveBeenCalledWith(
+        `[verify] FAILED E2E ${scenario} (exit code 7)`
+      )
+    }
+  )
 })

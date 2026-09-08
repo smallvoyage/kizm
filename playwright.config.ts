@@ -34,10 +34,19 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 
 export default defineConfig({
   testDir: "./e2e",
-  outputDir: resolve(worktreePath, "test-results"),
+  outputDir: resolve(worktreePath, "test-results", fixtureScenario),
   reporter: [
     ["list"],
-    ["html", { outputFolder: resolve(worktreePath, "playwright-report") }],
+    [
+      "html",
+      {
+        outputFolder: resolve(
+          worktreePath,
+          "playwright-report",
+          fixtureScenario
+        ),
+      },
+    ],
   ],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),

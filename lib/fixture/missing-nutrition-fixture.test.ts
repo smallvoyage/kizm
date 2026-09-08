@@ -25,3 +25,11 @@ test("PFCの一部だけが未入力の日を取得できる", async () => {
     carbs: expect.any(Number),
   })
 })
+
+test("通常fixtureの固定基準日を引き継ぐ", async () => {
+  await expect(
+    missingNutritionFixtureFitnessDataSource.getDays()
+  ).resolves.toMatchObject({
+    referenceDate: "2026-08-23",
+  })
+})
