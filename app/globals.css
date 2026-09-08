@@ -784,6 +784,35 @@
   scrollbar-width: thin;
 }
 
+.record-export-date {
+  display: grid;
+  gap: var(--space-xs);
+  min-width: 0;
+  margin-block-end: var(--space-md);
+  font-size: var(--text-sm);
+}
+
+.record-export-date select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: var(--space-xs);
+  border: var(--rule-hairline) solid var(--color-control-border);
+  border-radius: var(--radius-control);
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.record-export-date select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.record-export-date p {
+  color: var(--color-muted);
+}
+
 .record-export-preview img {
   display: block;
   width: 100%;

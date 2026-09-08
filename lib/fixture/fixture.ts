@@ -61,6 +61,7 @@ export const fixtureFitnessDataSource = {
     return {
       logs: fixtureLogs.map((log) => ({ ...log })),
       hasOlderLogs: false,
+      referenceDate: "2026-08-23",
     }
   },
   async getWorkouts() {

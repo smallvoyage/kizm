@@ -2,51 +2,33 @@
 
 import { CircleAlert, Dumbbell, LoaderCircle, Share2, X } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useRef, useState } from "react"
+import { useRef } from "react"
 
+import { useImageExport } from "@/components/image-export/use-image-export"
 import type { WorkoutSet } from "@/lib/fitness"
+import { getExportDates } from "@/lib/fitness/image-export/image-export"
 import { getTrainingRecord } from "@/lib/fitness/training-record/training-record"
 import { formatExportDate } from "./export-image/export-image-canvas"
 import { exportImageStyle } from "./export-image/export-image-style"
 import { renderTrainingRecord } from "./training-record-image/training-record-image"
 
-type ExportState = "idle" | "rendering" | "ready" | "error"
-type PreviewImage = { blob: Blob; height: number; url: string }
-
 export function TrainingRecordExport({
-  workoutSets,
   workoutHistory,
 }: {
-  workoutSets: WorkoutSet[]
   workoutHistory: WorkoutSet[]
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [state, setState] = useState<ExportState>("idle")
-  const [preview, setPreview] = useState<PreviewImage | null>(null)
-  const date = workoutSets[0]?.date ?? ""
-  const record = getTrainingRecord(workoutHistory, date)
-
-  useEffect(
-    () => () => {
-      if (preview) URL.revokeObjectURL(preview.url)
-    },
-    [preview]
-  )
-
-  const generate = async () => {
-    setState("rendering")
-    try {
-      const rendered = await renderTrainingRecord(record)
-      const url = URL.createObjectURL(rendered.blob)
-      setPreview((current) => {
-        if (current) URL.revokeObjectURL(current.url)
-        return { ...rendered, url }
-      })
-      setState("ready")
-    } catch {
-      setState("error")
+  const dates = getExportDates(workoutHistory)
+  const { date, state, preview, generate } = useImageExport(
+    dates[0] ?? "",
+    "training-record",
+    async (selectedDate) => {
+      const selectedRecord = getTrainingRecord(workoutHistory, selectedDate)
+      if (!selectedRecord.groups.length) throw new Error("Record not found")
+      return renderTrainingRecord(selectedRecord)
     }
-  }
+  )
+  const record = getTrainingRecord(workoutHistory, date)
 
   const open = () => {
     dialogRef.current?.showModal()
@@ -54,19 +36,19 @@ export function TrainingRecordExport({
     if (state !== "ready" && state !== "rendering") void generate()
   }
 
-  const filename = `training-record-${date}.png`
-
   const download = () => {
     if (!preview) return
     const anchor = document.createElement("a")
     anchor.href = preview.url
-    anchor.download = filename
+    anchor.download = preview.filename
     anchor.click()
   }
 
   const share = async () => {
     if (!preview) return
-    const file = new File([preview.blob], filename, { type: "image/png" })
+    const file = new File([preview.blob], preview.filename, {
+      type: "image/png",
+    })
     if (!navigator.canShare?.({ files: [file] })) {
       download()
       return
@@ -119,6 +101,25 @@ export function TrainingRecordExport({
               <X aria-hidden="true" />
             </button>
           </header>
+
+          <div className="record-export-date">
+            <label htmlFor="training-record-export-date">記録日</label>
+            <select
+              id="training-record-export-date"
+              value={date}
+              aria-describedby="training-record-export-date-note"
+              onChange={(event) => void generate(event.target.value)}
+            >
+              {dates.map((value) => (
+                <option key={value} value={value}>
+                  {formatExportDate(value)}
+                </option>
+              ))}
+            </select>
+            <p id="training-record-export-date-note">
+              読み込み済みの記録日から選べます
+            </p>
+          </div>
 
           <div
             className="record-export-preview"

@@ -1,4 +1,4 @@
-import { expect, test } from "vitest"
+import { afterEach, expect, test, vi } from "vitest"
 
 import { fixtureFitnessDataSource } from "./fixture"
 
@@ -30,4 +30,21 @@ test("決定論的な通常表示用データを取得できる", async () => {
   expect(
     first[1].filter((workout) => workout.date === "2026-08-16")
   ).toHaveLength(3)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+test.each([
+  "2026-08-22T15:00:00Z",
+  "2026-09-08T00:00:00Z",
+  "2027-01-01T00:00:00Z",
+])("実行日時が%sでも表示の基準日は固定される", async (now) => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date(now))
+
+  await expect(fixtureFitnessDataSource.getDays()).resolves.toMatchObject({
+    referenceDate: "2026-08-23",
+  })
 })

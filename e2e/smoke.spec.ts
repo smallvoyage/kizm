@@ -32,6 +32,15 @@ test("fixture dashboard shows its primary sections", async ({ page }) => {
     await expect(summary.getByRole("progressbar")).toHaveCount(4)
     await expect(heatmap).toBeVisible()
     await expect(heatmap.getByRole("button")).toHaveCount(84)
+    await expect(heatmap.getByRole("button").first()).toHaveAttribute(
+      "aria-label",
+      /^2026年6月1日/
+    )
+    await expect(heatmap.getByRole("button").last()).toHaveAttribute(
+      "aria-label",
+      /^2026年8月23日/
+    )
+    await expect(heatmap.getByRole("button").last()).toBeEnabled()
   })
 
   await test.step("body composition chart", async () => {

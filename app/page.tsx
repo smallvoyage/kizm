@@ -33,7 +33,7 @@ function formatRecordDate(date: string | null | undefined) {
 export default async function Home() {
   await connection()
 
-  const referenceDate = new Intl.DateTimeFormat("en-CA", {
+  let referenceDate = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -52,6 +52,7 @@ export default async function Home() {
   ])
 
   if (fitnessResult.status === "fulfilled") {
+    referenceDate = fitnessResult.value.referenceDate ?? referenceDate
     logs = fitnessResult.value.logs
     hasOlderLogs = fitnessResult.value.hasOlderLogs
   } else {
@@ -73,15 +74,7 @@ export default async function Home() {
   }
 
   const latestNutritionLog = getLatestNutritionLog(logs)
-  const latestDailyLog = logs.at(-1) ?? null
   const latestRecordDate = logs.at(-1)?.date ?? null
-  const latestWorkoutDate = workoutSets.reduce(
-    (latest, set) => (set.date > latest ? set.date : latest),
-    ""
-  )
-  const latestWorkoutSets = workoutSets.filter(
-    (set) => set.date === latestWorkoutDate
-  )
   const hasSourceError = Boolean(errorMessage || workoutErrorMessage)
   const hasNoRecords = logs.length === 0 && workoutSets.length === 0
   const shouldShowEmptyState = !hasSourceError && hasNoRecords
@@ -97,11 +90,12 @@ export default async function Home() {
             <span>KIZM</span>
           </h1>
           <div className="dashboard-header-actions">
-            {latestDailyLog && <DailySummaryExport log={latestDailyLog} />}
-            {latestWorkoutSets.length > 0 && (
+            {logs.length > 0 && (
+              <DailySummaryExport key={JSON.stringify(logs)} logs={logs} />
+            )}
+            {workoutSets.length > 0 && (
               <TrainingRecordExport
                 key={JSON.stringify(workoutSets)}
-                workoutSets={latestWorkoutSets}
                 workoutHistory={workoutSets}
               />
             )}
