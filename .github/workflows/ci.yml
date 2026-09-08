@@ -35,6 +35,7 @@ jobs:
   e2e:
     name: Chromium E2E
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true"
       FITNESS_DATA_SOURCE: fixture
@@ -59,7 +60,11 @@ jobs:
 
       - name: Run Chromium E2E tests
         id: e2e_tests
-        run: pnpm test:e2e:functional
+        run: |
+          pnpm test:e2e:functional
+          PLAYWRIGHT_REUSE_BUILD=true pnpm test:e2e:empty
+          PLAYWRIGHT_REUSE_BUILD=true pnpm test:e2e:all-error
+          PLAYWRIGHT_REUSE_BUILD=true pnpm test:e2e:workouts-error
 
       - name: Upload Playwright failure artifacts
         if: ${{ failure() && steps.e2e_tests.outcome == 'failure' }}
