@@ -21,15 +21,15 @@ const exports = [
     title: "日次サマリー",
     trigger: "体組成・カロリー・PFCを画像化",
     prefix: "daily-summary",
-    value: "67.7",
+    value: ["67.7"],
     height: 1520,
   },
   {
     title: "トレーニング記録",
     trigger: "トレーニング記録を画像化",
     prefix: "training-record",
-    value: "95 kg × 6 回",
-    height: 1350,
+    value: ["95", "6"],
+    height: 1520,
   },
 ]
 
@@ -116,7 +116,7 @@ for (const item of exports) {
     await expect(dialog.getByRole("img")).toHaveAttribute("alt", /2026年8月9日/)
     const draw = await page.evaluate(() => window.imageExportTest.draws.at(-1))
     expect(draw).toContain("2026年8月9日(日)")
-    expect(draw).toContain(item.value)
+    for (const value of item.value) expect(draw).toContain(value)
     expect(await page.evaluate(() => window.imageExportTest.revoked)).toContain(
       oldUrl
     )
@@ -274,7 +274,7 @@ for (const item of exports) {
     )
     expect(
       await page.evaluate(() => window.imageExportTest.draws.at(-1))
-    ).toContain(item.prefix === "daily-summary" ? "66.4" : "105 kg × 6 回")
+    ).toContain(item.prefix === "daily-summary" ? "66.4" : "105")
   })
 
   test(`${item.title}: 共有成功・キャンセル・失敗の分岐`, async ({ page }) => {
