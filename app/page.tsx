@@ -19,6 +19,8 @@ import { FitnessDataError } from "@/lib/fitness-data"
 import { fitnessDataSource } from "@/lib/fitness-data-source"
 import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
 
+export const instant = false
+
 function formatRecordDate(date: string | null | undefined) {
   if (!date) return "記録日なし"
 

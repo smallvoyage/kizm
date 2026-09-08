@@ -2,16 +2,20 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
   createNotionClient: vi.fn(),
+  cacheLife: vi.fn(),
+  cacheTag: vi.fn(),
   mapNotionPageToFitnessLog: vi.fn(),
   mapNotionPageToWorkoutSet: vi.fn(),
   queryAllFullPages: vi.fn(),
-  unstableCache: vi.fn((callback: () => Promise<unknown>) => callback),
   validateDaysDataSourceSchema: vi.fn(),
   validateWorkoutsDataSourceSchema: vi.fn(),
 }))
 
 vi.mock("server-only", () => ({}))
-vi.mock("next/cache", () => ({ unstable_cache: mocks.unstableCache }))
+vi.mock("next/cache", () => ({
+  cacheLife: mocks.cacheLife,
+  cacheTag: mocks.cacheTag,
+}))
 vi.mock("@/lib/notion-client", () => ({
   createNotionClient: mocks.createNotionClient,
 }))
@@ -38,18 +42,6 @@ describe("notionFitnessDataSource", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.clearAllMocks()
-  })
-
-  it("Days取得を既存のcache tagと再検証間隔で登録する", () => {
-    expect(mocks.unstableCache).toHaveBeenCalledOnce()
-    expect(mocks.unstableCache).toHaveBeenCalledWith(
-      expect.any(Function),
-      [FITNESS_LOGS_CACHE_TAG],
-      {
-        revalidate: 300,
-        tags: [FITNESS_LOGS_CACHE_TAG],
-      }
-    )
   })
 
   it("分離したNotionモジュールを通してDaysをドメインモデルへ変換する", async () => {
@@ -81,6 +73,8 @@ describe("notionFitnessDataSource", () => {
 
     expect(retrieve).toHaveBeenCalledWith({ data_source_id: "days-source" })
     expect(mocks.validateDaysDataSourceSchema).toHaveBeenCalledWith(properties)
+    expect(mocks.cacheLife).toHaveBeenCalledWith({ revalidate: 300 })
+    expect(mocks.cacheTag).toHaveBeenCalledWith(FITNESS_LOGS_CACHE_TAG)
     expect(mocks.queryAllFullPages).toHaveBeenCalledWith(
       query,
       expect.objectContaining({
