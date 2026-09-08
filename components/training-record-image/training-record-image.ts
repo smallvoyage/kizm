@@ -155,7 +155,7 @@ function measureRecord(
       }
       rowY += lines.length * SET_LINE_HEIGHT
     }
-    headingY = Math.max(contentBottom, rowY) + 9
+    headingY = Math.max(contentBottom, rowY) + 24
   }
   const footerY = Math.max(1290, contentBottom + 90)
   return { text, rules, badges, footerY, height: Math.ceil(footerY + 230) }
