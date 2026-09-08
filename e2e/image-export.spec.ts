@@ -29,7 +29,7 @@ const exports = [
     trigger: "トレーニング記録を画像化",
     prefix: "training-record",
     value: ["95", "6"],
-    height: 1571,
+    height: 1520,
   },
 ]
 

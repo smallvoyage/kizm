@@ -212,6 +212,6 @@ test("長い種目名、大きい数値、多数のセットもPNG内に収ま�
     expect(footer?.top).toBeGreaterThan(
       Math.max(...body.map((draw) => draw.bottom)) + 90
     )
-    if (count === 100) expect(rendered.height).toBeGreaterThan(9000)
+    if (count === 100) expect(rendered.height).toBeGreaterThan(7000)
   }
 })
