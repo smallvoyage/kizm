@@ -8,18 +8,15 @@ import {
   X,
 } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useRef, useState } from "react"
+import { useRef } from "react"
 
+import { useImageExport } from "@/components/image-export/use-image-export"
 import type { FitnessLog } from "@/lib/fitness"
+import {
+  getDailyExportLog,
+  getExportDates,
+} from "@/lib/fitness/image-export/image-export"
 import { formatNumber } from "@/lib/format-number"
-
-type ExportState = "idle" | "rendering" | "ready" | "error"
-
-type PreviewImage = {
-  blob: Blob
-  height: number
-  url: string
-}
 
 const CARD_WIDTH = 1080
 const CARD_HEIGHT = 1520
@@ -73,7 +70,7 @@ function drawMetric(
 
 async function renderSummary(
   log: FitnessLog
-): Promise<Omit<PreviewImage, "url">> {
+): Promise<{ blob: Blob; height: number }> {
   await document.fonts.ready
 
   const canvas = document.createElement("canvas")
@@ -129,32 +126,18 @@ async function renderSummary(
   return { blob, height: CARD_HEIGHT }
 }
 
-export function DailySummaryExport({ log }: { log: FitnessLog }) {
+export function DailySummaryExport({ logs }: { logs: FitnessLog[] }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const [state, setState] = useState<ExportState>("idle")
-  const [preview, setPreview] = useState<PreviewImage | null>(null)
-
-  useEffect(
-    () => () => {
-      if (preview) URL.revokeObjectURL(preview.url)
-    },
-    [preview]
-  )
-
-  const generate = async () => {
-    setState("rendering")
-    try {
-      const rendered = await renderSummary(log)
-      const url = URL.createObjectURL(rendered.blob)
-      setPreview((current) => {
-        if (current) URL.revokeObjectURL(current.url)
-        return { ...rendered, url }
-      })
-      setState("ready")
-    } catch {
-      setState("error")
+  const dates = getExportDates(logs)
+  const { date, state, preview, generate } = useImageExport(
+    dates[0] ?? "",
+    "daily-summary",
+    async (selectedDate) => {
+      const log = getDailyExportLog(logs, selectedDate)
+      if (!log) throw new Error("Record not found")
+      return renderSummary(log)
     }
-  }
+  )
 
   const open = () => {
     dialogRef.current?.showModal()
@@ -162,18 +145,19 @@ export function DailySummaryExport({ log }: { log: FitnessLog }) {
     if (state !== "ready" && state !== "rendering") void generate()
   }
 
-  const filename = `daily-summary-${log.date}.png`
   const download = () => {
     if (!preview) return
     const anchor = document.createElement("a")
     anchor.href = preview.url
-    anchor.download = filename
+    anchor.download = preview.filename
     anchor.click()
   }
 
   const share = async () => {
     if (!preview) return
-    const file = new File([preview.blob], filename, { type: "image/png" })
+    const file = new File([preview.blob], preview.filename, {
+      type: "image/png",
+    })
     if (!navigator.canShare?.({ files: [file] })) {
       download()
       return
@@ -215,7 +199,7 @@ export function DailySummaryExport({ log }: { log: FitnessLog }) {
           <header>
             <div className="record-export-heading">
               <h2 id="daily-summary-export-title">日次サマリー</h2>
-              <p>{formatDate(log.date)}</p>
+              <p>{formatDate(date)}</p>
             </div>
             <button
               type="button"
@@ -226,6 +210,25 @@ export function DailySummaryExport({ log }: { log: FitnessLog }) {
               <X aria-hidden="true" />
             </button>
           </header>
+
+          <div className="record-export-date">
+            <label htmlFor="daily-summary-export-date">記録日</label>
+            <select
+              id="daily-summary-export-date"
+              value={date}
+              aria-describedby="daily-summary-export-date-note"
+              onChange={(event) => void generate(event.target.value)}
+            >
+              {dates.map((value) => (
+                <option key={value} value={value}>
+                  {formatDate(value)}
+                </option>
+              ))}
+            </select>
+            <p id="daily-summary-export-date-note">
+              読み込み済みの記録日から選べます
+            </p>
+          </div>
 
           <div
             className="record-export-preview"
@@ -250,7 +253,7 @@ export function DailySummaryExport({ log }: { log: FitnessLog }) {
             {preview && state === "ready" && (
               <Image
                 src={preview.url}
-                alt={`${formatDate(log.date)}の体組成とカロリー・PFCサマリー`}
+                alt={`${formatDate(preview.date)}の体組成とカロリー・PFCサマリー`}
                 width={CARD_WIDTH}
                 height={preview.height}
                 unoptimized
