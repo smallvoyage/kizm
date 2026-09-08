@@ -104,7 +104,7 @@ function measureRecord(
     const ruleY =
       headingY + (headingLines.length - 1) * HEADING_LINE_HEIGHT + 38
     rules.push(ruleY)
-    let rowY = ruleY + 77
+    let rowY = ruleY + 38
     for (const [index, set] of group.sets.entries()) {
       place(
         run(`SET ${index + 1}`, "label", style.colors.muted),
@@ -155,7 +155,7 @@ function measureRecord(
       }
       rowY += lines.length * SET_LINE_HEIGHT
     }
-    headingY = Math.max(contentBottom, rowY) + 24
+    headingY = Math.max(contentBottom, rowY) + 9
   }
   const footerY = Math.max(1290, contentBottom + 90)
   return { text, rules, badges, footerY, height: Math.ceil(footerY + 230) }
