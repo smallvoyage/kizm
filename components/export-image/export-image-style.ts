@@ -14,7 +14,7 @@ export const exportImageStyle = {
   type: {
     title: "700 72px",
     date: "600 29px",
-    heading: "700 30px",
+    heading: "700 34px",
     label: "600 27px",
     value: "700 52px",
     footer: "600 24px",
