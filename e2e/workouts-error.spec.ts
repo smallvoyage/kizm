@@ -11,6 +11,19 @@ test.describe("Workoutsだけ取得に失敗する部分エラー", () => {
   }) => {
     await page.goto("/")
 
+    await expect(
+      page.getByRole("button", { name: "トレーニング記録を画像化" })
+    ).toHaveCount(0)
+    await page
+      .getByRole("button", { name: "体組成・カロリー・PFCを画像化" })
+      .click()
+    const dialog = page.getByRole("dialog", { name: "日次サマリー" })
+    await dialog
+      .getByRole("combobox", { name: "記録日" })
+      .selectOption("2026-08-09")
+    await expect(dialog.getByRole("button", { name: "共有する" })).toBeEnabled()
+    await dialog.getByRole("button", { name: "閉じる" }).click()
+
     await test.step("取得できた食事と身体組成を表示する", async () => {
       const nutrition = page.getByRole("region", {
         name: "食事状況",

@@ -9,6 +9,7 @@ test("DaysとWorkoutsの取得失敗時に全体エラーだけを表示する",
   )
 
   await page.goto("/")
+  await expect(page.getByRole("button", { name: /を画像化$/ })).toHaveCount(0)
 
   const alert = page.getByRole("main").getByRole("alert")
 
