@@ -50,25 +50,17 @@ test("終了済み週の平均・記録日数・前週差または不足理由�
   const calories = nutrition.getByRole("article", { name: "摂取カロリー" })
   const protein = nutrition.getByRole("article", { name: "たんぱく質" })
   await expect(nutrition.getByText("集計対象 8/10–8/16")).toBeVisible()
-  await expect(
-    calories.getByText("前週の記録 7/7日", { exact: true })
-  ).toBeVisible()
-
   if (scenario === "missing-nutrition") {
-    await expect(
-      calories.getByText("記録 6/7日", { exact: true })
-    ).toBeVisible()
-    await expect(protein.getByText("記録 5/7日", { exact: true })).toBeVisible()
-    await expect(calories.getByText("記録日が不足しています")).toBeVisible()
+    await expect(calories.getByText(/記録 6\/7日・前週 7\/7日/)).toBeVisible()
+    await expect(protein.getByText(/記録 5\/7日・前週 7\/7日/)).toBeVisible()
+    await expect(calories.getByText(/記録日が不足しています/)).toBeVisible()
     await expect(nutrition.getByText(/前週比/)).toHaveCount(0)
     await expect(nutrition.locator(".weekly-comparison svg")).toHaveCount(0)
   } else {
+    await expect(calories.getByText(/前週の記録/)).toHaveCount(0)
     await expect(calories.locator(".weekly-average-value")).toHaveText(
       "2,352.9kcal"
     )
-    await expect(
-      calories.getByText("記録 7/7日", { exact: true })
-    ).toBeVisible()
     await expect(
       calories.getByText("前週比 -34.3 kcal", { exact: true })
     ).toBeVisible()
@@ -97,9 +89,7 @@ test("週送りの限界、前週データ不足、更新後の表示を確認�
   for (let step = 0; step < 3; step++) await previous.click()
   await expect(previous).toBeDisabled()
   await expect(navigation.getByText("7/13–7/19", { exact: true })).toBeVisible()
-  await expect(
-    nutrition.getByText("前週のデータ不足", { exact: true })
-  ).toHaveCount(4)
+  await expect(nutrition.getByText(/前週のデータ不足/)).toHaveCount(4)
   await expectReadable(page, nutrition)
   for (let step = 0; step < 4; step++) await next.click()
   await expect(next).toBeDisabled()
@@ -130,7 +120,7 @@ test("週の途中は昨日までを平均し、週を戻すと前週差を表�
     "2,290kcal"
   )
   await expect(calories.getByText("記録 2/2日", { exact: true })).toBeVisible()
-  await expect(nutrition.getByText("週の途中のため比較なし")).toHaveCount(4)
+  await expect(nutrition.getByText(/週の途中のため比較なし/)).toHaveCount(4)
   await expect(nutrition.getByText(/前週比/)).toHaveCount(0)
   await expect(nutrition.locator(".weekly-comparison svg")).toHaveCount(0)
   await expectReadable(page, nutrition)
@@ -140,5 +130,5 @@ test("週の途中は昨日までを平均し、週を戻すと前週差を表�
   await expect(nutrition.getByText(/前週比/)).toHaveCount(4)
   await expectReadable(page, nutrition)
   await page.getByRole("button", { name: "次の週を表示" }).click()
-  await expect(nutrition.getByText("週の途中のため比較なし")).toHaveCount(4)
+  await expect(nutrition.getByText(/週の途中のため比較なし/)).toHaveCount(4)
 })

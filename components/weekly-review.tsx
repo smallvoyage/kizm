@@ -132,15 +132,13 @@ function AverageMetric({
           />
         ) : (
           <span className="weekly-comparison-reason">
+            記録 {average.recordedDays}/{eligibleDays}日・前週{" "}
+            {average.previous.recordedDays}/{previousEligibleDays}日
+            <span aria-hidden="true">（</span>
             {comparisonReasons[average.comparisonStatus]}
+            <span aria-hidden="true">）</span>
           </span>
         )}
-        <span>
-          記録 {average.recordedDays}/{eligibleDays}日
-        </span>
-        <span>
-          前週の記録 {average.previous.recordedDays}/{previousEligibleDays}日
-        </span>
         {[
           { label: "当週", records: average.excludedRecords },
           { label: "前週", records: average.previous.excludedRecords },
