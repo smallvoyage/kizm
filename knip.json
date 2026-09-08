@@ -1,4 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["e2e/support/fixed-clock.mjs"],
   "tags": ["-lintignore"]
 }
