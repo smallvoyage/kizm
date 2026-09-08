@@ -13,6 +13,15 @@ import { useEffect, useRef, useState } from "react"
 import type { FitnessLog } from "@/lib/fitness"
 import { formatNumber } from "@/lib/format-number"
 
+import {
+  canvasToPng,
+  drawExportFooter,
+  drawExportHeader,
+  drawExportRule,
+  formatExportDate,
+} from "./export-image/export-image-canvas"
+import { exportImageStyle } from "./export-image/export-image-style"
+
 type ExportState = "idle" | "rendering" | "ready" | "error"
 
 type PreviewImage = {
@@ -21,30 +30,14 @@ type PreviewImage = {
   url: string
 }
 
-const CARD_WIDTH = 1080
-const CARD_HEIGHT = 1520
-const CARD_PADDING = 86
-const CONTENT_WIDTH = CARD_WIDTH - CARD_PADDING * 2
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-    timeZone: "UTC",
-  }).format(new Date(`${date}T00:00:00Z`))
-}
+const CARD_WIDTH = exportImageStyle.width
+const CARD_HEIGHT = exportImageStyle.minHeight
+const CARD_PADDING = exportImageStyle.padding
 
 function formatValue(value: number | null, fractionDigits = 1) {
   return value === null
     ? "—"
     : formatNumber(value, { fractionDigits, fixed: true })
-}
-
-function drawRule(context: CanvasRenderingContext2D, y: number) {
-  context.fillStyle = "#d8d5ce"
-  context.fillRect(CARD_PADDING, y, CONTENT_WIDTH, 2)
 }
 
 function drawMetric(
@@ -56,17 +49,17 @@ function drawMetric(
   fontFamily: string,
   fractionDigits = 1
 ) {
-  context.fillStyle = "#77746d"
-  context.font = `600 27px ${fontFamily}`
+  context.fillStyle = exportImageStyle.colors.muted
+  context.font = `${exportImageStyle.type.label} ${fontFamily}`
   context.fillText(label, CARD_PADDING, y)
 
-  context.fillStyle = "#24231f"
-  context.font = `700 52px ${fontFamily}`
+  context.fillStyle = exportImageStyle.colors.ink
+  context.font = `${exportImageStyle.type.value} ${fontFamily}`
   context.textAlign = "right"
   context.fillText(formatValue(value, fractionDigits), CARD_WIDTH - 166, y)
 
-  context.fillStyle = "#77746d"
-  context.font = `600 27px ${fontFamily}`
+  context.fillStyle = exportImageStyle.colors.muted
+  context.font = `${exportImageStyle.type.label} ${fontFamily}`
   context.textAlign = "left"
   context.fillText(unit, CARD_WIDTH - 146, y)
 }
@@ -83,48 +76,27 @@ async function renderSummary(
   if (!context) throw new Error("Canvas is not available")
 
   const fontFamily = getComputedStyle(document.body).fontFamily
-  context.fillStyle = "#fbfaf7"
-  context.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
+  drawExportHeader(context, "DAILY LOG", log.date, fontFamily, CARD_HEIGHT)
 
-  context.fillStyle = "#24231f"
-  context.font = `700 72px ${fontFamily}`
-  context.fillText("DAILY LOG", CARD_PADDING, 150)
-  context.fillStyle = "#77746d"
-  context.font = `600 29px ${fontFamily}`
-  context.fillText(formatDate(log.date), CARD_PADDING, 205)
-
-  context.fillStyle = "#24231f"
-  context.font = `700 30px ${fontFamily}`
+  context.fillStyle = exportImageStyle.colors.ink
+  context.font = `${exportImageStyle.type.heading} ${fontFamily}`
   context.fillText("体組成", CARD_PADDING, 330)
-  drawRule(context, 368)
+  drawExportRule(context, 368)
   drawMetric(context, "体重", log.weight, "kg", 445, fontFamily)
   drawMetric(context, "体脂肪率", log.bodyFat, "%", 535, fontFamily)
   drawMetric(context, "筋肉量", log.muscleMass, "kg", 625, fontFamily)
 
-  context.fillStyle = "#24231f"
-  context.font = `700 30px ${fontFamily}`
+  context.fillStyle = exportImageStyle.colors.ink
+  context.font = `${exportImageStyle.type.heading} ${fontFamily}`
   context.fillText("カロリー・PFC", CARD_PADDING, 785)
-  drawRule(context, 823)
+  drawExportRule(context, 823)
   drawMetric(context, "カロリー", log.calories, "kcal", 900, fontFamily, 0)
   drawMetric(context, "たんぱく質", log.protein, "g", 990, fontFamily)
   drawMetric(context, "脂質", log.fat, "g", 1080, fontFamily)
   drawMetric(context, "炭水化物", log.carbs, "g", 1170, fontFamily)
 
-  drawRule(context, 1290)
-  context.fillStyle = "#aaa69e"
-  context.font = `600 24px ${fontFamily}`
-  context.fillText("KIZM", CARD_PADDING, 1360)
-  context.textAlign = "right"
-  context.fillText("#fitness #食事記録", CARD_WIDTH - CARD_PADDING, 1360)
-  context.textAlign = "left"
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (result) =>
-        result ? resolve(result) : reject(new Error("Image generation failed")),
-      "image/png"
-    )
-  })
+  drawExportFooter(context, "#fitness #食事記録", fontFamily, 1290)
+  const blob = await canvasToPng(canvas)
 
   return { blob, height: CARD_HEIGHT }
 }
@@ -215,7 +187,7 @@ export function DailySummaryExport({ log }: { log: FitnessLog }) {
           <header>
             <div className="record-export-heading">
               <h2 id="daily-summary-export-title">日次サマリー</h2>
-              <p>{formatDate(log.date)}</p>
+              <p>{formatExportDate(log.date)}</p>
             </div>
             <button
               type="button"
@@ -250,7 +222,7 @@ export function DailySummaryExport({ log }: { log: FitnessLog }) {
             {preview && state === "ready" && (
               <Image
                 src={preview.url}
-                alt={`${formatDate(log.date)}の体組成とカロリー・PFCサマリー`}
+                alt={`${formatExportDate(log.date)}の体組成とカロリー・PFCサマリー`}
                 width={CARD_WIDTH}
                 height={preview.height}
                 unoptimized

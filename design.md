@@ -47,6 +47,27 @@ nutrition metric must expose `data-nutrition-metric` so the shared mapping in
 
 ## Typography
 
+### Exported PNGs
+
+Daily and training exports share the paper style defined in
+`components/export-image/export-image-style.ts`. This extends the existing daily
+summary design; it is separate from the dashboard's interactive surfaces.
+
+- Width: 1080 px; horizontal padding: 86 px; minimum height: 1520 px.
+- Paper: `#fbfaf7`; ink: `#24231f`; muted: `#77746d`; rule: `#d8d5ce`;
+  footer: `#aaa69e`.
+- Use the loaded body font. Title: 700/72 px; date: 600/29 px; section heading:
+  700/30 px; labels and units: 600/27 px; values: 700/52 px; footer: 600/24 px.
+- Header: title baseline at 150 px, date at 205 px. Sections use 2 px rules,
+  left-aligned labels and right-aligned values. No decorative panels or chips.
+- Training exports show one set per row, keeping every set and the existing
+  `MAX RM` meaning. The record badge uses a soft red background (`#f3dddd`),
+  700/24 px ink text, and a small 6 px corner radius for restrained emphasis.
+  Wrap long exercise names and oversized values before drawing;
+  extend image height so the footer cannot overlap the record.
+
+### Dashboard fonts
+
 - Display: Inter for Latin and numerals, LINE Seed JP for Japanese, weight 700, style normal
 - Body: Inter for Latin and numerals, LINE Seed JP for Japanese, weight 400
 - Numeric outlier: Inter, weight 600
