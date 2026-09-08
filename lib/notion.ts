@@ -1,6 +1,6 @@
 import "server-only"
 
-import { unstable_cache } from "next/cache"
+import { cacheLife, cacheTag } from "next/cache"
 
 import { FITNESS_LOGS_CACHE_TAG } from "@/lib/cache-tags"
 import type { FitnessLog, WorkoutSet } from "@/lib/fitness"
@@ -80,10 +80,11 @@ function getHistoryStartDate() {
     .slice(0, 10)
 }
 
-async function fetchFitnessLogs(): Promise<DaysResult> {
-  const daysDataSourceId = getRequiredEnvironmentVariable(
-    "NOTION_DAYS_DATA_SOURCE_ID"
-  )
+async function fetchFitnessLogs(daysDataSourceId: string): Promise<DaysResult> {
+  "use cache"
+  cacheLife({ revalidate: 300 })
+  cacheTag(FITNESS_LOGS_CACHE_TAG)
+
   const notion = createNotionClient()
   const historyStartDate = getHistoryStartDate()
 
@@ -163,16 +164,10 @@ async function getWorkoutSets(): Promise<WorkoutSet[]> {
   }
 }
 
-const getFitnessLogs = unstable_cache(
-  fetchFitnessLogs,
-  [FITNESS_LOGS_CACHE_TAG],
-  {
-    revalidate: 300,
-    tags: [FITNESS_LOGS_CACHE_TAG],
-  }
-)
-
 export const notionFitnessDataSource: FitnessDataSource = {
-  getDays: getFitnessLogs,
+  getDays: () =>
+    fetchFitnessLogs(
+      getRequiredEnvironmentVariable("NOTION_DAYS_DATA_SOURCE_ID")
+    ),
   getWorkouts: getWorkoutSets,
 }
