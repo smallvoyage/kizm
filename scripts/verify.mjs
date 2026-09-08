@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url"
 const FIXTURE_ENVIRONMENT = {
   FITNESS_ALLOW_FIXTURE_IN_PRODUCTION: "true",
   FITNESS_DATA_SOURCE: "fixture",
+  FITNESS_FIXTURE_SCENARIO: "normal",
 }
 
 export const VERIFY_STEPS = [
@@ -15,12 +16,12 @@ export const VERIFY_STEPS = [
   { label: "build", args: ["build"], fixture: true },
 ]
 
-const E2E_STEP = {
-  label: "E2E",
-  args: ["test:e2e"],
-  fixture: true,
-  reuseBuild: true,
-}
+const E2E_STEPS = [
+  { label: "E2E normal", args: ["test:e2e", "--grep-invert", "@visual"] },
+  { label: "E2E empty", args: ["test:e2e:empty"] },
+  { label: "E2E all-error", args: ["test:e2e:all-error"] },
+  { label: "E2E workouts-error", args: ["test:e2e:workouts-error"] },
+].map((step) => ({ ...step, fixture: true, reuseBuild: true }))
 
 /**
  * @typedef {(command: string, args: string[], options: {
@@ -43,7 +44,7 @@ export function runVerification({
   runCommand = (command, args, options) => spawnSync(command, args, options),
   output = console,
 } = {}) {
-  const steps = includeE2E ? [...VERIFY_STEPS, E2E_STEP] : VERIFY_STEPS
+  const steps = includeE2E ? [...VERIFY_STEPS, ...E2E_STEPS] : VERIFY_STEPS
 
   for (const [index, step] of steps.entries()) {
     output.log(`[verify] ${index + 1}/${steps.length} ${step.label}`)
@@ -51,7 +52,12 @@ export function runVerification({
     const stepEnvironment = {
       ...environment,
       ...(step.fixture ? FIXTURE_ENVIRONMENT : {}),
-      ...(step.reuseBuild ? { PLAYWRIGHT_REUSE_BUILD: "true" } : {}),
+      ...(step.reuseBuild
+        ? {
+            PLAYWRIGHT_REUSE_BUILD: "true",
+            PLAYWRIGHT_VISUAL_REGRESSION: "false",
+          }
+        : {}),
     }
     const result = runCommand("pnpm", step.args, {
       env: stepEnvironment,

@@ -23,7 +23,7 @@
 ローカルでシナリオを指定する例:
 
 ```sh
-FITNESS_FIXTURE_SCENARIO=empty pnpm test:e2e
+pnpm test:e2e:empty
 ```
 
 Playwrightのweb serverには`playwright.config.ts`が`FITNESS_DATA_SOURCE=fixture`を設定する。
@@ -58,6 +58,10 @@ fixtureを変更すると既存のunit、E2E、baselineへ広く影響する。�
 
 ## 日付とタイムゾーン
 
+通常fixtureは `DaysResult.referenceDate` に `2026-08-23` を返し、ヒートマップの表示期間も固定する。
+`missing-nutrition` と `workouts-error` は通常fixtureから同じ基準日を引き継ぐ。
+基準日を省略するNotionデータソースでは、現在の日本時間を使用する。
+
 - fixtureの日付は実行日から計算せず、`YYYY-MM-DD`の固定値を使う。`Date.now()`や引数なしの
   `new Date()`でfixtureの内容を変化させない。
 - `YYYY-MM-DD`は時刻を持たないカレンダー日として扱う。日付の加減算が必要な場合は
@@ -89,7 +93,17 @@ UIを追加・変更した場合は、操作E2Eまたはvisual regressionで320p
 
 ### E2Eの役割分担
 
-- `pnpm test:e2e:functional`: 操作 E2E。`@visual` を除外し、通常の `Chromium E2E` job で実行する。
+- `pnpm test:e2e:functional`: `normal` の操作 E2E。`@visual` を除外し、Chromium の全 project で実行する。
+- `pnpm test:e2e:empty`: `empty` の空状態を検証する。
+- `pnpm test:e2e:all-error`: `all-error` の全体エラーを検証する。
+- `pnpm test:e2e:workouts-error`: `workouts-error` の部分エラーを検証する。
+
+上記のシナリオ専用コマンドは、対応する機能 spec だけを Chromium の320px・390px・desktopで実行する。
+通常表示を前提とする spec や `@visual` は実行しない。CI の `Chromium E2E` job では上記4コマンドを
+順に実行し、通常シナリオで作成した build を後続3シナリオでも再利用する。各実行でサーバーを起動し直し、
+シナリオ専用コマンドが環境変数を切り替える。いずれかが失敗したら job も失敗し、後続は実行しない。
+`missing-nutrition` は現時点で専用の機能 spec がないため、この実行対象には含めない。
+
 - `pnpm test:e2e:visual`: visual regression。`@visual` だけを Linux で実行する。
 - `pnpm test:e2e:visual:empty`: 空状態の visual regression を Linux で実行する。
 - `pnpm test:e2e:visual:all-error`: 全体エラーの visual regression を Linux で実行する。
@@ -131,8 +145,10 @@ PLAYWRIGHT_PORT=4101 pnpm test:e2e
 ```
 
 `.next/`、`test-results/`、`playwright-report/`は各worktree内に生成し、別worktreeのbuildや
-reportを参照・上書きしない。`PLAYWRIGHT_REUSE_BUILD=true`は`pnpm verify:all`が同じworktreeで
-直前に作ったbuildを使うための設定であり、別worktreeのbuild再利用には使わない。
+reportを参照・上書きしない。テスト結果は `test-results/<scenario>/`、HTML report は
+`playwright-report/<scenario>/` に保存し、後続シナリオで上書きしない。
+`PLAYWRIGHT_REUSE_BUILD=true` は `pnpm verify:all` や CI が同じworktreeで直前に作ったbuildを
+使うための設定であり、別worktreeのbuild再利用には使わない。
 
 ## main の required checks
 
@@ -236,7 +252,10 @@ pnpm verify:all
 ```
 
 これはBiome、unit、Next.js typegen、TypeScript、knip、fixture production build、全Playwright
-projectのE2Eを順に実行する。別worktreeのserverや成果物を使わず、統合を行うworktree自身で実行する。
+projectの `normal` 機能E2E、Chromium の `empty`・`all-error`・`workouts-error` 機能E2Eを順に実行する。
+`@visual` は除外する。通常シナリオでは Firefox と WebKit も使うため、初回は
+`pnpm exec playwright install firefox webkit` で追加する。
+別worktreeのserverや成果物を使わず、統合を行うworktree自身で実行する。
 visual baselineに影響する変更では、これに加えて固定Linux環境のvisual regressionも再実行し、
 成功結果と目視確認をmerge前に確認する。
 
@@ -246,8 +265,8 @@ visual baselineに影響する変更では、これに加えて固定Linux環境
 `visual-regression-failure-<run id>-<attempt>` artifact が14日間保存される。
 artifact には次を含む。
 
-- `test-results/`: expected、actual、diff 画像と `trace.zip`
-- `playwright-report/`: HTML report
+- `test-results/<scenario>/`: expected、actual、diff 画像と `trace.zip`
+- `playwright-report/<scenario>/`: HTML report
 
-HTML report は展開後に `pnpm exec playwright show-report <展開先>` で開く。
+HTML report は展開後に `pnpm exec playwright show-report <展開先>/playwright-report/<scenario>` で開く。
 trace は `pnpm exec playwright show-trace <trace.zip>` で確認する。
