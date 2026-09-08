@@ -795,7 +795,9 @@
 .record-export-date select {
   width: 100%;
   min-width: 0;
+  height: 2.75rem;
   min-height: 2.75rem;
+  box-sizing: border-box;
   padding: var(--space-xs);
   border: var(--rule-hairline) solid var(--color-control-border);
   border-radius: var(--radius-control);
