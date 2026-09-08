@@ -104,7 +104,7 @@ function measureRecord(
     const ruleY =
       headingY + (headingLines.length - 1) * HEADING_LINE_HEIGHT + 38
     rules.push(ruleY)
-    let rowY = ruleY + 38
+    let rowY = ruleY + 58
     for (const [index, set] of group.sets.entries()) {
       place(
         run(`SET ${index + 1}`, "label", style.colors.muted),
