@@ -22,8 +22,8 @@ test(
       await expect(img).toBeVisible()
       await img.evaluate((image: HTMLImageElement) => image.decode())
       await expect(dialog).toHaveScreenshot(`${item.name}-dialog.png`, {
-        // The translucent backdrop can expose a few animated chart pixels at
-        // the anti-aliased edge of the dialog's rounded corners.
+        // 半透明のbackdrop越しに、丸角のアンチエイリアス部分から
+        // 背面チャートのアニメーションが数ピクセル見える場合がある。
         maxDiffPixels: 5,
       })
       const bytes = await img.evaluate(async (image: HTMLImageElement) =>
