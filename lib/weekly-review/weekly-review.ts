@@ -1,13 +1,12 @@
-import { parseCalendarDate } from "@/lib/calendar-date"
-import type {
-  BodyCompositionMetric,
-  FitnessLog,
-  NutritionMetric,
-} from "@/lib/fitness"
+import { shiftDate } from "@/lib/calendar-date"
+import type { BodyCompositionMetric, FitnessLog } from "@/lib/fitness"
 
-const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000
+import {
+  getWeeklyNutrition,
+  type WeeklyNutrition,
+} from "@/lib/fitness/weekly-nutrition/weekly-nutrition"
 
-export type WeeklyAverage = {
+type WeeklyAverage = {
   value: number | null
   previousDifference: number | null
   recordedDays: number
@@ -22,9 +21,7 @@ export type WeeklyMetricChange = {
 export type WeeklyReview = {
   startDate: string
   endDate: string
-  nutrition: {
-    averages: Record<NutritionMetric, WeeklyAverage>
-  }
+  nutrition: WeeklyNutrition
   bodyComposition: {
     weight: WeeklyMetricChange
     weightAverage: WeeklyAverage
@@ -32,27 +29,6 @@ export type WeeklyReview = {
     muscleMass: WeeklyMetricChange
     recordedDays: number
   }
-}
-
-function formatDate(date: Date): string | null {
-  const value = date.toISOString().slice(0, 10)
-  return parseCalendarDate(value) ? value : null
-}
-
-export function getWeekStart(date: string): string | null {
-  const parsed = parseCalendarDate(date)
-  if (!parsed) return null
-
-  const daysSinceMonday = (parsed.getUTCDay() + 6) % 7
-  parsed.setUTCDate(parsed.getUTCDate() - daysSinceMonday)
-  return formatDate(parsed)
-}
-
-export function shiftDate(date: string, days: number): string | null {
-  const parsed = parseCalendarDate(date)
-  if (!parsed) return null
-
-  return formatDate(new Date(parsed.getTime() + days * DAY_IN_MILLISECONDS))
 }
 
 function average(values: Array<number | null>): {
@@ -75,7 +51,7 @@ function average(values: Array<number | null>): {
 function getAverage(
   logs: FitnessLog[],
   previousLogs: FitnessLog[],
-  metric: NutritionMetric | BodyCompositionMetric
+  metric: BodyCompositionMetric
 ): WeeklyAverage {
   const current = average(logs.map((log) => log[metric]))
   const previous = average(previousLogs.map((log) => log[metric]))
@@ -113,27 +89,18 @@ function logsInRange(logs: FitnessLog[], startDate: string, endDate: string) {
 
 export function getWeeklyReview(
   logs: FitnessLog[],
-  weekStart: string
+  weekStart: string,
+  referenceDate: string
 ): WeeklyReview | null {
   const endDate = shiftDate(weekStart, 6)
   const previousStartDate = shiftDate(weekStart, -7)
   const previousEndDate = shiftDate(weekStart, -1)
-  if (!endDate || !previousStartDate || !previousEndDate) return null
+  const nutrition = getWeeklyNutrition(logs, weekStart, referenceDate)
+  if (!endDate || !previousStartDate || !previousEndDate || !nutrition)
+    return null
 
   const weeklyLogs = logsInRange(logs, weekStart, endDate)
   const previousLogs = logsInRange(logs, previousStartDate, previousEndDate)
-  const nutritionMetrics: NutritionMetric[] = [
-    "calories",
-    "protein",
-    "fat",
-    "carbs",
-  ]
-  const averages = Object.fromEntries(
-    nutritionMetrics.map((metric) => [
-      metric,
-      getAverage(weeklyLogs, previousLogs, metric),
-    ])
-  ) as Record<NutritionMetric, WeeklyAverage>
   const bodyCompositionLogs = weeklyLogs.filter((log) =>
     (["weight", "bodyFat", "muscleMass"] as const).some(
       (metric) => log[metric] !== null
@@ -143,9 +110,7 @@ export function getWeeklyReview(
   return {
     startDate: weekStart,
     endDate,
-    nutrition: {
-      averages,
-    },
+    nutrition,
     bodyComposition: {
       weight: getMetricChange(weeklyLogs, "weight"),
       weightAverage: getAverage(weeklyLogs, previousLogs, "weight"),
