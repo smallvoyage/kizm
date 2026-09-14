@@ -43,3 +43,64 @@ test("身体組成チャートの表示指標を1つずつ切り替えられる"
     await expect(muscleMass).toHaveAttribute("aria-pressed", "false")
   })
 })
+
+test("モバイルでは横軸の間隔を固定してグラフを横スクロールできる", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !["chromium-320", "chromium-390"].includes(testInfo.project.name),
+    "モバイル幅のレイアウトを検証するテストです。"
+  )
+
+  await page.goto("/")
+
+  const chart = page
+    .getByRole("region", { name: "身体組成" })
+    .filter({ hasText: "指標を選んで、記録ごとの変化を確認" })
+  const scrollArea = chart.getByRole("region", {
+    name: "身体組成グラフ。横方向にスクロールできます",
+  })
+
+  await expect(scrollArea).toBeVisible()
+  await expect
+    .poll(() => scrollArea.evaluate((element) => element.scrollLeft))
+    .toBeGreaterThan(0)
+
+  const dimensions = await scrollArea.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollLeft: element.scrollLeft,
+    scrollWidth: element.scrollWidth,
+  }))
+  expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth)
+  expect(dimensions.scrollLeft).toBeGreaterThan(0)
+  await expect(
+    scrollArea.locator(".recharts-yAxis-tick-labels text").first()
+  ).toBeVisible()
+
+  await scrollArea.focus()
+  await page.keyboard.press("ArrowLeft")
+  await expect
+    .poll(() => scrollArea.evaluate((element) => element.scrollLeft))
+    .toBeLessThan(dimensions.scrollLeft)
+
+  const pointPositions = await scrollArea
+    .locator(".recharts-line-dots circle")
+    .evaluateAll((points) =>
+      points.map((point) => Number(point.getAttribute("cx")))
+    )
+  const intervals = pointPositions
+    .slice(1)
+    .map(
+      (position, index) =>
+        Math.round((position - pointPositions[index]) * 10) / 10
+    )
+
+  expect(new Set(intervals)).toEqual(new Set([56]))
+
+  await scrollArea.evaluate((element) => {
+    element.scrollLeft = 0
+  })
+  await expect
+    .poll(() => scrollArea.evaluate((element) => element.scrollLeft))
+    .toBe(0)
+})

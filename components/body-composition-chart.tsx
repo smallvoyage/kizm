@@ -1,7 +1,7 @@
 "use client"
 
 import { Minus, TrendingDown, TrendingUp } from "lucide-react"
-import { type CSSProperties, useMemo, useState } from "react"
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import {
@@ -20,6 +20,9 @@ const chartConfig = {
 } satisfies ChartConfig
 
 const Y_AXIS_PADDING = 1
+const X_AXIS_POINT_INTERVAL = 56
+const Y_AXIS_WIDTH = 42
+const CHART_HORIZONTAL_MARGIN = 16
 
 const metricOptions: Array<{
   value: BodyCompositionMetric
@@ -83,11 +86,22 @@ function latestBodyCompositionLog(logs: FitnessLog[]) {
   )
 }
 
+function keepYAxisInView(scrollArea: HTMLElement) {
+  scrollArea
+    .querySelectorAll<SVGGElement>(
+      ".recharts-yAxis, .recharts-yAxis-tick-labels"
+    )
+    .forEach((element) => {
+      element.setAttribute("transform", `translate(${scrollArea.scrollLeft} 0)`)
+    })
+}
+
 type BodyCompositionChartProps = {
   logs: FitnessLog[]
 }
 
 export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
+  const chartScrollRef = useRef<HTMLElement>(null)
   const initialLog = latestBodyCompositionLog(logs)
   const [selectedMetric, setSelectedMetric] =
     useState<BodyCompositionMetric>("weight")
@@ -136,6 +150,20 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
     "--selected-metric-color": selectedOption.color,
     "--selected-metric-soft": selectedOption.soft,
   } as CSSProperties
+  const pointCount = logs.length
+  const chartWidth =
+    Y_AXIS_WIDTH +
+    CHART_HORIZONTAL_MARGIN +
+    Math.max(pointCount - 1, 0) * X_AXIS_POINT_INTERVAL
+
+  useEffect(() => {
+    const scrollArea = chartScrollRef.current
+
+    if (scrollArea && pointCount > 1) {
+      scrollArea.scrollLeft = scrollArea.scrollWidth
+      keepYAxisInView(scrollArea)
+    }
+  }, [pointCount])
 
   return (
     <div className="composition-workbench" style={selectedMetricStyle}>
@@ -225,71 +253,81 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
             <p>この指標のデータはまだありません。</p>
           </div>
         ) : (
-          <ChartContainer
-            config={chartConfig}
-            initialDimension={{ width: 240, height: 272 }}
-            className="composition-chart [&_.recharts-responsive-container]:flex-1"
+          <section
+            ref={chartScrollRef}
+            className="composition-chart-scroll"
+            aria-label="身体組成グラフ。横方向にスクロールできます"
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: The scrollable chart needs to be reachable by keyboard.
+            tabIndex={0}
+            onScroll={(event) => keepYAxisInView(event.currentTarget)}
           >
-            <LineChart
-              accessibilityLayer
-              data={logs}
-              margin={{ top: 16, right: 12, bottom: 8, left: 4 }}
-              onClick={({ activeLabel }) => {
-                if (typeof activeLabel === "string") {
-                  setSelectedDate(activeLabel)
-                }
-              }}
+            <ChartContainer
+              config={chartConfig}
+              initialDimension={{ width: chartWidth, height: 272 }}
+              className="composition-chart [&_.recharts-responsive-container]:flex-1"
+              style={{ width: `max(100%, ${chartWidth}px)` }}
             >
-              <CartesianGrid vertical={false} stroke="var(--color-rule)" />
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tickMargin={12}
-                minTickGap={32}
-                tickFormatter={formatAxisDate}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tickMargin={8}
-                width={42}
-                domain={[
-                  (dataMin: number) => dataMin - Y_AXIS_PADDING,
-                  (dataMax: number) => dataMax + Y_AXIS_PADDING,
-                ]}
-                tickFormatter={(value: number) =>
-                  formatNumber(value, { fractionDigits: 1, fixed: true })
-                }
-              />
-              <ChartTooltip
-                trigger="click"
-                cursor={false}
-                content={() => null}
-              />
-              <Line
-                dataKey={selectedMetric}
-                name={selectedOption.label}
-                type="monotone"
-                isAnimationActive={false}
-                stroke={selectedOption.color}
-                strokeWidth={2.5}
-                dot={{
-                  r: 3.5,
-                  fill: selectedOption.color,
-                  stroke: "var(--background)",
-                  strokeWidth: 2,
+              <LineChart
+                accessibilityLayer
+                data={logs}
+                margin={{ top: 16, right: 12, bottom: 8, left: 4 }}
+                onClick={({ activeLabel }) => {
+                  if (typeof activeLabel === "string") {
+                    setSelectedDate(activeLabel)
+                  }
                 }}
-                activeDot={{
-                  r: 5.5,
-                  fill: selectedOption.color,
-                  stroke: "var(--background)",
-                  strokeWidth: 3,
-                }}
-                connectNulls={true}
-              />
-            </LineChart>
-          </ChartContainer>
+              >
+                <CartesianGrid vertical={false} stroke="var(--color-rule)" />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={12}
+                  interval={0}
+                  tickFormatter={formatAxisDate}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={8}
+                  width={Y_AXIS_WIDTH}
+                  domain={[
+                    (dataMin: number) => dataMin - Y_AXIS_PADDING,
+                    (dataMax: number) => dataMax + Y_AXIS_PADDING,
+                  ]}
+                  tickFormatter={(value: number) =>
+                    formatNumber(value, { fractionDigits: 1, fixed: true })
+                  }
+                />
+                <ChartTooltip
+                  trigger="click"
+                  cursor={false}
+                  content={() => null}
+                />
+                <Line
+                  dataKey={selectedMetric}
+                  name={selectedOption.label}
+                  type="monotone"
+                  isAnimationActive={false}
+                  stroke={selectedOption.color}
+                  strokeWidth={2.5}
+                  dot={{
+                    r: 3.5,
+                    fill: selectedOption.color,
+                    stroke: "var(--background)",
+                    strokeWidth: 2,
+                  }}
+                  activeDot={{
+                    r: 5.5,
+                    fill: selectedOption.color,
+                    stroke: "var(--background)",
+                    strokeWidth: 3,
+                  }}
+                  connectNulls={true}
+                />
+              </LineChart>
+            </ChartContainer>
+          </section>
         )}
       </div>
     </div>
