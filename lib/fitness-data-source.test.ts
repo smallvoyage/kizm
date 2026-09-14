@@ -34,10 +34,10 @@ vi.mock("@/lib/notion", () => ({
   notionFitnessDataSource: mocks.notionFitnessDataSource,
 }))
 
-import { fitnessDataSource } from "./fitness-data-source"
-
 describe("fitnessDataSource", () => {
-  it("通常起動ではNotion adapterを共通データ取得契約として公開する", () => {
+  it("通常起動ではNotion adapterを共通データ取得契約として公開する", async () => {
+    const { fitnessDataSource } = await import("./fitness-data-source")
+
     expect(mocks.resolveFitnessDataSource).toHaveBeenCalledWith(process.env)
     expect(fitnessDataSource).toBe(mocks.notionFitnessDataSource)
     expect(mocks.resolveFitnessFixtureScenario).not.toHaveBeenCalled()
