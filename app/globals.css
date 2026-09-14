@@ -2833,12 +2833,42 @@ body {
   font-weight: 600;
 }
 
+/* KIZM-100 · Hallmark component: chart viewport · locked Stat-Led system
+ * Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4
+ */
 .composition-chart {
   width: 100%;
   min-width: 0;
-  max-width: 100%;
+  max-width: none;
   height: 14.5rem;
   color: var(--color-muted);
+}
+
+.composition-chart-scroll {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  touch-action: pan-x pan-y;
+  border-radius: var(--radius-control);
+  outline: var(--rule-strong) solid transparent;
+  outline-offset: var(--space-3xs);
+}
+
+.composition-chart-scroll:focus-visible {
+  outline-color: var(--color-focus);
+}
+
+.composition-chart .recharts-yAxis,
+.composition-chart .recharts-yAxis-tick-labels {
+  pointer-events: none;
+}
+
+.composition-chart .recharts-yAxis-tick-labels text {
+  paint-order: stroke;
+  stroke: var(--color-paper-2);
+  stroke-width: var(--space-2xs);
+  stroke-linejoin: round;
 }
 
 .composition-empty {

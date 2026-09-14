@@ -1,9 +1,22 @@
 "use client"
 
 import { Minus, TrendingDown, TrendingUp } from "lucide-react"
-import { type CSSProperties, useMemo, useState } from "react"
+import {
+  type CSSProperties,
+  type TouchEvent,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
+import {
+  calculatePinchPointInterval,
+  DEFAULT_CHART_POINT_INTERVAL,
+} from "@/components/body-composition-chart-zoom"
 import {
   type ChartConfig,
   ChartContainer,
@@ -20,6 +33,9 @@ const chartConfig = {
 } satisfies ChartConfig
 
 const Y_AXIS_PADDING = 1
+const Y_AXIS_WIDTH = 42
+const CHART_HORIZONTAL_MARGIN = 16
+const CHART_PLOT_LEFT = Y_AXIS_WIDTH + 4
 
 const metricOptions: Array<{
   value: BodyCompositionMetric
@@ -83,16 +99,67 @@ function latestBodyCompositionLog(logs: FitnessLog[]) {
   )
 }
 
+function keepYAxisInView(scrollArea: HTMLElement) {
+  scrollArea
+    .querySelectorAll<SVGGElement>(
+      ".recharts-yAxis, .recharts-yAxis-tick-labels"
+    )
+    .forEach((element) => {
+      element.setAttribute("transform", `translate(${scrollArea.scrollLeft} 0)`)
+    })
+}
+
+function touchDistance(touches: TouchEvent<HTMLElement>["touches"]) {
+  const firstTouch = touches.item(0)
+  const secondTouch = touches.item(1)
+
+  if (!firstTouch || !secondTouch) return 0
+
+  return Math.hypot(
+    secondTouch.clientX - firstTouch.clientX,
+    secondTouch.clientY - firstTouch.clientY
+  )
+}
+
+function touchCenterX(
+  touches: TouchEvent<HTMLElement>["touches"],
+  scrollArea: HTMLElement
+) {
+  const firstTouch = touches.item(0)
+  const secondTouch = touches.item(1)
+
+  if (!firstTouch || !secondTouch) return 0
+
+  return (
+    (firstTouch.clientX + secondTouch.clientX) / 2 -
+    scrollArea.getBoundingClientRect().left
+  )
+}
+
 type BodyCompositionChartProps = {
   logs: FitnessLog[]
 }
 
 export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
+  const chartScrollRef = useRef<HTMLElement>(null)
+  const pinchRef = useRef<{
+    anchorIndex: number
+    initialDistance: number
+    initialInterval: number
+  } | null>(null)
+  const pendingScrollLeftRef = useRef<number | null>(null)
+  const zoomHintId = useId()
   const initialLog = latestBodyCompositionLog(logs)
   const [selectedMetric, setSelectedMetric] =
     useState<BodyCompositionMetric>("weight")
   const [selectedDate, setSelectedDate] = useState<string | null>(
     initialLog?.date ?? null
+  )
+  const [pointInterval, setPointInterval] = useState(
+    DEFAULT_CHART_POINT_INTERVAL
+  )
+  const [visiblePointCount, setVisiblePointCount] = useState<number | null>(
+    null
   )
 
   const latestAxisDate = useMemo(
@@ -136,6 +203,84 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
     "--selected-metric-color": selectedOption.color,
     "--selected-metric-soft": selectedOption.soft,
   } as CSSProperties
+  const pointCount = logs.length
+  const chartWidth =
+    Y_AXIS_WIDTH +
+    CHART_HORIZONTAL_MARGIN +
+    Math.max(pointCount - 1, 0) * pointInterval
+
+  useEffect(() => {
+    const scrollArea = chartScrollRef.current
+
+    if (scrollArea && pointCount > 1) {
+      scrollArea.scrollLeft = scrollArea.scrollWidth
+      keepYAxisInView(scrollArea)
+    }
+  }, [pointCount])
+
+  useLayoutEffect(() => {
+    const scrollArea = chartScrollRef.current
+    const pendingScrollLeft = pendingScrollLeftRef.current
+
+    if (!scrollArea || pendingScrollLeft === null || chartWidth <= 0) return
+
+    const animationFrame = requestAnimationFrame(() => {
+      scrollArea.scrollLeft = pendingScrollLeft
+      keepYAxisInView(scrollArea)
+      pendingScrollLeftRef.current = null
+    })
+
+    return () => cancelAnimationFrame(animationFrame)
+  }, [chartWidth])
+
+  function handleTouchStart(event: TouchEvent<HTMLElement>) {
+    if (event.touches.length !== 2) return
+
+    const scrollArea = event.currentTarget
+    const centerX = touchCenterX(event.touches, scrollArea)
+
+    pinchRef.current = {
+      anchorIndex:
+        (scrollArea.scrollLeft + centerX - CHART_PLOT_LEFT) / pointInterval,
+      initialDistance: touchDistance(event.touches),
+      initialInterval: pointInterval,
+    }
+  }
+
+  function handleTouchMove(event: TouchEvent<HTMLElement>) {
+    const pinch = pinchRef.current
+
+    if (!pinch || event.touches.length !== 2) return
+
+    if (event.cancelable) event.preventDefault()
+
+    const scrollArea = event.currentTarget
+    const nextInterval = calculatePinchPointInterval({
+      initialDistance: pinch.initialDistance,
+      currentDistance: touchDistance(event.touches),
+      initialInterval: pinch.initialInterval,
+    })
+    const centerX = touchCenterX(event.touches, scrollArea)
+
+    pendingScrollLeftRef.current =
+      CHART_PLOT_LEFT + pinch.anchorIndex * nextInterval - centerX
+    setVisiblePointCount(
+      Math.max(
+        1,
+        Math.floor(
+          (scrollArea.clientWidth - CHART_HORIZONTAL_MARGIN - Y_AXIS_WIDTH) /
+            nextInterval
+        ) + 1
+      )
+    )
+    setPointInterval(nextInterval)
+  }
+
+  function handleTouchEnd(event: TouchEvent<HTMLElement>) {
+    if (event.touches.length < 2) {
+      pinchRef.current = null
+    }
+  }
 
   return (
     <div className="composition-workbench" style={selectedMetricStyle}>
@@ -225,71 +370,92 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
             <p>この指標のデータはまだありません。</p>
           </div>
         ) : (
-          <ChartContainer
-            config={chartConfig}
-            initialDimension={{ width: 240, height: 272 }}
-            className="composition-chart [&_.recharts-responsive-container]:flex-1"
+          <section
+            ref={chartScrollRef}
+            className="composition-chart-scroll"
+            aria-label="身体組成グラフ。横方向にスクロールできます"
+            aria-describedby={zoomHintId}
+            data-point-interval={pointInterval}
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: The scrollable chart needs to be reachable by keyboard.
+            tabIndex={0}
+            onScroll={(event) => keepYAxisInView(event.currentTarget)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
           >
-            <LineChart
-              accessibilityLayer
-              data={logs}
-              margin={{ top: 16, right: 12, bottom: 8, left: 4 }}
-              onClick={({ activeLabel }) => {
-                if (typeof activeLabel === "string") {
-                  setSelectedDate(activeLabel)
-                }
-              }}
+            <p id={zoomHintId} className="sr-only" aria-live="polite">
+              2本指で表示日数を調整できます。
+              {visiblePointCount !== null &&
+                `現在の表示範囲は約${visiblePointCount}日です。`}
+            </p>
+            <ChartContainer
+              config={chartConfig}
+              initialDimension={{ width: chartWidth, height: 272 }}
+              className="composition-chart [&_.recharts-responsive-container]:flex-1"
+              style={{ width: `max(100%, ${chartWidth}px)` }}
             >
-              <CartesianGrid vertical={false} stroke="var(--color-rule)" />
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tickMargin={12}
-                minTickGap={32}
-                tickFormatter={formatAxisDate}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tickMargin={8}
-                width={42}
-                domain={[
-                  (dataMin: number) => dataMin - Y_AXIS_PADDING,
-                  (dataMax: number) => dataMax + Y_AXIS_PADDING,
-                ]}
-                tickFormatter={(value: number) =>
-                  formatNumber(value, { fractionDigits: 1, fixed: true })
-                }
-              />
-              <ChartTooltip
-                trigger="click"
-                cursor={false}
-                content={() => null}
-              />
-              <Line
-                dataKey={selectedMetric}
-                name={selectedOption.label}
-                type="monotone"
-                isAnimationActive={false}
-                stroke={selectedOption.color}
-                strokeWidth={2.5}
-                dot={{
-                  r: 3.5,
-                  fill: selectedOption.color,
-                  stroke: "var(--background)",
-                  strokeWidth: 2,
+              <LineChart
+                accessibilityLayer
+                data={logs}
+                margin={{ top: 16, right: 12, bottom: 8, left: 4 }}
+                onClick={({ activeLabel }) => {
+                  if (typeof activeLabel === "string") {
+                    setSelectedDate(activeLabel)
+                  }
                 }}
-                activeDot={{
-                  r: 5.5,
-                  fill: selectedOption.color,
-                  stroke: "var(--background)",
-                  strokeWidth: 3,
-                }}
-                connectNulls={true}
-              />
-            </LineChart>
-          </ChartContainer>
+              >
+                <CartesianGrid vertical={false} stroke="var(--color-rule)" />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={12}
+                  interval={0}
+                  tickFormatter={formatAxisDate}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={8}
+                  width={Y_AXIS_WIDTH}
+                  domain={[
+                    (dataMin: number) => dataMin - Y_AXIS_PADDING,
+                    (dataMax: number) => dataMax + Y_AXIS_PADDING,
+                  ]}
+                  tickFormatter={(value: number) =>
+                    formatNumber(value, { fractionDigits: 1, fixed: true })
+                  }
+                />
+                <ChartTooltip
+                  trigger="click"
+                  cursor={false}
+                  content={() => null}
+                />
+                <Line
+                  dataKey={selectedMetric}
+                  name={selectedOption.label}
+                  type="monotone"
+                  isAnimationActive={false}
+                  stroke={selectedOption.color}
+                  strokeWidth={2.5}
+                  dot={{
+                    r: 3.5,
+                    fill: selectedOption.color,
+                    stroke: "var(--background)",
+                    strokeWidth: 2,
+                  }}
+                  activeDot={{
+                    r: 5.5,
+                    fill: selectedOption.color,
+                    stroke: "var(--background)",
+                    strokeWidth: 3,
+                  }}
+                  connectNulls={true}
+                />
+              </LineChart>
+            </ChartContainer>
+          </section>
         )}
       </div>
     </div>
