@@ -1,9 +1,22 @@
 "use client"
 
 import { Minus, TrendingDown, TrendingUp } from "lucide-react"
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
+import {
+  type CSSProperties,
+  type TouchEvent,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
+import {
+  calculatePinchPointInterval,
+  DEFAULT_CHART_POINT_INTERVAL,
+} from "@/components/body-composition-chart-zoom"
 import {
   type ChartConfig,
   ChartContainer,
@@ -20,9 +33,9 @@ const chartConfig = {
 } satisfies ChartConfig
 
 const Y_AXIS_PADDING = 1
-const X_AXIS_POINT_INTERVAL = 56
 const Y_AXIS_WIDTH = 42
 const CHART_HORIZONTAL_MARGIN = 16
+const CHART_PLOT_LEFT = Y_AXIS_WIDTH + 4
 
 const metricOptions: Array<{
   value: BodyCompositionMetric
@@ -96,17 +109,57 @@ function keepYAxisInView(scrollArea: HTMLElement) {
     })
 }
 
+function touchDistance(touches: TouchEvent<HTMLElement>["touches"]) {
+  const firstTouch = touches.item(0)
+  const secondTouch = touches.item(1)
+
+  if (!firstTouch || !secondTouch) return 0
+
+  return Math.hypot(
+    secondTouch.clientX - firstTouch.clientX,
+    secondTouch.clientY - firstTouch.clientY
+  )
+}
+
+function touchCenterX(
+  touches: TouchEvent<HTMLElement>["touches"],
+  scrollArea: HTMLElement
+) {
+  const firstTouch = touches.item(0)
+  const secondTouch = touches.item(1)
+
+  if (!firstTouch || !secondTouch) return 0
+
+  return (
+    (firstTouch.clientX + secondTouch.clientX) / 2 -
+    scrollArea.getBoundingClientRect().left
+  )
+}
+
 type BodyCompositionChartProps = {
   logs: FitnessLog[]
 }
 
 export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
   const chartScrollRef = useRef<HTMLElement>(null)
+  const pinchRef = useRef<{
+    anchorIndex: number
+    initialDistance: number
+    initialInterval: number
+  } | null>(null)
+  const pendingScrollLeftRef = useRef<number | null>(null)
+  const zoomHintId = useId()
   const initialLog = latestBodyCompositionLog(logs)
   const [selectedMetric, setSelectedMetric] =
     useState<BodyCompositionMetric>("weight")
   const [selectedDate, setSelectedDate] = useState<string | null>(
     initialLog?.date ?? null
+  )
+  const [pointInterval, setPointInterval] = useState(
+    DEFAULT_CHART_POINT_INTERVAL
+  )
+  const [visiblePointCount, setVisiblePointCount] = useState<number | null>(
+    null
   )
 
   const latestAxisDate = useMemo(
@@ -154,7 +207,7 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
   const chartWidth =
     Y_AXIS_WIDTH +
     CHART_HORIZONTAL_MARGIN +
-    Math.max(pointCount - 1, 0) * X_AXIS_POINT_INTERVAL
+    Math.max(pointCount - 1, 0) * pointInterval
 
   useEffect(() => {
     const scrollArea = chartScrollRef.current
@@ -164,6 +217,70 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
       keepYAxisInView(scrollArea)
     }
   }, [pointCount])
+
+  useLayoutEffect(() => {
+    const scrollArea = chartScrollRef.current
+    const pendingScrollLeft = pendingScrollLeftRef.current
+
+    if (!scrollArea || pendingScrollLeft === null || chartWidth <= 0) return
+
+    const animationFrame = requestAnimationFrame(() => {
+      scrollArea.scrollLeft = pendingScrollLeft
+      keepYAxisInView(scrollArea)
+      pendingScrollLeftRef.current = null
+    })
+
+    return () => cancelAnimationFrame(animationFrame)
+  }, [chartWidth])
+
+  function handleTouchStart(event: TouchEvent<HTMLElement>) {
+    if (event.touches.length !== 2) return
+
+    const scrollArea = event.currentTarget
+    const centerX = touchCenterX(event.touches, scrollArea)
+
+    pinchRef.current = {
+      anchorIndex:
+        (scrollArea.scrollLeft + centerX - CHART_PLOT_LEFT) / pointInterval,
+      initialDistance: touchDistance(event.touches),
+      initialInterval: pointInterval,
+    }
+  }
+
+  function handleTouchMove(event: TouchEvent<HTMLElement>) {
+    const pinch = pinchRef.current
+
+    if (!pinch || event.touches.length !== 2) return
+
+    if (event.cancelable) event.preventDefault()
+
+    const scrollArea = event.currentTarget
+    const nextInterval = calculatePinchPointInterval({
+      initialDistance: pinch.initialDistance,
+      currentDistance: touchDistance(event.touches),
+      initialInterval: pinch.initialInterval,
+    })
+    const centerX = touchCenterX(event.touches, scrollArea)
+
+    pendingScrollLeftRef.current =
+      CHART_PLOT_LEFT + pinch.anchorIndex * nextInterval - centerX
+    setVisiblePointCount(
+      Math.max(
+        1,
+        Math.floor(
+          (scrollArea.clientWidth - CHART_HORIZONTAL_MARGIN - Y_AXIS_WIDTH) /
+            nextInterval
+        ) + 1
+      )
+    )
+    setPointInterval(nextInterval)
+  }
+
+  function handleTouchEnd(event: TouchEvent<HTMLElement>) {
+    if (event.touches.length < 2) {
+      pinchRef.current = null
+    }
+  }
 
   return (
     <div className="composition-workbench" style={selectedMetricStyle}>
@@ -257,10 +374,21 @@ export function BodyCompositionChart({ logs }: BodyCompositionChartProps) {
             ref={chartScrollRef}
             className="composition-chart-scroll"
             aria-label="身体組成グラフ。横方向にスクロールできます"
+            aria-describedby={zoomHintId}
+            data-point-interval={pointInterval}
             // biome-ignore lint/a11y/noNoninteractiveTabindex: The scrollable chart needs to be reachable by keyboard.
             tabIndex={0}
             onScroll={(event) => keepYAxisInView(event.currentTarget)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
           >
+            <p id={zoomHintId} className="sr-only" aria-live="polite">
+              2本指で表示日数を調整できます。
+              {visiblePointCount !== null &&
+                `現在の表示範囲は約${visiblePointCount}日です。`}
+            </p>
             <ChartContainer
               config={chartConfig}
               initialDimension={{ width: chartWidth, height: 272 }}

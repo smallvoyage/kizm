@@ -1,4 +1,65 @@
-import { expect, test } from "@playwright/test"
+import { expect, type Locator, test } from "@playwright/test"
+
+async function pinch(
+  scrollArea: Locator,
+  initialDistance: number,
+  currentDistance: number
+) {
+  await scrollArea.evaluate(
+    (element, distances) => {
+      const centerX =
+        element.getBoundingClientRect().left + element.clientWidth / 2
+      const centerY =
+        element.getBoundingClientRect().top + element.clientHeight / 2
+
+      const createTouches = (distance: number) => [
+        new Touch({
+          identifier: 1,
+          target: element,
+          clientX: centerX - distance / 2,
+          clientY: centerY,
+        }),
+        new Touch({
+          identifier: 2,
+          target: element,
+          clientX: centerX + distance / 2,
+          clientY: centerY,
+        }),
+      ]
+      const initialTouches = createTouches(distances.initialDistance)
+      const currentTouches = createTouches(distances.currentDistance)
+
+      element.dispatchEvent(
+        new TouchEvent("touchstart", {
+          bubbles: true,
+          cancelable: true,
+          touches: initialTouches,
+          targetTouches: initialTouches,
+          changedTouches: initialTouches,
+        })
+      )
+      element.dispatchEvent(
+        new TouchEvent("touchmove", {
+          bubbles: true,
+          cancelable: true,
+          touches: currentTouches,
+          targetTouches: currentTouches,
+          changedTouches: currentTouches,
+        })
+      )
+      element.dispatchEvent(
+        new TouchEvent("touchend", {
+          bubbles: true,
+          cancelable: true,
+          touches: [],
+          targetTouches: [],
+          changedTouches: currentTouches,
+        })
+      )
+    },
+    { initialDistance, currentDistance }
+  )
+}
 
 test("身体組成チャートの表示指標を1つずつ切り替えられる", async ({ page }) => {
   await page.goto("/")
@@ -103,4 +164,39 @@ test("モバイルでは横軸の間隔を固定してグラフを横スクロ�
   await expect
     .poll(() => scrollArea.evaluate((element) => element.scrollLeft))
     .toBe(0)
+})
+
+test("モバイルではピンチ操作で表示日数を変更できる", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !["chromium-320", "chromium-390"].includes(testInfo.project.name),
+    "モバイル幅のタッチ操作を検証するテストです。"
+  )
+
+  await page.goto("/")
+
+  const scrollArea = page.getByRole("region", {
+    name: "身体組成グラフ。横方向にスクロールできます",
+  })
+
+  await expect(scrollArea).toHaveAttribute("data-point-interval", "56")
+
+  await pinch(scrollArea, 100, 150)
+  await expect(scrollArea).toHaveAttribute("data-point-interval", "84")
+  await expect(scrollArea).toContainText("現在の表示範囲は約")
+
+  const expandedIntervals = await scrollArea
+    .locator(".recharts-line-dots circle")
+    .evaluateAll((points) =>
+      points.slice(1).map((point, index) => {
+        const previousX = Number(points[index].getAttribute("cx"))
+        const currentX = Number(point.getAttribute("cx"))
+        return Math.round((currentX - previousX) * 10) / 10
+      })
+    )
+  expect(new Set(expandedIntervals)).toEqual(new Set([84]))
+
+  await pinch(scrollArea, 100, 50)
+  await expect(scrollArea).toHaveAttribute("data-point-interval", "42")
 })

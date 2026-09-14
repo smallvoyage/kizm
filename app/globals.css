@@ -2849,6 +2849,7 @@ body {
   min-width: 0;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
+  touch-action: pan-x pan-y;
   border-radius: var(--radius-control);
   outline: var(--rule-strong) solid transparent;
   outline-offset: var(--space-3xs);
