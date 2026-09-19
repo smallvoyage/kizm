@@ -39,6 +39,57 @@ const retrieve = vi.fn()
 const query = vi.fn()
 
 describe("notionFitnessDataSource", () => {
+  it("getDayは日付で絞り込み、毎回Notionから取得する", async () => {
+    vi.stubEnv("NOTION_DAYS_DATA_SOURCE_ID", "single-day-source")
+    retrieve.mockResolvedValue({ properties: {} })
+    mocks.createNotionClient.mockReturnValue({
+      dataSources: { query, retrieve },
+    })
+    mocks.queryAllFullPages.mockResolvedValue([{ id: "day" }])
+    mocks.mapNotionPageToFitnessLog.mockReturnValue({
+      date: "2026-09-19",
+      calories: 100,
+    })
+    expect(await notionFitnessDataSource.getDay("2026-09-19")).toEqual({
+      date: "2026-09-19",
+      calories: 100,
+    })
+    mocks.mapNotionPageToFitnessLog.mockReturnValue({
+      date: "2026-09-19",
+      calories: 200,
+    })
+    expect(await notionFitnessDataSource.getDay("2026-09-19")).toEqual({
+      date: "2026-09-19",
+      calories: 200,
+    })
+    expect(mocks.queryAllFullPages).toHaveBeenCalledTimes(2)
+    expect(mocks.queryAllFullPages).toHaveBeenCalledWith(query, {
+      data_source_id: "single-day-source",
+      page_size: 100,
+      filter: { property: "Date", date: { equals: "2026-09-19" } },
+    })
+    expect(mocks.cacheLife).not.toHaveBeenCalled()
+    expect(mocks.cacheTag).not.toHaveBeenCalled()
+  })
+
+  it("getDayは空・不正なレコードをnullにし、重複や通信失敗はエラーにする", async () => {
+    vi.stubEnv("NOTION_DAYS_DATA_SOURCE_ID", "single-day-edge-source")
+    retrieve.mockResolvedValue({ properties: {} })
+    mocks.createNotionClient.mockReturnValue({
+      dataSources: { query, retrieve },
+    })
+    mocks.queryAllFullPages.mockResolvedValue([])
+    expect(await notionFitnessDataSource.getDay("2026-09-19")).toBeNull()
+    mocks.queryAllFullPages.mockResolvedValue([{}, {}])
+    mocks.mapNotionPageToFitnessLog
+      .mockReturnValueOnce(null)
+      .mockReturnValueOnce({ date: "2026-09-18" })
+    expect(await notionFitnessDataSource.getDay("2026-09-19")).toBeNull()
+    mocks.mapNotionPageToFitnessLog.mockReturnValue({ date: "2026-09-19" })
+    await expect(notionFitnessDataSource.getDay("2026-09-19")).rejects.toThrow()
+    mocks.queryAllFullPages.mockRejectedValueOnce(new Error("upstream"))
+    await expect(notionFitnessDataSource.getDay("2026-09-19")).rejects.toThrow()
+  })
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.clearAllMocks()
