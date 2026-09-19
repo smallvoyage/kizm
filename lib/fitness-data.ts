@@ -8,6 +8,8 @@ export type DaysResult = {
 }
 
 export interface FitnessDataSource {
+  /** 指定日（YYYY-MM-DD）の記録をキャッシュせず取得する。 */
+  getDay(date: string): Promise<FitnessLog | null>
   getDays(): Promise<DaysResult>
   getWorkouts(): Promise<WorkoutSet[]>
 }

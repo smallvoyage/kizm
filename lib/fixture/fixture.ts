@@ -57,6 +57,10 @@ const fixtureWorkouts = fixtureWorkoutDates.flatMap((date, index) => [
 ])
 
 export const fixtureFitnessDataSource = {
+  async getDay(date: string) {
+    const log = fixtureLogs.find((log) => log.date === date)
+    return log ? { ...log } : null
+  },
   async getDays() {
     return {
       logs: fixtureLogs.map((log) => ({ ...log })),

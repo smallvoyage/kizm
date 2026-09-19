@@ -165,6 +165,37 @@ async function getWorkoutSets(): Promise<WorkoutSet[]> {
 }
 
 export const notionFitnessDataSource: FitnessDataSource = {
+  async getDay(date) {
+    const dataSourceId = getRequiredEnvironmentVariable(
+      "NOTION_DAYS_DATA_SOURCE_ID"
+    )
+    const notion = createNotionClient()
+    try {
+      await ensureValidDataSourceSchema(
+        notion,
+        dataSourceId,
+        validateDaysDataSourceSchema
+      )
+      const pages = await queryAllFullPages(notion.dataSources.query, {
+        data_source_id: dataSourceId,
+        page_size: 100,
+        filter: {
+          property: NOTION_DAY_PROPERTY_NAMES.date,
+          date: { equals: date },
+        },
+      })
+      const logs = pages
+        .map(mapNotionPageToFitnessLog)
+        .filter((log): log is FitnessLog => log !== null && log.date === date)
+      if (logs.length > 1)
+        throw new FitnessDataError(
+          "同じ日付の記録が複数あります。NotionのDaysを確認してください。"
+        )
+      return logs[0] ?? null
+    } catch (error: unknown) {
+      throw toFitnessDataError(error, "Days")
+    }
+  },
   getDays: () =>
     fetchFitnessLogs(
       getRequiredEnvironmentVariable("NOTION_DAYS_DATA_SOURCE_ID")

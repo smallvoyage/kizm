@@ -4,6 +4,9 @@ const DAYS_ERROR_MESSAGE = "Daysデータを取得できませんでした。"
 const WORKOUTS_ERROR_MESSAGE = "Workoutsデータを取得できませんでした。"
 
 export const allErrorFixtureFitnessDataSource = {
+  async getDay() {
+    throw new FitnessDataError(DAYS_ERROR_MESSAGE)
+  },
   async getDays() {
     throw new FitnessDataError(DAYS_ERROR_MESSAGE)
   },

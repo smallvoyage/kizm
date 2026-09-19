@@ -199,6 +199,9 @@ MVPで必須なのは `NOTION_TOKEN`、`NOTION_DAYS_DATA_SOURCE_ID`、`NOTION_WO
 
 ## ローカル開発
 
+Apple Watchから今日の摂取カロリー・PFCと残量を確認する手順は、
+[Apple Watchショートカット](docs/apple-watch-shortcut.md)を参照してください。
+
 ```bash
 pnpm dev
 ```
