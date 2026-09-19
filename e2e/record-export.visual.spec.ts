@@ -21,7 +21,11 @@ test(
       const img = dialog.locator("img")
       await expect(img).toBeVisible()
       await img.evaluate((image: HTMLImageElement) => image.decode())
-      await expect(dialog).toHaveScreenshot(`${item.name}-dialog.png`)
+      await expect(dialog).toHaveScreenshot(`${item.name}-dialog.png`, {
+        // 半透明のbackdrop越しに、丸角のアンチエイリアス部分から
+        // 背面チャートのアニメーションが数ピクセル見える場合がある。
+        maxDiffPixels: 5,
+      })
       const bytes = await img.evaluate(async (image: HTMLImageElement) =>
         Array.from(new Uint8Array(await (await fetch(image.src)).arrayBuffer()))
       )
