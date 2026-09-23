@@ -13,7 +13,11 @@ test("身体組成チャートの表示指標を1つずつ切り替えられる"
   const bodyFat = metrics.getByRole("button", { name: /^体脂肪率/ })
   const muscleMass = metrics.getByRole("button", { name: /^筋肉量/ })
 
-  await expect(chart.getByRole("group", { name: "表示期間" })).toHaveCount(0)
+  await expect(
+    chart
+      .getByRole("group", { name: "表示期間" })
+      .getByRole("button", { name: "30日", exact: true })
+  ).toHaveAttribute("aria-pressed", "true")
 
   await test.step("初期表示では体重だけが選択される", async () => {
     await expect(weight).toHaveAttribute("aria-pressed", "true")

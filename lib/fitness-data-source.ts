@@ -7,6 +7,7 @@ import {
 } from "@/lib/fitness-data-source-config"
 import {
   allErrorFixtureFitnessDataSource,
+  denseCompositionFixtureFitnessDataSource,
   emptyFixtureFitnessDataSource,
   fixtureFitnessDataSource,
   missingNutritionFixtureFitnessDataSource,
@@ -16,6 +17,7 @@ import { notionFitnessDataSource } from "@/lib/notion"
 
 const fixtureFitnessDataSources = {
   "all-error": allErrorFixtureFitnessDataSource,
+  "dense-composition": denseCompositionFixtureFitnessDataSource,
   empty: emptyFixtureFitnessDataSource,
   "missing-nutrition": missingNutritionFixtureFitnessDataSource,
   normal: fixtureFitnessDataSource,

@@ -25,6 +25,7 @@ vi.mock("@/lib/fitness-data-source-config", () => ({
 }))
 vi.mock("@/lib/fixture", () => ({
   allErrorFixtureFitnessDataSource: mocks.fixtureFitnessDataSource,
+  denseCompositionFixtureFitnessDataSource: mocks.fixtureFitnessDataSource,
   emptyFixtureFitnessDataSource: mocks.fixtureFitnessDataSource,
   fixtureFitnessDataSource: mocks.fixtureFitnessDataSource,
   missingNutritionFixtureFitnessDataSource: mocks.fixtureFitnessDataSource,

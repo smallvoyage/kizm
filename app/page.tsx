@@ -185,7 +185,10 @@ export default async function Home() {
                     <p>指標を選んで、記録ごとの変化を確認</p>
                   </div>
                 </header>
-                <BodyCompositionChart logs={logs} />
+                <BodyCompositionChart
+                  logs={logs}
+                  referenceDate={referenceDate}
+                />
               </section>
             )}
 
