@@ -52,7 +52,9 @@ test("fixture dashboard shows its primary sections", async ({ page }) => {
     await expect(
       bodyComposition.getByRole("button", { name: /^体重/, pressed: true })
     ).toBeVisible()
-    await expect(bodyComposition.getByText("測定日")).toBeVisible()
+    await expect(
+      bodyComposition.getByText("測定日", { exact: true })
+    ).toBeVisible()
     await expect(bodyComposition.getByRole("application")).toBeVisible()
   })
 

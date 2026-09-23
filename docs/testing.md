@@ -11,6 +11,7 @@
 | シナリオ | 用途 |
 | --- | --- |
 | `normal` | 固定日付の通常データ。通常表示、操作、集計の確認 |
+| `dense-composition` | 90日分の身体組成。高密度・欠測・単一測定・期間内の空状態の確認 |
 | `empty` | DaysとWorkoutsがともに0件の空状態 |
 | `missing-nutrition` | 栄養値が全部または一部未入力の状態。`null`は0ではなく未入力を表す |
 | `workouts-error` | Daysは成功し、Workoutsだけが失敗する部分エラー |
@@ -25,6 +26,8 @@
 ```sh
 pnpm test:e2e:empty
 ```
+
+身体組成グラフの高密度シナリオは、`FITNESS_FIXTURE_SCENARIO=dense-composition pnpm exec playwright test e2e/composition-scroll.spec.ts --project chromium-320 --project chromium-390`で確認する。
 
 Playwrightのweb serverには`playwright.config.ts`が`FITNESS_DATA_SOURCE=fixture`を設定する。
 production buildでfixtureを使うための`FITNESS_ALLOW_FIXTURE_IN_PRODUCTION=true`もテスト実行時に

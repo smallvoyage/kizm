@@ -46,6 +46,13 @@ describe("resolveFitnessDataSource", () => {
 })
 
 describe("resolveFitnessFixtureScenario", () => {
+  test("高密度の身体組成データを選ぶ", () => {
+    expect(
+      resolveFitnessFixtureScenario({
+        FITNESS_FIXTURE_SCENARIO: "dense-composition",
+      })
+    ).toBe("dense-composition")
+  })
   test("未指定時は通常データを選ぶ", () => {
     expect(resolveFitnessFixtureScenario({})).toBe("normal")
   })
