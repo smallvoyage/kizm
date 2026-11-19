@@ -6,7 +6,7 @@ export type NutritionGoals = Record<NutritionMetric, number>
 
 export const NUTRITION_GOALS: NutritionGoals = {
   calories: 1800,
-  protein: 140,
+  protein: 112,
   fat: 50,
-  carbs: 200,
+  carbs: 225,
 }
