@@ -52,12 +52,7 @@ export function runVerification({
     const stepEnvironment = {
       ...environment,
       ...(step.fixture ? FIXTURE_ENVIRONMENT : {}),
-      ...(step.reuseBuild
-        ? {
-            PLAYWRIGHT_REUSE_BUILD: "true",
-            PLAYWRIGHT_VISUAL_REGRESSION: "false",
-          }
-        : {}),
+      ...(step.reuseBuild ? { PLAYWRIGHT_REUSE_BUILD: "true" } : {}),
     }
     const result = runCommand("pnpm", step.args, {
       env: stepEnvironment,

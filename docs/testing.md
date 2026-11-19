@@ -82,7 +82,7 @@ visual baselineを検索し、意図した変更だけをまとめて更新す�
 | --- | --- | --- |
 | unit | 集計、変換、入力検証、error変換、fixtureの契約。DOMやbrowserを必要としない振る舞い | 原則として実装と同じディレクトリ。`pnpm test:unit` |
 | 操作E2E | routing、Server Component／Action、client操作、responsive、accessibilityを通した主要導線 | `e2e/*.spec.ts`。`pnpm test:e2e:functional` |
-| visual regression | CSS、レイアウト、チャート、空・エラー状態など、値のassertionだけでは検出しにくい見た目 | `@visual`を付けたspecとLinux baseline。`pnpm test:e2e:visual` |
+| visual regression | CSS、レイアウト、チャート、空・エラー状態など、値のassertionだけでは検出しにくい見た目 | `@visual`を付けたspecとmacOS baseline。`pnpm test:e2e:visual` |
 
 ドメインロジックの正しさをE2Eだけで担保しない。unit testで入力と出力の境界を細かく確認し、
 E2Eでは利用者が見る代表的な導線を確認する。見た目の差分を操作E2Eの大量のCSS assertionで
@@ -104,10 +104,10 @@ UIを追加・変更した場合は、操作E2Eまたはvisual regressionで320p
 シナリオ専用コマンドが環境変数を切り替える。いずれかが失敗したら job も失敗し、後続は実行しない。
 `missing-nutrition` は現時点で専用の機能 spec がないため、この実行対象には含めない。
 
-- `pnpm test:e2e:visual`: visual regression。`@visual` だけを Linux で実行する。
-- `pnpm test:e2e:visual:empty`: 空状態の visual regression を Linux で実行する。
-- `pnpm test:e2e:visual:all-error`: 全体エラーの visual regression を Linux で実行する。
-- `pnpm test:e2e:visual:workouts-error`: Workouts 部分エラーの visual regression を Linux で実行する。
+- `pnpm test:e2e:visual`: visual regression。`@visual` だけを実行する。
+- `pnpm test:e2e:visual:empty`: 空状態の visual regression を実行する。
+- `pnpm test:e2e:visual:all-error`: 全体エラーの visual regression を実行する。
+- `pnpm test:e2e:visual:workouts-error`: Workouts 部分エラーの visual regression を実行する。
 
 GitHub Actions では `.github/workflows/ci.yml` と
 `.github/workflows/visual-regression.yml` を分けているため、操作 E2E と visual
@@ -190,36 +190,21 @@ gh api repos/watagit/kizm/rulesets/<ruleset-id>
 
 ## Visual baseline の基準環境
 
-baseline の正本は Linux 用だけとし、macOS 用 baseline は管理しない。
-実行環境は
-`mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e`、
-テストランナーは `@playwright/test` 1.62.1 に固定する。Playwright を更新するときは
-`package.json`、lockfile、workflow とこの文書のコンテナタグ・digest を同時に更新し、
-すべての baseline を作り直す。
+このサービスの利用者・開発者は macOS 環境のみのため、baseline の正本は macOS 用
+（`*-darwin.png`）だけとし、Linux 用 baseline は管理しない。visual regression は CI では
+実行せず、ローカルの macOS で `pnpm test:e2e:visual` を直接実行する。
 
-`pnpm test:e2e:visual` と `pnpm test:e2e:visual:update` は Linux 以外では失敗する。
-ローカルでは次の固定コンテナから実行する。
-
-```sh
-docker run --rm --ipc=host \
-  --user "$(id -u):$(id -g)" \
-  -e CI=1 \
-  -e HOME=/tmp \
-  -e PNPM_HOME=/tmp/pnpm-home \
-  -v "$PWD:/work" \
-  -w /work \
-  mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e \
-  bash -lc 'npm install --global --prefix "$PNPM_HOME" pnpm@10.33.0 && export PATH="$PNPM_HOME/bin:$PATH" && pnpm install --store-dir /tmp/pnpm-store --frozen-lockfile && pnpm test:e2e:visual'
-```
+macOS、Chromium、`@playwright/test` の更新で描画が変わった場合は、差分が環境起因であることを
+確認したうえで全 baseline を作り直す。
 
 ## Baseline の更新と目視確認
 
 baselineを更新してよいのは、レビュー対象のUI、fixture、撮影対象、または固定したPlaywright環境の
 意図した変更により、正しい表示が変わる場合だけとする。単にvisual regressionを成功させるため、
-原因を説明できない差分を受け入れるため、またはローカルOSの差分を消すためには更新しない。
+原因を説明できない差分を受け入れるためには更新しない。
 
 1. 先に失敗時のactual、expected、diffを確認し、実装またはfixtureの不具合ではないことを確認する。
-2. 上記コンテナ内で`pnpm test:e2e:visual:update`を実行する。シナリオ固有のbaselineを
+2. `pnpm test:e2e:visual:update`を実行する。シナリオ固有のbaselineを
    変更した場合は、該当する次のコマンドにも`--update-snapshots`を付けて実行する。
 
    - `pnpm test:e2e:visual:empty`
@@ -228,7 +213,7 @@ baselineを更新してよいのは、レビュー対象のUI、fixture、撮影
 
 3. 変更された`e2e/*.spec.ts-snapshots/`の画像をすべて開き、320px、390px、身体組成の各指標、
    空状態、全体エラー、部分エラーについて、意図した表示だけが変化していることを目視確認する。
-4. 更新に使った各コマンドを`--update-snapshots`なしで同じコンテナから再実行し、baselineと
+4. 更新に使った各コマンドを`--update-snapshots`なしで再実行し、baselineと
    一致することを確認する。
 5. spec、fixture、baselineを同じPRに含め、レビュー時にも変更画像を目視確認する。
 
@@ -239,7 +224,7 @@ baselineを更新してよいのは、レビュー対象のUI、fixture、撮影
 後続のbaseline担当は、先行するUI変更を統合先へ取り込んだ後、その最新状態から生成する。
 
 競合時にどちらかの画像を機械的に選んだり、別worktreeで生成した画像をコピーしたりしない。
-統合後のコードとfixtureから固定Linux環境で全baselineを再生成し、全画像を目視確認する。
+統合後のコードとfixtureから全baselineを再生成し、全画像を目視確認する。
 
 ## 統合時の再検証
 
@@ -256,17 +241,15 @@ projectの `normal` 機能E2E、Chromium の `empty`・`all-error`・`workouts-e
 `@visual` は除外する。通常シナリオでは Firefox と WebKit も使うため、初回は
 `pnpm exec playwright install firefox webkit` で追加する。
 別worktreeのserverや成果物を使わず、統合を行うworktree自身で実行する。
-visual baselineに影響する変更では、これに加えて固定Linux環境のvisual regressionも再実行し、
+visual baselineに影響する変更では、これに加えてvisual regressionも再実行し、
 成功結果と目視確認をmerge前に確認する。
 
-## CI 失敗時の確認
+## visual regression 失敗時の確認
 
-`Linux visual regression` が失敗すると、GitHub Actions の run に
-`visual-regression-failure-<run id>-<attempt>` artifact が14日間保存される。
-artifact には次を含む。
+失敗時の出力は worktree 内の次の場所に保存される。
 
 - `test-results/<scenario>/`: expected、actual、diff 画像と `trace.zip`
 - `playwright-report/<scenario>/`: HTML report
 
-HTML report は展開後に `pnpm exec playwright show-report <展開先>/playwright-report/<scenario>` で開く。
+HTML report は `pnpm exec playwright show-report playwright-report/<scenario>` で開く。
 trace は `pnpm exec playwright show-trace <trace.zip>` で確認する。
