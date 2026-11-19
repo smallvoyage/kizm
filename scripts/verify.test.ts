@@ -63,7 +63,6 @@ describe("runVerification", () => {
         NOTION_TOKEN: "",
         FITNESS_DATA_SOURCE: "notion",
         FITNESS_FIXTURE_SCENARIO: "empty",
-        PLAYWRIGHT_VISUAL_REGRESSION: "true",
         PLAYWRIGHT_PORT: "4193",
       },
       output: { log: vi.fn(), error: vi.fn() },
@@ -92,7 +91,6 @@ describe("runVerification", () => {
         FITNESS_DATA_SOURCE: "fixture",
         FITNESS_FIXTURE_SCENARIO: "normal",
         PLAYWRIGHT_REUSE_BUILD: "true",
-        PLAYWRIGHT_VISUAL_REGRESSION: "false",
         PLAYWRIGHT_PORT: "4193",
       })
     }
