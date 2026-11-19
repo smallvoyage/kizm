@@ -71,9 +71,9 @@ describe("GET /api/nutrition/today", () => {
       date: "2026-09-19",
       status: "complete",
       fetchedAt: "2026-09-19T09:35:00.000Z",
-      metrics: { calories: { consumed: 1450, goal: 1800, remaining: 350 } },
+      metrics: { calories: { consumed: 1450, goal: 2100, remaining: 650 } },
     })
-    expect(body.displayText).toContain("残り 350 kcal")
+    expect(body.displayText).toContain("残り 650 kcal")
     mocks.getDay.mockResolvedValue({ ...record, calories: 1600 })
     expect(
       (await (await GET(request())).json()).metrics.calories.consumed
