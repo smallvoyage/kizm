@@ -60,7 +60,7 @@ const validWorkoutsSchemaProperties = {
   "Exercised Day": createTitleSchemaProperty("exercised-day", "Exercised Day"),
   Category: createSelectSchemaProperty("category", "Category"),
   Exercise: createSelectSchemaProperty("exercise", "Exercise"),
-  "Weight kg": createRichTextSchemaProperty("weight", "Weight kg"),
+  "Weight kg": createNumberSchemaProperty("weight", "Weight kg"),
   Reps: createNumberSchemaProperty("reps", "Reps"),
   "Set Count": createNumberSchemaProperty("set-count", "Set Count"),
 } satisfies PartialDataSourceObjectResponse["properties"]
@@ -112,7 +112,7 @@ function createText(content: string): RichTextItemResponse {
 
 function createWorkoutPage(
   id: string,
-  values: { date: string; weight: string; reps: number }
+  values: { date: string; weight: number | null; reps: number }
 ): PageObjectResponse {
   const properties = {
     "Exercised Day": {
@@ -130,11 +130,7 @@ function createWorkoutPage(
       type: "select",
       select: { id: "bench-press", name: "ベンチプレス", color: "red" },
     },
-    "Weight kg": {
-      id: "weight",
-      type: "rich_text",
-      rich_text: [createText(values.weight)],
-    },
+    "Weight kg": { id: "weight", type: "number", number: values.weight },
     Reps: { id: "reps", type: "number", number: values.reps },
     "Set Count": { id: "set-count", type: "number", number: 3 },
   } satisfies PageObjectResponse["properties"]
@@ -166,17 +162,17 @@ function createWorkoutPage(
 export const invalidNotionWorkoutPageFixtures = {
   invalidDate: createWorkoutPage("workout-invalid-date", {
     date: "2026-02-30",
-    weight: "80",
+    weight: 80,
     reps: 8,
   }),
   invalidWeight: createWorkoutPage("workout-invalid-weight", {
     date: "2026-08-20",
-    weight: "heavy",
+    weight: -5,
     reps: 8,
   }),
   invalidReps: createWorkoutPage("workout-invalid-reps", {
     date: "2026-08-20",
-    weight: "80",
+    weight: 80,
     reps: 0,
   }),
 } as const

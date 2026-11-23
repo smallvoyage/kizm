@@ -69,7 +69,7 @@ function createRollupNumberProperty(id: string, number: number) {
 
 function createWorkoutPage(
   id: string,
-  values: { dateParts: string[]; weightParts: string[] }
+  values: { dateParts: string[]; weight: number | null }
 ) {
   return createPage(id, {
     "Exercised Day": {
@@ -87,11 +87,7 @@ function createWorkoutPage(
       type: "select",
       select: { id: "bench-press", name: "ベンチプレス", color: "red" },
     },
-    "Weight kg": {
-      id: "weight",
-      type: "rich_text",
-      rich_text: values.weightParts.map(createText),
-    },
+    "Weight kg": { id: "weight", type: "number", number: values.weight },
     Reps: createNumberProperty("reps", 8),
     "Set Count": createNumberProperty("set-count", 3),
   })
@@ -119,13 +115,21 @@ export const notionMapperPageFixtures = {
     }),
   },
   workouts: {
-    richTextWeightAndTitleDate: createWorkoutPage("workout-normalized", {
+    numberWeightAndTitleDate: createWorkoutPage("workout-normalized", {
       dateParts: ["2026-08-", "20T09:30:00.000+09:00"],
-      weightParts: ["82", ".5"],
+      weight: 82.5,
     }),
-    invalidWeight: createWorkoutPage("workout-invalid-weight", {
+    zeroWeight: createWorkoutPage("workout-zero-weight", {
       dateParts: ["2026-08-20"],
-      weightParts: ["heavy"],
+      weight: 0,
+    }),
+    missingWeight: createWorkoutPage("workout-missing-weight", {
+      dateParts: ["2026-08-20"],
+      weight: null,
+    }),
+    negativeWeight: createWorkoutPage("workout-negative-weight", {
+      dateParts: ["2026-08-20"],
+      weight: -5,
     }),
   },
 } as const

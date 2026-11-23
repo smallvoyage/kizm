@@ -113,10 +113,7 @@ export function mapNotionPageToWorkoutSet(
     exerciseProperty?.type === "select"
       ? (exerciseProperty.select?.name.trim() ?? null)
       : null
-  const weightText = getPlainText(
-    properties[NOTION_WORKOUT_PROPERTY_NAMES.weight]
-  )
-  const weightKg = weightText === null ? Number.NaN : Number(weightText)
+  const weightKg = getNumber(properties, NOTION_WORKOUT_PROPERTY_NAMES.weight)
   const reps = getNumber(properties, NOTION_WORKOUT_PROPERTY_NAMES.reps)
   const setCount = getNumber(properties, NOTION_WORKOUT_PROPERTY_NAMES.setCount)
 
@@ -124,6 +121,7 @@ export function mapNotionPageToWorkoutSet(
     !date ||
     !isCalendarDate(date) ||
     !exercise ||
+    weightKg === null ||
     !Number.isFinite(weightKg) ||
     weightKg < 0 ||
     reps === null ||

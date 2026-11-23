@@ -17,7 +17,7 @@ const validWorkoutsProperties = {
   "Exercised Day": { type: "title" },
   Category: { type: "select" },
   Exercise: { type: "select" },
-  "Weight kg": { type: "rich_text" },
+  "Weight kg": { type: "number" },
   Reps: { type: "number" },
   "Set Count": { type: "number" },
 }
@@ -74,13 +74,13 @@ describe("validateWorkoutsDataSourceSchema", () => {
         "Exercised Day": { type: "date" },
         Category: { type: "multi_select" },
         Exercise: { type: "rich_text" },
-        "Weight kg": { type: "number" },
+        "Weight kg": { type: "rich_text" },
         Reps: { type: "formula" },
         "Set Count": { type: "formula" },
       })
     ).toThrowError(
       new FitnessDataError(
-        "NotionのWorkoutsプロパティの型を確認してください: Exercised Day (title), Category (select), Exercise (select), Weight kg (rich_text), Reps (number), Set Count (number)"
+        "NotionのWorkoutsプロパティの型を確認してください: Exercised Day (title), Category (select), Exercise (select), Weight kg (number), Reps (number), Set Count (number)"
       )
     )
   })

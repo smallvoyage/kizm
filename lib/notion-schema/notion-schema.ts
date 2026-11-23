@@ -13,7 +13,7 @@ const REQUIRED_WORKOUTS_PROPERTY_TYPES = {
   "Exercised Day": "title",
   Category: "select",
   Exercise: "select",
-  "Weight kg": "rich_text",
+  "Weight kg": "number",
   Reps: "number",
   "Set Count": "number",
 } as const
