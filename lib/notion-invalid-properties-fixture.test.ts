@@ -60,10 +60,7 @@ describe("invalidNotionDataSourceFixtures", () => {
 describe("invalidNotionWorkoutPageFixtures", () => {
   test.each([
     ["不正な日付", invalidNotionWorkoutPageFixtures.invalidDate],
-    [
-      "数値として解釈できない重量",
-      invalidNotionWorkoutPageFixtures.invalidWeight,
-    ],
+    ["負の重量", invalidNotionWorkoutPageFixtures.invalidWeight],
     ["0回の回数", invalidNotionWorkoutPageFixtures.invalidReps],
   ])("%sを含むWorkout行がmapperで除外される", (_caseName, page) => {
     expect(mapNotionPageToWorkoutSet(page)).toBeNull()

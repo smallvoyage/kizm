@@ -46,10 +46,10 @@ describe("mapNotionPageToFitnessLog", () => {
 })
 
 describe("mapNotionPageToWorkoutSet", () => {
-  test("rich text重量とtitle日付をWorkoutSetへ正規化する", () => {
+  test("number型の重量とtitle日付をWorkoutSetへ正規化する", () => {
     expect(
       mapNotionPageToWorkoutSet(
-        notionMapperPageFixtures.workouts.richTextWeightAndTitleDate
+        notionMapperPageFixtures.workouts.numberWeightAndTitleDate
       )
     ).toEqual({
       date: "2026-08-20",
@@ -61,9 +61,16 @@ describe("mapNotionPageToWorkoutSet", () => {
     })
   })
 
-  test("無効な重量を含む行を除外する", () => {
+  test("自重種目などの0kgの重量を許容する", () => {
     expect(
-      mapNotionPageToWorkoutSet(notionMapperPageFixtures.workouts.invalidWeight)
-    ).toBeNull()
+      mapNotionPageToWorkoutSet(notionMapperPageFixtures.workouts.zeroWeight)
+    ).toMatchObject({ weightKg: 0 })
+  })
+
+  test.each([
+    ["未入力の重量", notionMapperPageFixtures.workouts.missingWeight],
+    ["負の重量", notionMapperPageFixtures.workouts.negativeWeight],
+  ])("%sを含む行を除外する", (_caseName, page) => {
+    expect(mapNotionPageToWorkoutSet(page)).toBeNull()
   })
 })
