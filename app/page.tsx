@@ -2,6 +2,7 @@ import { Activity, Database, TriangleAlert } from "lucide-react"
 import { connection } from "next/server"
 
 import { BodyCompositionChart } from "@/components/body-composition-chart"
+import { BodyCompositionGoalProgress } from "@/components/body-composition-goal-progress"
 import { DailySummaryExport } from "@/components/daily-summary-export"
 import { NutritionHeatmap } from "@/components/nutrition-heatmap"
 import { NutritionSummary } from "@/components/nutrition-summary"
@@ -10,11 +11,13 @@ import { TrainingProgress } from "@/components/training-progress"
 import { TrainingRecordExport } from "@/components/training-record-export"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { WeeklyReview } from "@/components/weekly-review"
+import { BODY_COMPOSITION_GOALS } from "@/lib/body-composition-goals"
 import {
   type FitnessLog,
   getLatestNutritionLog,
   type WorkoutSet,
 } from "@/lib/fitness"
+import { getBodyCompositionGoalProgress } from "@/lib/fitness/body-composition-goal/body-composition-goal"
 import { FitnessDataError } from "@/lib/fitness-data"
 import { fitnessDataSource } from "@/lib/fitness-data-source"
 import { NUTRITION_GOALS } from "@/lib/nutrition-goals"
@@ -77,6 +80,11 @@ export default async function Home() {
 
   const latestNutritionLog = getLatestNutritionLog(logs)
   const latestRecordDate = logs.at(-1)?.date ?? null
+  const goalProgress = getBodyCompositionGoalProgress(
+    logs,
+    BODY_COMPOSITION_GOALS,
+    referenceDate
+  )
   const hasSourceError = Boolean(errorMessage || workoutErrorMessage)
   const hasNoRecords = logs.length === 0 && workoutSets.length === 0
   const shouldShowEmptyState = !hasSourceError && hasNoRecords
@@ -141,6 +149,10 @@ export default async function Home() {
                 <AlertTitle>日次データを読み込めませんでした</AlertTitle>
                 <AlertDescription>{errorMessage}</AlertDescription>
               </Alert>
+            )}
+
+            {logs.length > 0 && (
+              <BodyCompositionGoalProgress progress={goalProgress} />
             )}
 
             {logs.length > 0 && <WeeklyReview logs={logs} />}
