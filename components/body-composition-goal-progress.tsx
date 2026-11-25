@@ -1,7 +1,5 @@
-"use client"
-
 import { CircleCheck } from "lucide-react"
-import { type CSSProperties, useEffect, useState } from "react"
+import type { CSSProperties } from "react"
 
 import type {
   BodyCompositionGoalMetric,
@@ -78,14 +76,6 @@ function formatRemaining(remaining: number, unit: string) {
   return `あと ${formatValue(Math.abs(remaining))} ${unit} ${direction}`
 }
 
-function formatWeeklyChange(value: number, unit: string) {
-  const formatted = formatNumber(Math.abs(value), {
-    fractionDigits: 2,
-    fixed: true,
-  })
-  return `週 ${value > 0 ? "+" : "−"}${formatted} ${unit} ペース`
-}
-
 function formatDaysRemaining(daysRemaining: number | null) {
   if (daysRemaining === null) return null
   if (daysRemaining > 0) return `あと${daysRemaining}日`
@@ -125,276 +115,58 @@ function toMetricView(progress: BodyCompositionGoalMetricProgress): MetricView {
   }
 }
 
-function GoalProgressBar({ view }: { view: MetricView }) {
+function GoalCard({ view }: { view: MetricView }) {
+  const { current, baseline, target, achieved } = view.progress
+
   return (
-    <div
-      className="goal-bar"
-      role="progressbar"
-      aria-label={`${view.display.label}の目標進捗`}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={view.percent ?? undefined}
-      aria-valuetext={view.percent === null ? "記録なし" : `${view.percent}%`}
+    <article
+      className="goal-card"
+      data-goal-metric={view.progress.metric}
+      data-status={view.dataStatus}
+      style={view.style}
     >
-      <span />
-    </div>
-  )
-}
-
-function GoalStatus({ view }: { view: MetricView }) {
-  return (
-    <p className="goal-row-status">
-      {view.progress.achieved && <CircleCheck aria-hidden="true" />}
-      {view.status}
-    </p>
-  )
-}
-
-function CurrentValue({ view }: { view: MetricView }) {
-  const { current } = view.progress
-  return (
-    <p className="goal-row-value">
-      <strong>{current === null ? "—" : formatValue(current.value)}</strong>
-      <span>{current === null ? "" : view.display.unit}</span>
-    </p>
-  )
-}
-
-function baselineText(view: MetricView) {
-  const { baseline } = view.progress
-  if (baseline === null || view.percent === null) {
-    return "記録が追加されると進捗を表示します"
-  }
-  return `${formatShortDate(baseline.date)}の${formatValue(baseline.value)} ${view.display.unit}から ${view.percent}%`
-}
-
-/* パターンA: リスト */
-function ListPattern({ views }: { views: MetricView[] }) {
-  return (
-    <div className="goal-summary" data-goal-pattern="list">
-      {views.map((view) => (
-        <article
-          key={view.progress.metric}
-          className="goal-row"
-          data-goal-metric={view.progress.metric}
-          data-status={view.dataStatus}
-          style={view.style}
-        >
-          <header className="goal-row-heading">
-            <h3>{view.display.label}</h3>
-            <GoalStatus view={view} />
-          </header>
-          <CurrentValue view={view} />
-          <p className="goal-row-target">
-            目標 {formatTarget(view.progress.target, view.display.unit)}
-          </p>
-          <GoalProgressBar view={view} />
-          <p className="goal-row-meta">
-            <span>{baselineText(view)}</span>
-            {view.progress.requiredWeeklyChange !== null && (
-              <span>
-                {formatWeeklyChange(
-                  view.progress.requiredWeeklyChange,
-                  view.display.unit
-                )}
-              </span>
-            )}
-          </p>
-        </article>
-      ))}
-    </div>
-  )
-}
-
-/* パターンB: カード */
-function CardPattern({ views }: { views: MetricView[] }) {
-  return (
-    <div className="goal-cards" data-goal-pattern="cards">
-      {views.map((view) => (
-        <article
-          key={view.progress.metric}
-          className="goal-card"
-          data-goal-metric={view.progress.metric}
-          data-status={view.dataStatus}
-          style={view.style}
-        >
-          <h3>{view.display.label}</h3>
-          <p className="goal-card-percent">
-            <strong>{view.percent === null ? "—" : view.percent}</strong>
-            {view.percent !== null && <span>%</span>}
-          </p>
-          <GoalProgressBar view={view} />
-          <dl className="goal-card-values">
-            <div>
-              <dt>現在</dt>
-              <dd>
-                {view.progress.current === null
-                  ? "—"
-                  : `${formatValue(view.progress.current.value)} ${view.display.unit}`}
-              </dd>
-            </div>
-            <div>
-              <dt>目標</dt>
-              <dd>{formatTarget(view.progress.target, view.display.unit)}</dd>
-            </div>
-          </dl>
-          <GoalStatus view={view} />
-        </article>
-      ))}
-    </div>
-  )
-}
-
-/* パターンC: トラック（起点→現在→目標） */
-function TrackPattern({ views }: { views: MetricView[] }) {
-  return (
-    <div className="goal-summary" data-goal-pattern="track">
-      {views.map((view) => {
-        const { baseline, current, target } = view.progress
-        return (
-          <article
-            key={view.progress.metric}
-            className="goal-track-row"
-            data-goal-metric={view.progress.metric}
-            data-status={view.dataStatus}
-            style={view.style}
-          >
-            <header className="goal-track-heading">
-              <h3>{view.display.label}</h3>
-              <GoalStatus view={view} />
-            </header>
-            <div className="goal-track">
-              <GoalProgressBar view={view} />
-              {view.percent !== null && (
-                <span className="goal-track-marker" aria-hidden="true" />
-              )}
-            </div>
-            <dl className="goal-track-points">
-              <div>
-                <dt>
-                  {baseline === null
-                    ? "起点"
-                    : `起点 ${formatShortDate(baseline.date)}`}
-                </dt>
-                <dd>{baseline === null ? "—" : formatValue(baseline.value)}</dd>
-              </div>
-              <div data-point="current">
-                <dt>
-                  {current === null
-                    ? "現在"
-                    : `現在 ${formatShortDate(current.date)}`}
-                </dt>
-                <dd>{current === null ? "—" : formatValue(current.value)}</dd>
-              </div>
-              <div data-point="target">
-                <dt>目標</dt>
-                <dd>{formatTarget(target, view.display.unit)}</dd>
-              </div>
-            </dl>
-          </article>
-        )
-      })}
-    </div>
-  )
-}
-
-/* パターンD: ダイジェスト（全体進捗＋一覧表） */
-function DigestPattern({
-  views,
-  progress,
-}: {
-  views: MetricView[]
-  progress: BodyCompositionGoalProgressModel
-}) {
-  const overall =
-    progress.overallProgressRatio === null
-      ? null
-      : Math.round(progress.overallProgressRatio * 100)
-
-  return (
-    <div className="goal-digest" data-goal-pattern="digest">
+      <h3>{view.display.label}</h3>
+      <p className="goal-card-percent">
+        <strong>{view.percent === null ? "—" : view.percent}</strong>
+        {view.percent !== null && <span>%</span>}
+      </p>
       <div
-        className="goal-digest-overview"
-        style={
-          {
-            "--goal-progress": progress.overallProgressRatio ?? 0,
-          } as CSSProperties
-        }
+        className="goal-bar"
+        role="progressbar"
+        aria-label={`${view.display.label}の目標進捗`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={view.percent ?? undefined}
+        aria-valuetext={view.percent === null ? "記録なし" : `${view.percent}%`}
       >
-        <div
-          className="goal-ring"
-          role="progressbar"
-          aria-label="最終目標の全体進捗"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={overall ?? undefined}
-          aria-valuetext={overall === null ? "記録なし" : `${overall}%`}
-        >
-          <span className="goal-ring-value">
-            <strong>{overall === null ? "—" : overall}</strong>
-            {overall !== null && <span>%</span>}
-          </span>
-        </div>
-        <dl className="goal-digest-stats">
-          <div>
-            <dt>達成</dt>
-            <dd>
-              <strong>{progress.achievedCount}</strong> / {views.length}
-            </dd>
-          </div>
-          <div>
-            <dt>残り</dt>
-            <dd>
-              {progress.daysRemaining === null ? (
-                "—"
-              ) : (
-                <>
-                  <strong>{Math.max(progress.daysRemaining, 0)}</strong> 日
-                </>
-              )}
-            </dd>
-          </div>
-        </dl>
+        <span />
       </div>
-      <ul className="goal-digest-list">
-        {views.map((view) => (
-          <li
-            key={view.progress.metric}
-            data-goal-metric={view.progress.metric}
-            data-status={view.dataStatus}
-            style={view.style}
-          >
-            <span className="goal-digest-label">{view.display.label}</span>
-            <span className="goal-digest-value">
-              {view.progress.current === null
-                ? "—"
-                : formatValue(view.progress.current.value)}
-              <small>
-                {" → "}
-                {formatTarget(view.progress.target, view.display.unit)}
-              </small>
-            </span>
-            <GoalStatus view={view} />
-          </li>
-        ))}
-      </ul>
-    </div>
+      <dl className="goal-card-values">
+        <div>
+          <dt>現在</dt>
+          <dd>
+            {current === null
+              ? "—"
+              : `${formatValue(current.value)} ${view.display.unit}`}
+          </dd>
+        </div>
+        <div>
+          <dt>目標</dt>
+          <dd>{formatTarget(target, view.display.unit)}</dd>
+        </div>
+      </dl>
+      <p className="goal-card-status">
+        {achieved && <CircleCheck aria-hidden="true" />}
+        {view.status}
+      </p>
+      {baseline !== null && (
+        <p className="goal-card-baseline">
+          起点 {formatShortDate(baseline.date)} {formatValue(baseline.value)}{" "}
+          {view.display.unit}
+        </p>
+      )}
+    </article>
   )
-}
-
-const patterns = [
-  { value: "list", label: "リスト" },
-  { value: "cards", label: "カード" },
-  { value: "track", label: "トラック" },
-  { value: "digest", label: "ダイジェスト" },
-] as const
-
-type GoalPattern = (typeof patterns)[number]["value"]
-
-const PATTERN_STORAGE_KEY = "kizm:goal-pattern"
-
-function isGoalPattern(value: unknown): value is GoalPattern {
-  return patterns.some((pattern) => pattern.value === value)
 }
 
 export function BodyCompositionGoalProgress({
@@ -402,27 +174,7 @@ export function BodyCompositionGoalProgress({
 }: {
   progress: BodyCompositionGoalProgressModel
 }) {
-  const [pattern, setPattern] = useState<GoalPattern>("list")
   const daysRemaining = formatDaysRemaining(progress.daysRemaining)
-  const views = progress.metrics.map(toMetricView)
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(PATTERN_STORAGE_KEY)
-      if (isGoalPattern(stored)) setPattern(stored)
-    } catch {
-      // 保存できない環境では初期パターンのまま表示する。
-    }
-  }, [])
-
-  function selectPattern(next: GoalPattern) {
-    setPattern(next)
-    try {
-      window.localStorage.setItem(PATTERN_STORAGE_KEY, next)
-    } catch {
-      // 保存できなくても表示の切り替えは継続する。
-    }
-  }
 
   return (
     <section
@@ -431,7 +183,7 @@ export function BodyCompositionGoalProgress({
     >
       <header className="dashboard-section-heading">
         <div>
-          <h2 id="body-composition-goal-heading">最終目標</h2>
+          <h2 id="body-composition-goal-heading">目標</h2>
           <p>
             <time dateTime={progress.deadline}>
               {formatDeadline(progress.deadline)}
@@ -446,27 +198,11 @@ export function BodyCompositionGoalProgress({
           </p>
         </div>
       </header>
-
-      <fieldset className="goal-pattern-switcher">
-        <legend className="sr-only">最終目標の表示パターン</legend>
-        {patterns.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={pattern === option.value}
-            onClick={() => selectPattern(option.value)}
-          >
-            {option.label}
-          </button>
+      <div className="goal-cards">
+        {progress.metrics.map((metric) => (
+          <GoalCard key={metric.metric} view={toMetricView(metric)} />
         ))}
-      </fieldset>
-
-      {pattern === "list" && <ListPattern views={views} />}
-      {pattern === "cards" && <CardPattern views={views} />}
-      {pattern === "track" && <TrackPattern views={views} />}
-      {pattern === "digest" && (
-        <DigestPattern views={views} progress={progress} />
-      )}
+      </div>
     </section>
   )
 }

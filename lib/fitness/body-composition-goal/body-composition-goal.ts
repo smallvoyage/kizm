@@ -52,10 +52,6 @@ export type BodyCompositionGoalProgress = {
   /** 基準日から期限までの日数。期限当日は0、期限超過は負。基準日が不正ならnull。 */
   daysRemaining: number | null
   metrics: BodyCompositionGoalMetricProgress[]
-  /** 達成済みの指標数。 */
-  achievedCount: number
-  /** 進捗率を判定できた指標の平均（0〜1）。1件もなければnull。 */
-  overallProgressRatio: number | null
 }
 
 const BODY_COMPOSITION_GOAL_METRICS: BodyCompositionGoalMetric[] = [
@@ -181,21 +177,12 @@ export function getBodyCompositionGoalProgress(
   referenceDate: string
 ): BodyCompositionGoalProgress {
   const daysRemaining = daysBetween(referenceDate, goals.deadline)
-  const metrics = BODY_COMPOSITION_GOAL_METRICS.map((metric) =>
-    getMetricProgress(logs, metric, goals.targets[metric], daysRemaining)
-  )
-  const ratios = metrics
-    .map((metric) => metric.progressRatio)
-    .filter((ratio): ratio is number => ratio !== null)
 
   return {
     deadline: goals.deadline,
     daysRemaining,
-    metrics,
-    achievedCount: metrics.filter((metric) => metric.achieved).length,
-    overallProgressRatio:
-      ratios.length === 0
-        ? null
-        : ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length,
+    metrics: BODY_COMPOSITION_GOAL_METRICS.map((metric) =>
+      getMetricProgress(logs, metric, goals.targets[metric], daysRemaining)
+    ),
   }
 }

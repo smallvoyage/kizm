@@ -180,26 +180,8 @@ describe("getBodyCompositionGoalProgress", () => {
     expect(weight?.progressRatio).toBe(0)
   })
 
-  it("達成数と全体の平均進捗を求める", () => {
-    const progress = getBodyCompositionGoalProgress(
-      [
-        log("2026-11-01", { weight: 70, muscleMass: 29.3 }),
-        log("2026-11-24", { weight: 68, muscleMass: 30.3 }),
-      ],
-      goals,
-      "2026-11-25"
-    )
-
-    // 体重は達成（1.0）、骨格筋量は50%、体脂肪系は未記録で平均から除外
-    expect(progress.achievedCount).toBe(1)
-    expect(progress.overallProgressRatio).toBeCloseTo(0.75)
-  })
-
   it("未記録の指標はnullを返す", () => {
     const progress = getBodyCompositionGoalProgress([], goals, "2026-11-25")
-
-    expect(progress.achievedCount).toBe(0)
-    expect(progress.overallProgressRatio).toBeNull()
 
     for (const metric of progress.metrics) {
       expect(metric.current).toBeNull()
