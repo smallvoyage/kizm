@@ -79,7 +79,16 @@ describe("getBodyCompositionGoalProgress", () => {
     expect(progress.daysRemaining).toBe(126)
   })
 
-  it("最古と最新の記録から各指標の進捗を求める", () => {
+  it("期限当日は0、期限超過は負の日数になる", () => {
+    expect(
+      getBodyCompositionGoalProgress(logs, goals, "2027-03-31").daysRemaining
+    ).toBe(0)
+    expect(
+      getBodyCompositionGoalProgress(logs, goals, "2027-04-01").daysRemaining
+    ).toBe(-1)
+  })
+
+  it("最新の記録から各指標の残りと達成を求める", () => {
     const progress = getBodyCompositionGoalProgress(logs, goals, "2026-11-25")
     const byMetric = Object.fromEntries(
       progress.metrics.map((metric) => [metric.metric, metric])
@@ -92,29 +101,20 @@ describe("getBodyCompositionGoalProgress", () => {
       "muscleMass",
     ])
 
-    expect(byMetric.weight.baseline).toEqual({ date: "2026-11-01", value: 72 })
     expect(byMetric.weight.current).toEqual({ date: "2026-11-24", value: 70 })
     expect(byMetric.weight.remaining).toBeCloseTo(-1.5)
     expect(byMetric.weight.achieved).toBe(false)
-    // 起点72→上限68.5まで3.5kgのうち2kg進んだ
-    expect(byMetric.weight.progressRatio).toBeCloseTo(2 / 3.5)
-    expect(byMetric.weight.requiredWeeklyChange).toBeCloseTo((-1.5 / 126) * 7)
 
     expect(byMetric.bodyFat.remaining).toBeCloseTo(-2.5)
-    expect(byMetric.bodyFat.progressRatio).toBeCloseTo(2.6 / 5.1)
 
-    // 72kg×25%=18kg → 70kg×22.4%=15.68kg、目標13.5kg
-    expect(byMetric.bodyFatMass.baseline?.value).toBeCloseTo(18)
+    // 70kg×22.4%=15.68kg、目標13.5kg
     expect(byMetric.bodyFatMass.current?.value).toBeCloseTo(15.68)
     expect(byMetric.bodyFatMass.remaining).toBeCloseTo(-2.18)
-    expect(byMetric.bodyFatMass.progressRatio).toBeCloseTo(2.32 / 4.5)
 
     expect(byMetric.muscleMass.remaining).toBeCloseTo(1)
-    expect(byMetric.muscleMass.progressRatio).toBeCloseTo(0.5)
-    expect(byMetric.muscleMass.requiredWeeklyChange).toBeCloseTo((1 / 126) * 7)
   })
 
-  it("達成済みの指標は進捗100%で必要ペースを返さない", () => {
+  it("目標を満たした指標は達成で残り0になる", () => {
     const progress = getBodyCompositionGoalProgress(
       [log("2026-11-01", { weight: 70 }), log("2026-11-24", { weight: 68 })],
       goals,
@@ -124,60 +124,6 @@ describe("getBodyCompositionGoalProgress", () => {
 
     expect(weight?.achieved).toBe(true)
     expect(weight?.remaining).toBe(0)
-    expect(weight?.progressRatio).toBe(1)
-    expect(weight?.requiredWeeklyChange).toBeNull()
-  })
-
-  it("起点から目標と反対方向へ離れた場合は進捗0%にする", () => {
-    const progress = getBodyCompositionGoalProgress(
-      [
-        log("2026-11-01", { muscleMass: 30.5 }),
-        log("2026-11-24", { muscleMass: 30 }),
-      ],
-      goals,
-      "2026-11-25"
-    )
-    const muscleMass = progress.metrics.find(
-      (metric) => metric.metric === "muscleMass"
-    )
-
-    expect(muscleMass?.progressRatio).toBe(0)
-  })
-
-  it("起点で達成していて最新で未達になった場合は進捗0%にする", () => {
-    const progress = getBodyCompositionGoalProgress(
-      [log("2026-11-01", { weight: 68 }), log("2026-11-24", { weight: 69 })],
-      goals,
-      "2026-11-25"
-    )
-    const weight = progress.metrics.find((metric) => metric.metric === "weight")
-
-    expect(weight?.achieved).toBe(false)
-    expect(weight?.progressRatio).toBe(0)
-  })
-
-  it("範囲の反対側へ行き過ぎた場合は進捗0%にする", () => {
-    const progress = getBodyCompositionGoalProgress(
-      [log("2026-11-01", { weight: 70 }), log("2026-11-24", { weight: 67 })],
-      goals,
-      "2026-11-25"
-    )
-    const weight = progress.metrics.find((metric) => metric.metric === "weight")
-
-    expect(weight?.remaining).toBeCloseTo(0.5)
-    expect(weight?.progressRatio).toBe(0)
-  })
-
-  it("記録が1件だけなら起点と最新が同じで進捗0%になる", () => {
-    const progress = getBodyCompositionGoalProgress(
-      [log("2026-11-24", { weight: 70 })],
-      goals,
-      "2026-11-25"
-    )
-    const weight = progress.metrics.find((metric) => metric.metric === "weight")
-
-    expect(weight?.baseline).toEqual(weight?.current)
-    expect(weight?.progressRatio).toBe(0)
   })
 
   it("未記録の指標はnullを返す", () => {
@@ -185,23 +131,12 @@ describe("getBodyCompositionGoalProgress", () => {
 
     for (const metric of progress.metrics) {
       expect(metric.current).toBeNull()
-      expect(metric.baseline).toBeNull()
       expect(metric.remaining).toBeNull()
-      expect(metric.progressRatio).toBeNull()
       expect(metric.achieved).toBe(false)
     }
   })
 
-  it("期限を過ぎたら必要ペースを返さない", () => {
-    const progress = getBodyCompositionGoalProgress(logs, goals, "2027-04-01")
-
-    expect(progress.daysRemaining).toBe(-1)
-    for (const metric of progress.metrics) {
-      expect(metric.requiredWeeklyChange).toBeNull()
-    }
-  })
-
-  it("記録の並び順に依存しない", () => {
+  it("記録の並び順に依存せず最新日を使う", () => {
     const progress = getBodyCompositionGoalProgress(
       logs.toReversed(),
       goals,
@@ -209,7 +144,6 @@ describe("getBodyCompositionGoalProgress", () => {
     )
     const weight = progress.metrics.find((metric) => metric.metric === "weight")
 
-    expect(weight?.baseline?.date).toBe("2026-11-01")
     expect(weight?.current?.date).toBe("2026-11-24")
   })
 })

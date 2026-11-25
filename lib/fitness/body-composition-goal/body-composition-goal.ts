@@ -34,17 +34,11 @@ type DatedValue = {
 export type BodyCompositionGoalMetricProgress = {
   metric: BodyCompositionGoalMetric
   target: BodyCompositionGoalTarget
-  /** 表示期間内で最も古い記録。進捗率の起点に使う。 */
-  baseline: DatedValue | null
   /** 最新の記録。 */
   current: DatedValue | null
   /** 目標達成に必要な変化量。増やす必要があれば正、減らす必要があれば負、達成済みは0。 */
   remaining: number | null
   achieved: boolean
-  /** 起点から目標までの進み具合（0〜1）。判定できない場合はnull。 */
-  progressRatio: number | null
-  /** 期限までに必要な1週間あたりの変化量。期限切れ・達成済み・未記録はnull。 */
-  requiredWeeklyChange: number | null
 }
 
 export type BodyCompositionGoalProgress = {
@@ -106,69 +100,25 @@ function daysBetween(from: string, to: string): number | null {
   )
 }
 
-function clampRatio(value: number): number {
-  return Math.min(Math.max(value, 0), 1)
-}
-
 function getMetricProgress(
   logs: FitnessLog[],
   metric: BodyCompositionGoalMetric,
-  target: BodyCompositionGoalTarget,
-  daysRemaining: number | null
+  target: BodyCompositionGoalTarget
 ): BodyCompositionGoalMetricProgress {
-  const recorded = logs
-    .map((log) => ({ date: log.date, value: metricValue(log, metric) }))
-    .filter((entry): entry is DatedValue => entry.value !== null)
-    .toSorted((a, b) => a.date.localeCompare(b.date))
+  const current =
+    logs
+      .map((log) => ({ date: log.date, value: metricValue(log, metric) }))
+      .filter((entry): entry is DatedValue => entry.value !== null)
+      .toSorted((a, b) => a.date.localeCompare(b.date))
+      .at(-1) ?? null
 
-  const baseline = recorded.at(0) ?? null
-  const current = recorded.at(-1) ?? null
-
-  if (!current || !baseline) {
-    return {
-      metric,
-      target,
-      baseline: null,
-      current: null,
-      remaining: null,
-      achieved: false,
-      progressRatio: null,
-      requiredWeeklyChange: null,
-    }
+  if (!current) {
+    return { metric, target, current: null, remaining: null, achieved: false }
   }
 
   const remaining = getGoalGap(current.value, target)
-  const achieved = remaining === 0
-  const baselineGap = getGoalGap(baseline.value, target)
 
-  let progressRatio: number
-  if (achieved) {
-    progressRatio = 1
-  } else if (
-    baselineGap === 0 ||
-    Math.sign(baselineGap) !== Math.sign(remaining)
-  ) {
-    // 起点では達成していた、または目標を挟んで反対側にいた場合は起点からの進捗を測れない。
-    progressRatio = 0
-  } else {
-    progressRatio = clampRatio(1 - remaining / baselineGap)
-  }
-
-  const requiredWeeklyChange =
-    !achieved && daysRemaining !== null && daysRemaining > 0
-      ? (remaining / daysRemaining) * 7
-      : null
-
-  return {
-    metric,
-    target,
-    baseline,
-    current,
-    remaining,
-    achieved,
-    progressRatio,
-    requiredWeeklyChange,
-  }
+  return { metric, target, current, remaining, achieved: remaining === 0 }
 }
 
 export function getBodyCompositionGoalProgress(
@@ -176,13 +126,11 @@ export function getBodyCompositionGoalProgress(
   goals: BodyCompositionGoals,
   referenceDate: string
 ): BodyCompositionGoalProgress {
-  const daysRemaining = daysBetween(referenceDate, goals.deadline)
-
   return {
     deadline: goals.deadline,
-    daysRemaining,
+    daysRemaining: daysBetween(referenceDate, goals.deadline),
     metrics: BODY_COMPOSITION_GOAL_METRICS.map((metric) =>
-      getMetricProgress(logs, metric, goals.targets[metric], daysRemaining)
+      getMetricProgress(logs, metric, goals.targets[metric])
     ),
   }
 }

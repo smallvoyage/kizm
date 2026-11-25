@@ -11,44 +11,32 @@ import { formatNumber } from "@/lib/format-number"
 
 const metricDisplay: Record<
   BodyCompositionGoalMetric,
-  { label: string; unit: "kg" | "%"; color: string; soft: string }
+  { label: string; unit: "kg" | "%"; color: string }
 > = {
   weight: {
     label: "体重",
     unit: "kg",
     color: "var(--color-weight)",
-    soft: "var(--color-weight-soft)",
   },
   bodyFat: {
     label: "体脂肪率",
     unit: "%",
     color: "var(--color-body-fat)",
-    soft: "var(--color-body-fat-soft)",
   },
   bodyFatMass: {
     label: "体脂肪量",
     unit: "kg",
     color: "var(--color-body-fat)",
-    soft: "var(--color-body-fat-soft)",
   },
   muscleMass: {
     label: "骨格筋量",
     unit: "kg",
     color: "var(--color-muscle-mass)",
-    soft: "var(--color-muscle-mass-soft)",
   },
 }
 
 function formatValue(value: number) {
   return formatNumber(value, { fractionDigits: 1, fixed: true })
-}
-
-function formatShortDate(date: string) {
-  return new Intl.DateTimeFormat("ja-JP", {
-    month: "numeric",
-    day: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${date}T00:00:00Z`))
 }
 
 function formatDeadline(date: string) {
@@ -83,88 +71,39 @@ function formatDaysRemaining(daysRemaining: number | null) {
   return `期限から${Math.abs(daysRemaining)}日経過`
 }
 
-type MetricView = {
+function GoalCard({
+  progress,
+}: {
   progress: BodyCompositionGoalMetricProgress
-  display: (typeof metricDisplay)[BodyCompositionGoalMetric]
-  percent: number | null
-  status: string
-  dataStatus: "empty" | "achieved" | "open"
-  style: CSSProperties
-}
-
-function toMetricView(progress: BodyCompositionGoalMetricProgress): MetricView {
+}) {
   const display = metricDisplay[progress.metric]
-  const { current, remaining, achieved, progressRatio } = progress
-
-  return {
-    progress,
-    display,
-    percent: progressRatio === null ? null : Math.round(progressRatio * 100),
-    status:
-      current === null || remaining === null
-        ? "記録なし"
-        : achieved
-          ? "達成"
-          : formatRemaining(remaining, display.unit),
-    dataStatus: current === null ? "empty" : achieved ? "achieved" : "open",
-    style: {
-      "--metric-color": display.color,
-      "--metric-soft": display.soft,
-      "--goal-progress": progressRatio ?? 0,
-    } as CSSProperties,
-  }
-}
-
-function GoalCard({ view }: { view: MetricView }) {
-  const { current, baseline, target, achieved } = view.progress
+  const { current, remaining, achieved, target } = progress
+  const status =
+    current === null || remaining === null
+      ? "記録なし"
+      : achieved
+        ? "達成"
+        : formatRemaining(remaining, display.unit)
 
   return (
     <article
       className="goal-card"
-      data-goal-metric={view.progress.metric}
-      data-status={view.dataStatus}
-      style={view.style}
+      data-goal-metric={progress.metric}
+      data-status={current === null ? "empty" : achieved ? "achieved" : "open"}
+      style={{ "--metric-color": display.color } as CSSProperties}
     >
-      <h3>{view.display.label}</h3>
-      <p className="goal-card-percent">
-        <strong>{view.percent === null ? "—" : view.percent}</strong>
-        {view.percent !== null && <span>%</span>}
+      <h3>{display.label}</h3>
+      <p className="goal-card-value">
+        <strong>{current === null ? "—" : formatValue(current.value)}</strong>
+        {current !== null && <span>{display.unit}</span>}
       </p>
-      <div
-        className="goal-bar"
-        role="progressbar"
-        aria-label={`${view.display.label}の目標進捗`}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={view.percent ?? undefined}
-        aria-valuetext={view.percent === null ? "記録なし" : `${view.percent}%`}
-      >
-        <span />
-      </div>
-      <dl className="goal-card-values">
-        <div>
-          <dt>現在</dt>
-          <dd>
-            {current === null
-              ? "—"
-              : `${formatValue(current.value)} ${view.display.unit}`}
-          </dd>
-        </div>
-        <div>
-          <dt>目標</dt>
-          <dd>{formatTarget(target, view.display.unit)}</dd>
-        </div>
-      </dl>
+      <p className="goal-card-target">
+        目標 {formatTarget(target, display.unit)}
+      </p>
       <p className="goal-card-status">
         {achieved && <CircleCheck aria-hidden="true" />}
-        {view.status}
+        {status}
       </p>
-      {baseline !== null && (
-        <p className="goal-card-baseline">
-          起点 {formatShortDate(baseline.date)} {formatValue(baseline.value)}{" "}
-          {view.display.unit}
-        </p>
-      )}
     </article>
   )
 }
@@ -200,7 +139,7 @@ export function BodyCompositionGoalProgress({
       </header>
       <div className="goal-cards">
         {progress.metrics.map((metric) => (
-          <GoalCard key={metric.metric} view={toMetricView(metric)} />
+          <GoalCard key={metric.metric} progress={metric} />
         ))}
       </div>
     </section>
