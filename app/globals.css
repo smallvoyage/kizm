@@ -3278,6 +3278,14 @@ body {
   text-align: end;
 }
 
+.training-selected-values {
+  display: grid;
+  min-width: 0;
+  justify-items: end;
+  gap: var(--space-3xs);
+  text-align: end;
+}
+
 .training-chart {
   width: 100%;
   min-width: 0;

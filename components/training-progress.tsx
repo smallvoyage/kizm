@@ -5,6 +5,7 @@ import { useMemo, useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart"
+import { getNiceTicks } from "@/lib/chart-ticks"
 import {
   compareWorkoutPerformance,
   getExerciseGroups,
@@ -16,7 +17,7 @@ import {
 import { formatNumber } from "@/lib/format-number"
 
 const chartConfig = {
-  weightKg: { label: "重量", color: "var(--color-weight)" },
+  estimatedOneRepMax: { label: "推定1RM", color: "var(--color-weight)" },
 } satisfies ChartConfig
 
 const TREND_CONTENT: Record<
@@ -45,6 +46,10 @@ function formatSet(set: RepresentativeWorkoutSet) {
   return `${formatNumber(set.weightKg, { fractionDigits: 1 })} kg × ${formatNumber(set.reps)} 回`
 }
 
+function formatEstimatedOneRepMax(set: RepresentativeWorkoutSet) {
+  return `推定1RM ${formatNumber(set.estimatedOneRepMax, { fractionDigits: 1 })} kg`
+}
+
 type TrainingProgressProps = {
   workoutSets: WorkoutSet[]
 }
@@ -68,6 +73,10 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
   const representativeSets = useMemo(
     () => getRepresentativeWorkoutSets(workoutSets, activeExercise),
     [activeExercise, workoutSets]
+  )
+  const yAxisTicks = useMemo(
+    () => getNiceTicks(representativeSets.map((set) => set.estimatedOneRepMax)),
+    [representativeSets]
   )
   const latestSet = representativeSets.at(-1) ?? null
   const previousSet = representativeSets.at(-2) ?? null
@@ -135,15 +144,18 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
       <div className="training-chart-panel">
         <div className="training-chart-meta">
           <div>
-            <p>重量の推移</p>
-            <span>点をタップすると回数を確認できます</span>
+            <p>推定1RMの推移</p>
+            <span>重量と回数から算出。タップで詳細</span>
           </div>
           {selectedSet && (
             <div className="training-selected-set">
               <time dateTime={selectedSet.date}>
                 {formatDate(selectedSet.date)}
               </time>
-              <strong>{formatSet(selectedSet)}</strong>
+              <div className="training-selected-values">
+                <strong>{formatSet(selectedSet)}</strong>
+                <span>{formatEstimatedOneRepMax(selectedSet)}</span>
+              </div>
             </div>
           )}
         </div>
@@ -175,17 +187,15 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
               tickLine={false}
               tickMargin={8}
               width={38}
-              domain={[
-                (dataMin: number) => Math.max(0, dataMin - 2.5),
-                (dataMax: number) => dataMax + 2.5,
-              ]}
+              domain={[yAxisTicks[0] ?? 0, yAxisTicks.at(-1) ?? "auto"]}
+              ticks={yAxisTicks}
               tickFormatter={(value: number) =>
                 formatNumber(value, { fractionDigits: 1 })
               }
             />
             <Line
-              dataKey="weightKg"
-              name="重量"
+              dataKey="estimatedOneRepMax"
+              name="推定1RM"
               type="monotone"
               isAnimationActive={false}
               stroke="var(--color-weight)"
@@ -209,7 +219,8 @@ export function TrainingProgress({ workoutSets }: TrainingProgressProps) {
         <ul className="sr-only">
           {representativeSets.map((set) => (
             <li key={set.date}>
-              {formatDate(set.date)}: {formatSet(set)}
+              {formatDate(set.date)}: {formatSet(set)}（
+              {formatEstimatedOneRepMax(set)}）
             </li>
           ))}
         </ul>

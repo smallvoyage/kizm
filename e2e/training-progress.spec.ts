@@ -27,6 +27,7 @@ test("Workout種目を切り替えると最新代表セットと推移が更新�
     await expect(summary).toContainText("70 kg × 8 回")
     await expect(summary).toContainText("前回 · 67.5 kg × 8 回")
     await expect(chart).toContainText("8月16日70 kg × 8 回")
+    await expect(chart).toContainText("推定1RM 88.7 kg")
     await expect(history).toContainText("7月19日: 60 kg × 8 回")
     await expect(history).toContainText("8月16日: 70 kg × 8 回")
     await expect(training.getByText("100 kg × 6 回")).toHaveCount(0)

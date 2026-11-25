@@ -64,7 +64,7 @@ test("fixture dashboard shows its primary sections", async ({ page }) => {
       "バックスクワット"
     )
     await expect(training.getByText("100 kg × 6 回").first()).toBeVisible()
-    await expect(training.getByText("重量の推移")).toBeVisible()
+    await expect(training.getByText("推定1RMの推移")).toBeVisible()
     await expect(training.getByRole("application")).toBeVisible()
   })
 })
